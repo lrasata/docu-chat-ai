@@ -80,7 +80,7 @@ const DrawerAppBar = (props: Props) => {
   return (
     <Box sx={{ display: "flex" }}>
       <AppBar component="nav">
-        <Container maxWidth="lg">
+        <Container maxWidth="xl">
           <Toolbar sx={{ padding: "0 !important" }}>
             <IconButton
               color="inherit"
