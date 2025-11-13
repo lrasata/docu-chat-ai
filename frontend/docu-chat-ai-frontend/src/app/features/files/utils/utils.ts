@@ -1,7 +1,7 @@
 import { API_UPLOAD_MEDIA } from "../../../shared/constants/constants.ts";
 
 export const getPresignedUrl = async (
-  id: number,
+  id: number | string,
   file: File,
   resource: string = "users",
 ): Promise<{ upload_url: string; file_key: string } | undefined> => {
@@ -25,6 +25,10 @@ export const getPresignedUrl = async (
 
     const response = await fetch(`${API_UPLOAD_MEDIA}?${params}`, {
       method: "GET",
+      // TODO keep this only for local testing, when infra done, will be injected by cloudfront
+      // headers:{
+      //     "x-api-gateway-img-upload-auth": "",
+      // }
     });
 
     if (!response.ok) {
