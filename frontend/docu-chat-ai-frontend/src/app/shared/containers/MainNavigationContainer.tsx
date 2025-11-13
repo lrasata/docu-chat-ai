@@ -1,40 +1,49 @@
 import DrawerAppBar from "../components/DrawerAppBar.tsx";
-import { APP_NAME } from "../constants/constants.ts";
-import { useNavigate } from "react-router-dom";
+import {
+  APP_NAME,
+  AWS_COGNITO_CLIENT_ID,
+  AWS_COGNITO_DOMAIN_URL_LOGOUT,
+} from "../constants/constants.ts";
 import { useEffect, useState } from "react";
+import { useAuth } from "react-oidc-context";
 
-const authNavItems = [{ title: "Log out", url: "/logout" }];
+interface MainNavigationContainerProps {
+  isAuthenticated: boolean;
+}
+const MainNavigationContainer = ({
+  isAuthenticated = false,
+}: MainNavigationContainerProps) => {
+  const auth = useAuth();
+  const [menuContent, setMenuContent] = useState<{ title: string }>({
+    title: "Sign in",
+  });
 
-const nonAuthNavItems = [
-  { title: "Sign up", url: "/login" },
-  { title: "Log in", url: "/login" },
-];
+  const signOutRedirect = () => {
+    const clientId = AWS_COGNITO_CLIENT_ID;
+    const logoutUri = `${window.location.origin}/`; // must exactly match App client Sign out URL
+    const cognitoDomain = AWS_COGNITO_DOMAIN_URL_LOGOUT;
 
-const MainNavigationContainer = () => {
-  const [isAuthenticated] = useState(false);
-  const navigate = useNavigate();
-  const [menuContent, setMenuContent] = useState<
-    { title: string; url: string }[]
-  >([]);
+    auth.removeUser();
 
-  const handleOnClickNavigate = (href: string) => {
-    navigate(href);
+    // Redirect to Hosted UI logout
+    window.location.href = `${cognitoDomain}/logout?client_id=${clientId}&logout_uri=${encodeURIComponent(logoutUri)}`;
   };
 
-  const handleOnClickLogout = async () => {};
-
   useEffect(() => {
-    const addMenuItems = isAuthenticated ? authNavItems : nonAuthNavItems;
+    const currentMenuItem = isAuthenticated
+      ? { title: "Sign out" }
+      : { title: "Sign in" };
 
-    setMenuContent([...addMenuItems]);
+    setMenuContent((prevState) =>
+      prevState.title !== currentMenuItem.title ? currentMenuItem : prevState,
+    );
   }, [isAuthenticated]);
 
   return (
     <DrawerAppBar
       appName={APP_NAME}
-      navItems={menuContent}
-      handleOnClickNavigate={handleOnClickNavigate}
-      handleOnClickLogout={handleOnClickLogout}
+      logOutMenuItem={menuContent}
+      handleOnClickLogout={signOutRedirect}
     />
   );
 };

@@ -3,7 +3,6 @@ import Box from "@mui/material/Box";
 import Divider from "@mui/material/Divider";
 import Drawer from "@mui/material/Drawer";
 import IconButton from "@mui/material/IconButton";
-import List from "@mui/material/List";
 import ListItem from "@mui/material/ListItem";
 import ListItemButton from "@mui/material/ListItemButton";
 import ListItemText from "@mui/material/ListItemText";
@@ -16,34 +15,20 @@ import { Container } from "@mui/material";
 import { Link } from "react-router-dom";
 
 interface Props {
-  /**
-   * Injected by the documentation to work in an iframe.
-   * You won't need it on your project.
-   */
   window?: () => Window;
   appName: string;
-  navItems: { title: string; url: string }[];
+  logOutMenuItem: { title: string };
   handleOnClickLogout: () => void;
-  handleOnClickNavigate: (href: string) => void;
 }
 
 const drawerWidth = 240;
 
 const DrawerAppBar = (props: Props) => {
-  const { window, navItems, handleOnClickNavigate, handleOnClickLogout } =
-    props;
+  const { window, logOutMenuItem, handleOnClickLogout } = props;
   const [mobileOpen, setMobileOpen] = useState(false);
 
   const handleDrawerToggle = () => {
     setMobileOpen((prevState) => !prevState);
-  };
-
-  const handleOnClickMenuItem = (href: string) => {
-    if (href === "/logout") {
-      handleOnClickLogout();
-    } else {
-      handleOnClickNavigate(href);
-    }
   };
 
   const drawer = (
@@ -59,18 +44,15 @@ const DrawerAppBar = (props: Props) => {
       </Typography>
 
       <Divider />
-      <List>
-        {navItems.map((item) => (
-          <ListItem key={item.title} disablePadding>
-            <ListItemButton
-              sx={{ textAlign: "center" }}
-              onClick={() => handleOnClickMenuItem(item.url)}
-            >
-              <ListItemText primary={item.title} />
-            </ListItemButton>
-          </ListItem>
-        ))}
-      </List>
+
+      <ListItem key={logOutMenuItem.title} disablePadding>
+        <ListItemButton
+          sx={{ textAlign: "center" }}
+          onClick={() => handleOnClickLogout}
+        >
+          <ListItemText primary={logOutMenuItem.title} />
+        </ListItemButton>
+      </ListItem>
     </Box>
   );
 
@@ -105,15 +87,13 @@ const DrawerAppBar = (props: Props) => {
               {props.appName}
             </Typography>
             <Box sx={{ display: { xs: "none", sm: "block" } }}>
-              {navItems.map((item) => (
-                <Button
-                  key={item.title}
-                  sx={{ color: "white" }}
-                  onClick={() => handleOnClickMenuItem(item.url)}
-                >
-                  {item.title}
-                </Button>
-              ))}
+              <Button
+                key={logOutMenuItem.title}
+                sx={{ color: "white" }}
+                onClick={handleOnClickLogout}
+              >
+                {logOutMenuItem.title}
+              </Button>
             </Box>
           </Toolbar>
         </Container>

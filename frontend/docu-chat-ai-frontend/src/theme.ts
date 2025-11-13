@@ -4,15 +4,15 @@ const themeOptions: ThemeOptions = {
   typography: {
     fontFamily: '"Baloo 2", "Poppins", "Quicksand", sans-serif',
     h1: {
-      fontSize: "2rem",
+      fontSize: "1.75rem",
       fontWeight: 700,
     },
     h2: {
-      fontSize: "1.75rem",
+      fontSize: "1.5rem",
       fontWeight: 600,
     },
     h3: {
-      fontSize: "1.5rem",
+      fontSize: "1.25rem",
       fontWeight: 600,
     },
     body1: {
