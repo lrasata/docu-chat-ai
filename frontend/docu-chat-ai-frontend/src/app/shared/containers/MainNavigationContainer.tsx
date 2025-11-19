@@ -20,7 +20,7 @@ const MainNavigationContainer = ({
 
   const signOutRedirect = () => {
     const clientId = AWS_COGNITO_CLIENT_ID;
-    const logoutUri = `${window.location.origin}/`; // must exactly match App client Sign out URL
+    const logoutUri = window.location.origin; // must exactly match App client Sign out URL
     const cognitoDomain = AWS_COGNITO_DOMAIN_URL_LOGOUT;
 
     auth.removeUser();

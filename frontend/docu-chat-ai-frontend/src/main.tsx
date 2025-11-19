@@ -9,14 +9,27 @@ import {
   AWS_COGNITO_REDIRECT_URI,
   AWS_COGNITO_RESPONSE,
   AWS_COGNITO_SCOPE,
+    AWS_COGNITO_DOMAIN_URL_LOGOUT
 } from "./app/shared/constants/constants.ts";
 
 const cognitoAuthConfig = {
   authority: AWS_COGNITO_DOMAIN_URL_LOGIN,
   client_id: AWS_COGNITO_CLIENT_ID,
   redirect_uri: AWS_COGNITO_REDIRECT_URI,
+  post_logout_redirect_uri: AWS_COGNITO_REDIRECT_URI,
   response_type: AWS_COGNITO_RESPONSE,
   scope: AWS_COGNITO_SCOPE,
+  metadata: {
+    issuer: AWS_COGNITO_DOMAIN_URL_LOGOUT,
+    authorization_endpoint:
+      `${AWS_COGNITO_DOMAIN_URL_LOGOUT}/oauth2/authorize`,
+    token_endpoint:
+      `${AWS_COGNITO_DOMAIN_URL_LOGOUT}/oauth2/token`,
+    userinfo_endpoint:
+      `${AWS_COGNITO_DOMAIN_URL_LOGOUT}/oauth2/userInfo`,
+    end_session_endpoint:
+      `${AWS_COGNITO_DOMAIN_URL_LOGOUT}/logout`,
+  },
 };
 
 createRoot(document.getElementById("root")!).render(

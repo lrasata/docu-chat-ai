@@ -1,8 +1,7 @@
 terraform {
-
   backend "s3" {
     bucket = "docu-chat-ai-app-states"
-    key    = "frontend/terraform.tfstate"
+    key    = "security/terraform.tfstate"
     region = "eu-central-1"
   }
 
@@ -18,9 +17,4 @@ terraform {
 
 provider "aws" {
   region = var.region
-}
-
-provider "aws" {
-  alias  = "us_east_1"
-  region = "us-east-1"
 }
