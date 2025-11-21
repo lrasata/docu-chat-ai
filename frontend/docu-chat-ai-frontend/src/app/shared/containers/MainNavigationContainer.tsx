@@ -2,7 +2,7 @@ import DrawerAppBar from "../components/DrawerAppBar.tsx";
 import {
   APP_NAME,
   AWS_COGNITO_CLIENT_ID,
-  AWS_COGNITO_DOMAIN_URL_LOGOUT,
+  AWS_HOSTED_COGNITO_LOGIN_DOMAIN,
 } from "../constants/constants.ts";
 import { useEffect, useState } from "react";
 import { useAuth } from "react-oidc-context";
@@ -20,8 +20,8 @@ const MainNavigationContainer = ({
 
   const signOutRedirect = () => {
     const clientId = AWS_COGNITO_CLIENT_ID;
-    const logoutUri = `${window.location.origin}/`; // must exactly match App client Sign out URL
-    const cognitoDomain = AWS_COGNITO_DOMAIN_URL_LOGOUT;
+    const logoutUri = window.location.origin; // must exactly match App client Sign out URL
+    const cognitoDomain = AWS_HOSTED_COGNITO_LOGIN_DOMAIN;
 
     auth.removeUser();
 

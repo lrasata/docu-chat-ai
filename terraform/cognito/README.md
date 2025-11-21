@@ -76,7 +76,7 @@ This final step creates the **User Pool Client** (the application interface) and
 Run the following command, targeting the `cognito_client` module:
 
 ```bash
-terraform apply -target="module.cognito_client" -var-file="../common/staging.tfvars"
+terraform apply -target="module.cognito_clients" -var-file="../common/staging.tfvars"
 ```
 
 * **Expected Output:** 

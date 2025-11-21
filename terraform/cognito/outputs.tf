@@ -10,7 +10,7 @@ output "cognito_user_pool_id" {
 
 output "cognito_user_pool_domain" {
   description = "Cognito User Pool Domain"
-  value       = "${module.cognito_base.cognito_user_pool_domain}.auth.${var.region}.amazoncognito.com"
+  value       = module.cognito_base.cognito_user_pool_domain
 }
 
 output "cognito_user_pool_endpoint" {
