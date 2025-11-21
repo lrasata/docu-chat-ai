@@ -1,10 +1,11 @@
 module "file_uploader" {
-  source = "git::https://github.com/lrasata/infra-file-uploader//modules/file_uploader?ref=v1.4.0"
+  source = "git::https://github.com/lrasata/infra-file-uploader//modules/file_uploader?ref=v1.5.0"
 
   lambda_process_uploaded_file_dir = "./lambda_process_uploaded_file_build"
 
   region                                        = var.region
   environment                                   = var.environment
+  secret_store_name                             = data.terraform_remote_state.security.outputs.secret_store_name
   api_file_upload_domain_name                   = var.api_file_upload_domain_name
   backend_certificate_arn                       = var.backend_certificate_arn
   uploads_bucket_name                           = var.uploads_bucket_name

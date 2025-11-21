@@ -33,7 +33,7 @@ resource "aws_cloudfront_distribution" "cdn" {
     }
 
     custom_header {
-      name  = "x-api-gateway-img-upload-auth"
+      name  = "x-api-gateway-file-upload-auth"
       value = data.terraform_remote_state.security.outputs.file_upload_auth_secret
     }
   }
