@@ -1,7 +1,7 @@
 locals {
-  s3_static_web_files_bucket_origin = "${var.environment}-${var.app_name}-s3-static-web-files-bucket-origin"
-  s3_uploads_bucket_origin          = "${var.environment}-${var.app_name}-s3-uploads-bucket-origin"
-  api_gw_file_uploader_origin       = "${var.environment}-${var.app_name}-file-uploader-api-gateway-origin"
+  s3_static_web_files_bucket_origin = "${var.environment}-${var.app_id}-s3-static-web-files-bucket-origin"
+  s3_uploads_bucket_origin          = "${var.environment}-${var.app_id}-s3-uploads-bucket-origin"
+  api_gw_file_uploader_origin       = "${var.environment}-${var.app_id}-file-uploader-api-gateway-origin"
 }
 
 resource "aws_cloudfront_distribution" "cdn" {

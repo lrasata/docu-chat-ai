@@ -10,7 +10,7 @@ variable "region" {
   default     = "eu-central-1"
 }
 
-variable "app_name" {
+variable "app_id" {
   type    = string
   default = "docu-chat-ai"
 }

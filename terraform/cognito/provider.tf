@@ -1,10 +1,5 @@
 terraform {
-
-  backend "s3" {
-    bucket = "docu-chat-ai-app-states"
-    key    = "cognito/terraform.tfstate"
-    region = "eu-central-1"
-  }
+  backend "s3" {}
 
   required_providers {
     aws = {
