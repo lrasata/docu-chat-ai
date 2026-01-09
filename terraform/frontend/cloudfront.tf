@@ -16,13 +16,13 @@ resource "aws_cloudfront_distribution" "cdn" {
   }
 
   origin {
-    domain_name              = module.file_uploader.uploads_bucket_regional_domain_name
+    domain_name              = data.terraform_remote_state.backend.outputs.uploads_bucket_regional_domain_name
     origin_access_control_id = aws_cloudfront_origin_access_control.oac.id
     origin_id                = local.s3_uploads_bucket_origin
   }
 
   origin {
-    domain_name = var.api_file_upload_domain_name
+    domain_name = data.terraform_remote_state.backend.outputs.api_file_upload_domain_name
     origin_id   = local.api_gw_file_uploader_origin
 
     custom_origin_config {

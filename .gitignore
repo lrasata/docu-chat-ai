@@ -30,3 +30,4 @@ override.tf.json
 dist
 *.zip
 lambda_process_uploaded_file_build
+terraform/backend/src/lambda_functions/*/node_modules
