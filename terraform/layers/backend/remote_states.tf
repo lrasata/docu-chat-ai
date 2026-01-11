@@ -3,18 +3,18 @@ data "terraform_remote_state" "cognito" {
 
   config = {
     bucket = "docu-chat-ai-app-states"
-    key    = "cognito/terraform.tfstate"
+    key    = "cognito/${var.environment}/terraform.tfstate"
     region = var.region
   }
 }
 
 
-data "terraform_remote_state" "security" {
+data "terraform_remote_state" "secrets" {
   backend = "s3"
 
   config = {
     bucket = "docu-chat-ai-app-states"
-    key    = "security/terraform.tfstate"
+    key    = "secrets/${var.environment}/terraform.tfstate"
     region = var.region
   }
 }
