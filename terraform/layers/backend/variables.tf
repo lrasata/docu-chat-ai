@@ -42,11 +42,6 @@ variable "use_bucketav" {
   default     = false
 }
 
-variable "bucketav_sns_findings_topic_name" {
-  description = "Name of SNS topics where BucketAV publishes findings"
-  type        = string
-}
-
 variable "enable_transfer_acceleration" {
   type        = bool
   description = "Enable S3 Transfer Acceleration?"

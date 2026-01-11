@@ -1,0 +1,68 @@
+name: Destroy Staging Environment
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "Which environment to destroy?"
+        required: true
+        type: choice
+        options:
+          - staging
+
+jobs:
+  destroy:
+    name: Destroy Staging Terraform Layers
+    runs-on: ubuntu-latest
+    environment: ${{ github.event.inputs.environment }}
+    permissions:
+      id-token: write
+      contents: read
+
+    env:
+      TF_VAR_region: ${{ secrets.AWS_REGION }}
+      TF_VAR_app_id: docu-chat-ai
+      TF_VAR_environment: ${{ github.event.inputs.environment }}
+      TF_VAR_callback_urls: '["https://${{ github.event.inputs.environment }}.epic-trip-planner.com"]'
+      TF_VAR_logout_urls: '["https://${{ github.event.inputs.environment }}.epic-trip-planner.com"]'
+      TF_VAR_cloudfront_domain_name: ${{ github.event.inputs.environment }}.epic-trip-planner.com
+      TF_VAR_api_file_upload_domain_name: ${{ github.event.inputs.environment }}-file-upload-api.epic-trip-planner.com
+      TF_VAR_backend_certificate_arn: ${{secrets.BACKEND_CERTIFICATE_ARN}}
+      TF_VAR_use_bucketav: false
+      TF_VAR_bucket_av_sns_findings_topic_name: ""
+      TF_VAR_uploads_bucket_name: docu-chat-ai-file-uploads-bucket-${{ github.event.inputs.environment }}
+      TF_VAR_enable_transfer_acceleration: true
+      TF_VAR_secret_store_name: ${{secrets.SECRET_STORE_NAME}}
+      TF_VAR_notification_email: ${{secrets.ALERT_EMAIL}}
+      TF_VAR_route53_zone_name: epic-trip-planner.com
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: 1.12.2
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::387836084035:role/githubTripPlannerInfraManager
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Destroy layers sequentially
+        run: |
+          layers=("backend" "cognito" "secrets")
+          for layer in "${layers[@]}"; do
+            echo "==== Destroying $layer ===="
+            cd $GITHUB_WORKSPACE/terraform/layers/$layer
+            terraform init \
+              -input=false \
+              -backend-config="bucket=docu-chat-ai-app-states" \
+              -backend-config="key=${layer}/${{ github.event.inputs.environment }}/terraform.tfstate" \
+              -backend-config="region=${{ secrets.AWS_REGION }}" \
+              -backend-config="dynamodb_table=${{ github.event.inputs.environment }}-docu-chat-ai-terraform-locks" \
+              -backend-config="encrypt=true"
+            terraform destroy -auto-approve
+            cd ../../../..
+          done
