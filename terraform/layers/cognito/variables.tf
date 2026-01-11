@@ -8,6 +8,10 @@ variable "region" {
   type        = string
 }
 
+variable "app_id" {
+  type = string
+}
+
 variable "callback_urls" {
   type = list(string)
 }

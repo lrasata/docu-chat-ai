@@ -1,5 +1,5 @@
 resource "aws_cognito_user_pool_client" "cognito_user_pool_client" {
-  name         = "${var.environment}-docu-chat-ai-cognito-user-pool-client"
+  name         = "${var.environment}-${var.app_id}-cognito-user-pool-client"
   user_pool_id = var.cognito_user_pool_id
 
   generate_secret                      = false # application which runs in the browser (React), you must NOT use a client secret — because it cannot be securely stored

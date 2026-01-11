@@ -1,5 +1,5 @@
 resource "aws_cognito_user_pool" "cognito_user_pool" {
-  name = "${var.environment}-docu-chat-ai-cognito-user-pool"
+  name = "${var.environment}-${var.app_id}-cognito-user-pool"
 
   alias_attributes         = ["email"]
   auto_verified_attributes = ["email"]
@@ -23,6 +23,6 @@ resource "aws_cognito_user_pool" "cognito_user_pool" {
 }
 
 resource "aws_cognito_user_pool_domain" "cognito_user_pool_domain" {
-  domain       = "${var.environment}-docu-chat-ai-auth-domain"
+  domain       = "${var.environment}-${var.app_id}-auth-domain"
   user_pool_id = aws_cognito_user_pool.cognito_user_pool.id
 }

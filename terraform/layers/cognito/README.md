@@ -1,26 +1,37 @@
-# Cognito Setup 
+## AWS Cognito Terraform Layer
 
-This documentation outlines the steps to deploy and configure the AWS Cognito User Pool, Domain, and Client using Terraform, specifically for a staging environment that integrates with Google as an Identity Provider (IdP).
+This directory contains Terraform code for provisioning AWS Cognito resources for the serverless-docu-chat-ai project. It supports secure authentication and social sign-in (Google) for your application.
 
------
+---
+
+### 📄 Overview
+
+This guide walks you through deploying and configuring the AWS Cognito User Pool, Domain, and Client using Terraform. It is tailored for a staging environment and includes Google as an Identity Provider (IdP).
+
+---
+
+> **Note:**
+> When running the GitHub pipeline, most requirements are handled automatically, but the Google Cloud setup (OAuth consent/redirect URI) must be done manually.
+
+---
 
 ## Prerequisites
 
-* Terraform installed and configured.
-* AWS credentials configured for the target region.
-* A Google Cloud Project with OAuth 2.0 Client ID and Client Secret for use in your Terraform variables (e.g., in `staging.tfvars`).
-    * **AWS Secrets Manager Secret** configured (see detail below).
+- Terraform >= 1.0 installed and configured
+- AWS credentials for the target region
+- A Google Cloud Project with OAuth 2.0 Client ID and Secret (for use in your Terraform variables, e.g., in `staging.tfvars`)
+- **AWS Secrets Manager Secret** configured (see below)
 
 ### 🔑 Required AWS Secrets Manager Secret
 
-This configuration retrieves your sensitive Google credentials securely from AWS Secrets Manager. You must create a secret with the following specifications:
+Create a secret in AWS Secrets Manager with the following:
 
 | Detail | Value |
 | :--- | :--- |
-| **Secret Name** | `${var.environment}/docu-chat-ai/secrets` (e.g., `staging/docu-chat-ai/secrets`) |
-| **Secret Type** | **Plaintext** or **Key/Value** (The content must be a valid JSON string.) |
+| **Secret Name** | `${var.environment}/${var.app_id}/secrets` (e.g., `staging/docu-chat-ai/secrets`) |
+| **Secret Type** | Plaintext or Key/Value (must be a valid JSON string) |
 
-The secret's **value** must be a **JSON string** containing the `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` keys, matching how they are accessed in the `locals` block:
+**Secret value example:**
 
 ```json
 {
@@ -28,74 +39,89 @@ The secret's **value** must be a **JSON string** containing the `GOOGLE_CLIENT_I
   "GOOGLE_CLIENT_SECRET": "YOUR_GOOGLE_OAUTH_CLIENT_SECRET"
 }
 ```
------
 
-## 🚀 Deployment Steps
+---
 
-### Step 1 - Create Cognito User Pool and Domain
+## 🚀 Deployment Steps details
 
-This step deploys the foundational Cognito resources: the **User Pool** itself and the **Cognito Hosted UI Domain**.
+### 1. Create Cognito User Pool and Domain
 
-Run the following command, targeting the `cognito_base` module to create these resources:
 
-```bash
+This step deploys the foundational Cognito resources: the **User Pool** and the **Cognito Hosted UI Domain**.
+
+```sh
 terraform apply -target="module.cognito_base" -var-file="../common/staging.tfvars"
 ```
 
-* **Expected Output:** 
+**Expected Output:**
+- `cognito_user_pool_id`
+- `cognito_user_pool_domain` (e.g., `staging-app-auth-domain`)
 
-* This command will generate the `cognito_user_pool_id` and the base `cognito_user_pool_domain` (e.g., `staging-app-auth-domain`).
+---
 
------
+### 2. Configure Authorized Redirect URIs in Google Cloud (Manual, one-time)
 
-### Step 2 - Configure Authorized Redirect URIs in Google Cloud
-
-Before creating the Cognito User Pool Client, you must inform Google (the Identity Provider) about the valid URL to which Cognito will redirect users after they successfully log in.
+Before creating the Cognito User Pool Client, you must inform Google (the IdP) about the valid redirect URI.
 
 **Action Required:**
+1. Retrieve the full Cognito User Pool Domain URL from Step 1 output.
+2. In your Google Cloud Project, go to OAuth consent screen or credentials settings.
+3. Add this URI to **Authorized redirect URIs**:
 
-1.  Retrieve the full Cognito User Pool Domain URL from the output of Step 1.
-2.  Navigate to your Google Cloud Project's OAuth consent screen or credentials settings.
-3.  Add the following URI to the list of **Authorized redirect URIs**:
-
-<!-- end list -->
-
-```text
+```
 https://<user_pool_domain>.auth.<region>.amazoncognito.com/oauth2/idpresponse
 ```
 
-* **Example:** If your domain is `staging-docu-chat-ai-auth-domain` and your region is `eu-central-1`, the URI would be:
-  `https://staging-docu-chat-ai-auth-domain.auth.eu-central-1.amazoncognito.com/oauth2/idpresponse`
+**Examples:**
+- `https://staging-docu-chat-ai-auth-domain.auth.eu-central-1.amazoncognito.com/oauth2/idpresponse`
+- `https://dev-docu-chat-ai-auth-domain.auth.eu-central-1.amazoncognito.com/oauth2/idpresponse`
 
------
+The domain format: `${var.environment}-${var.app_id}-auth-domain`
 
-### Step 3 - Create User Pool Client referencing Google IdP
+---
 
-This final step creates the **User Pool Client** (the application interface) and configures it to use the **Google Identity Provider** for social sign-in. This module relies on the pool and domain created in Step 1.
+### 3. Create User Pool Client referencing Google IdP
 
-Run the following command, targeting the `cognito_client` module:
+This step creates the **User Pool Client** and configures it to use Google as an Identity Provider.
 
-```bash
+```sh
 terraform apply -target="module.cognito_clients" -var-file="../common/staging.tfvars"
 ```
 
-* **Expected Output:** 
+**Expected Output:**
+- `cognito_user_pool_client_id` (used in your application's frontend or API config)
 
-This command will generate the crucial **`cognito_user_pool_client_id`**, which you will use in your serverless application's front-end or API configuration.
+---
 
------
+### 4. Verification
 
-### Verification
+After all steps, check the outputs:
 
-After successfully completing all steps, you can check the final output values:
-
-```bash
+```sh
 terraform output
 ```
 
-You should see all necessary values printed:
+You should see:
+- `cognito_user_pool_id`
+- `cognito_user_pool_domain`
+- `cognito_user_pool_client_id`
+- `cognito_user_pool_endpoint`
 
-* `cognito_user_pool_id`
-* `cognito_user_pool_domain`
-* `cognito_user_pool_client_id`
-* `cognito_user_pool_endpoint`
+---
+
+## 📁 Module Structure
+
+- **main.tf**: Entry point for Cognito resources
+- **variables.tf**: Input variables
+- **outputs.tf**: Outputs from the Cognito layer
+- **provider.tf**: AWS provider config
+- **remote_states.tf**: Remote state data sources
+- **modules/**: Reusable submodules:
+  - `cognito_base/`: User pool and IdP setup
+  - `cognito_clients/`: User pool client config
+
+---
+
+## ℹ️ Additional Information
+
+Refer to the module files for advanced configuration. For questions or issues, open an issue in the main repository or contact the maintainers.

@@ -18,7 +18,6 @@ jobs:
     permissions:
       id-token: write
       contents: read
-      pull-requests: write
     env:
       TF_VAR_region: ${{ secrets.AWS_REGION }}
       TF_VAR_app_id: docu-chat-ai
@@ -45,7 +44,7 @@ jobs:
             -input=false \
             -backend-config="bucket=docu-chat-ai-app-states" \
             -backend-config="key=secrets/${{ github.event.inputs.environment }}/terraform.tfstate" \
-            -backend-config="region=eu-central-1" \
+            -backend-config="region=${{ secrets.AWS_REGION }}" \
             -backend-config="dynamodb_table=${{ github.event.inputs.environment }}-docu-chat-ai-terraform-locks" \
             -backend-config="encrypt=true"
 
@@ -53,3 +52,53 @@ jobs:
         working-directory: terraform/layers/secrets
         run: |
           terraform apply -auto-approve
+
+  apply-cognito:
+    needs: apply-secrets
+    name: Cognito - Apply to ${{ github.event.inputs.environment }} Env
+    runs-on: ubuntu-latest
+    environment: ${{ github.event.inputs.environment }}
+    permissions:
+      id-token: write
+      contents: read
+    env:
+      TF_VAR_region: ${{ secrets.AWS_REGION }}
+      TF_VAR_app_id: docu-chat-ai
+      TF_VAR_environment: ${{ github.event.inputs.environment }}
+      TF_VAR_callback_urls: '["https://${{ github.event.inputs.environment }}.epic-trip-planner.com"]'
+      TF_VAR_logout_urls: '["https://${{ github.event.inputs.environment }}.epic-trip-planner.com"]'
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: 1.12.2
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::387836084035:role/githubDocuChatAIManager
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Terraform Init
+        working-directory: terraform/layers/cognito
+        run: |
+          terraform init \
+            -input=false \
+            -backend-config="bucket=docu-chat-ai-app-states" \
+            -backend-config="key=cognito/${{ github.event.inputs.environment }}/terraform.tfstate" \
+            -backend-config="region=${{ secrets.AWS_REGION }}" \
+            -backend-config="dynamodb_table=${{ github.event.inputs.environment }}-docu-chat-ai-terraform-locks" \
+            -backend-config="encrypt=true"
+
+      - name: Terraform Apply - Cognito Base
+        working-directory: terraform/layers/cognito
+        run: |
+          terraform apply -target="module.cognito_base" -auto-approve
+
+      - name: Terraform Apply - Cognito Clients
+        working-directory: terraform/layers/cognito
+        run: |
+          terraform apply -target="module.cognito_clients" -auto-approve
