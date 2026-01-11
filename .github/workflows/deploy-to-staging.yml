@@ -1,0 +1,55 @@
+name: Apply to Staging Environment
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to deploy to'
+        required: true
+        type: choice
+        options:
+          - staging
+
+jobs:
+  apply-secrets:
+    name: Secrets - Apply to ${{ github.event.inputs.environment }} Env
+    runs-on: ubuntu-latest
+    environment: ${{ github.event.inputs.environment }}
+    permissions:
+      id-token: write
+      contents: read
+      pull-requests: write
+    env:
+      TF_VAR_region: ${{ secrets.AWS_REGION }}
+      TF_VAR_app_id: docu-chat-ai
+      TF_VAR_environment: ${{ github.event.inputs.environment }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: 1.12.2
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::387836084035:role/githubDocuChatAIManager
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Terraform Init
+        working-directory: terraform/layers/secrets
+        run: |
+          terraform init \
+            -input=false \
+            -backend-config="bucket=docu-chat-ai-states" \
+            -backend-config="key=secrets/${{ github.event.inputs.environment }}/terraform.tfstate" \
+            -backend-config="region=eu-central-1" \
+            -backend-config="dynamodb_table=${{ github.event.inputs.environment }}-docu-chat-ai-terraform-locks" \
+            -backend-config="encrypt=true"
+
+      - name: Terraform Apply
+        working-directory: terraform/layers/secrets
+        run: |
+          terraform apply -auto-approve
