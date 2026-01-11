@@ -50,19 +50,50 @@ jobs:
           role-to-assume: arn:aws:iam::387836084035:role/githubTripPlannerInfraManager
           aws-region: ${{ secrets.AWS_REGION }}
 
-      - name: Destroy layers sequentially
+      - name: Destroy Backend Layer
+        working-directory: terraform/layers/backend
         run: |
-          layers=("backend" "cognito" "secrets")
-          for layer in "${layers[@]}"; do
-            echo "==== Destroying $layer ===="
-            cd $GITHUB_WORKSPACE/terraform/layers/$layer
-            terraform init \
-              -input=false \
-              -backend-config="bucket=docu-chat-ai-app-states" \
-              -backend-config="key=${layer}/${{ github.event.inputs.environment }}/terraform.tfstate" \
-              -backend-config="region=${{ secrets.AWS_REGION }}" \
-              -backend-config="dynamodb_table=${{ github.event.inputs.environment }}-docu-chat-ai-terraform-locks" \
-              -backend-config="encrypt=true"
-            terraform destroy -auto-approve
-            cd ../../../..
-          done
+          terraform init \
+            -input=false \
+            -backend-config="bucket=docu-chat-ai-app-states" \
+            -backend-config="key=backend/${{ github.event.inputs.environment }}/terraform.tfstate" \
+            -backend-config="region=${{ secrets.AWS_REGION }}" \
+            -backend-config="dynamodb_table=${{ github.event.inputs.environment }}-docu-chat-ai-terraform-locks" \
+            -backend-config="encrypt=true"
+          terraform destroy -auto-approve
+
+      - name: Destroy Cognito Clients
+        working-directory: terraform/layers/cognito
+        run: |
+          terraform init \
+            -input=false \
+            -backend-config="bucket=docu-chat-ai-app-states" \
+            -backend-config="key=cognito/${{ github.event.inputs.environment }}/terraform.tfstate" \
+            -backend-config="region=${{ secrets.AWS_REGION }}" \
+            -backend-config="dynamodb_table=${{ github.event.inputs.environment }}-docu-chat-ai-terraform-locks" \
+            -backend-config="encrypt=true"
+          terraform destroy -auto-approve -target=module.cognito_clients
+
+      - name: Destroy Cognito Base
+        working-directory: terraform/layers/cognito
+        run: |
+          terraform init \
+            -input=false \
+            -backend-config="bucket=docu-chat-ai-app-states" \
+            -backend-config="key=cognito/${{ github.event.inputs.environment }}/terraform.tfstate" \
+            -backend-config="region=${{ secrets.AWS_REGION }}" \
+            -backend-config="dynamodb_table=${{ github.event.inputs.environment }}-docu-chat-ai-terraform-locks" \
+            -backend-config="encrypt=true"
+          terraform destroy -auto-approve -target=module.cognito_base
+
+      - name: Destroy Secrets Layer
+        working-directory: terraform/layers/secrets
+        run: |
+          terraform init \
+            -input=false \
+            -backend-config="bucket=docu-chat-ai-app-states" \
+            -backend-config="key=secrets/${{ github.event.inputs.environment }}/terraform.tfstate" \
+            -backend-config="region=${{ secrets.AWS_REGION }}" \
+            -backend-config="dynamodb_table=${{ github.event.inputs.environment }}-docu-chat-ai-terraform-locks" \
+            -backend-config="encrypt=true"
+          terraform destroy -auto-approve
