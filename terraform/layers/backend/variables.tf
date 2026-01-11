@@ -64,4 +64,19 @@ variable "lambda_memory_size_mb" {
   type        = number
   default     = 512
 }
+
+variable "notification_email" {
+  description = "Email address for notifications"
+  type        = string
+}
+
+variable "route53_zone_name" {
+  description = "Route53 zone name"
+  type        = string
+}
+
+variable "bucket_av_sns_findings_topic_name" {
+  description = "SNS topic name for bucket AV findings"
+  type        = string
+}
 # END

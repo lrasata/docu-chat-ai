@@ -124,6 +124,8 @@ jobs:
       TF_VAR_uploads_bucket_name: docu-chat-ai-file-uploads-bucket-${{ github.event.inputs.environment }}
       TF_VAR_enable_transfer_acceleration: true
       TF_VAR_secret_store_name: ${{secrets.SECRET_STORE_NAME}}
+      TF_VAR_notification_email: ${{secrets.ALERT_EMAIL}}
+      TF_VAR_route53_zone_name: epic-trip-planner.com
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
