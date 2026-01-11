@@ -1,5 +1,5 @@
 module "file_uploader" {
-  source = "git::https://github.com/lrasata/infra-file-uploader//terraform/modules/file_uploader?ref=v1.6.1"
+  source = "git::https://github.com/lrasata/infra-file-uploader//terraform/modules/file_uploader?ref=v1.6.2"
 
   region                                        = var.region
   app_id                                        = var.app_id
@@ -12,8 +12,8 @@ module "file_uploader" {
   lambda_upload_presigned_url_expiration_time_s = var.lambda_upload_presigned_url_expiration_time_s
   bucket_av_sns_findings_topic_name             = var.bucket_av_sns_findings_topic_name
   lambda_memory_size_mb                         = var.lambda_memory_size_mb
-  notification_email = var.notification_email
-  route53_zone_name = var.route53_zone_name
+  notification_email                            = var.notification_email
+  route53_zone_name                             = var.route53_zone_name
 }
 
 module "lambda_functions" {

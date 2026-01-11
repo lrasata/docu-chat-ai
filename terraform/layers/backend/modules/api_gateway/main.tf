@@ -38,7 +38,7 @@ resource "aws_apigatewayv2_integration" "list_files" {
   api_id             = aws_apigatewayv2_api.api.id
   integration_type   = "AWS_LAMBDA"
   integration_method = "POST"
-  target             = "arn:aws:apigatewayv2:${var.region}:lambda:path/2015-03-31/functions/${var.lambda_list_files_arn}/invocations"
+  integration_uri    = "arn:aws:apigateway:${var.region}:lambda:path/2015-03-31/functions/${var.lambda_get_document_data_arn}/invocations"
 }
 
 resource "aws_apigatewayv2_route" "list_files" {
@@ -62,7 +62,8 @@ resource "aws_apigatewayv2_integration" "get_file" {
   api_id             = aws_apigatewayv2_api.api.id
   integration_type   = "AWS_LAMBDA"
   integration_method = "POST"
-  target             = "arn:aws:apigatewayv2:${var.region}:lambda:path/2015-03-31/functions/${var.lambda_get_file_arn}/invocations"
+  integration_uri    = "arn:aws:apigateway:${var.region}:lambda:path/2015-03-31/functions/${var.lambda_get_file_arn}/invocations"
+
 }
 
 resource "aws_apigatewayv2_route" "get_file" {
@@ -86,7 +87,8 @@ resource "aws_apigatewayv2_integration" "get_document_data" {
   api_id             = aws_apigatewayv2_api.api.id
   integration_type   = "AWS_LAMBDA"
   integration_method = "POST"
-  target             = "arn:aws:apigatewayv2:${var.region}:lambda:path/2015-03-31/functions/${var.lambda_get_document_data_arn}/invocations"
+  integration_uri    = "arn:aws:apigateway:${var.region}:lambda:path/2015-03-31/functions/${var.lambda_get_document_data_arn}/invocations"
+
 }
 
 resource "aws_apigatewayv2_route" "get_document_data" {
