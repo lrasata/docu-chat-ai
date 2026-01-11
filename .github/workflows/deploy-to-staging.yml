@@ -43,7 +43,7 @@ jobs:
         run: |
           terraform init \
             -input=false \
-            -backend-config="bucket=docu-chat-ai-states" \
+            -backend-config="bucket=docu-chat-ai-app-states" \
             -backend-config="key=secrets/${{ github.event.inputs.environment }}/terraform.tfstate" \
             -backend-config="region=eu-central-1" \
             -backend-config="dynamodb_table=${{ github.event.inputs.environment }}-docu-chat-ai-terraform-locks" \
