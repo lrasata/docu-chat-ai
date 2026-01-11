@@ -4,8 +4,8 @@ locals {
   lambda_configs = {
     # Configuration for LIST_FILES
     list_files = {
-      base_name    = "${var.environment}-${var.app_id}-list-files"
-      source_dir   = "${path.module}/src/lambdas_functions/list_files"
+      base_name    = "list-files"
+      source_dir   = "${path.module}/src/lambda_functions/list_files"
       handler_file = "index.handler"
       # Variables unique to this Lambda
       environment_vars = {
@@ -26,10 +26,9 @@ locals {
     }
     # Configuration for GET_FILE
     get_file = {
-      base_name    = "${var.environment}-${var.app_id}-get-file"
+      base_name    = "get-file"
       source_dir   = "${path.module}/src/lambda_functions/get_file"
       handler_file = "index.handler"
-      excludes     = []
       # Variables unique to this Lambda
       environment_vars = {
         UPLOADS_BUCKET = module.file_uploader.uploads_bucket_id
@@ -53,10 +52,9 @@ locals {
 
     # Configuration for GET_DOCUMENT_DATA
     get_document_data = {
-      base_name    = "${var.environment}-${var.app_id}-get-document-data"
+      base_name    = "get-document-data"
       source_dir   = "${path.module}/src/lambda_functions/get_document_data"
       handler_file = "index.handler"
-      excludes     = []
       # Variables unique to this Lambda
       environment_vars = {
         DOCUMENTS_TABLE = module.file_uploader.dynamo_db_table_name
