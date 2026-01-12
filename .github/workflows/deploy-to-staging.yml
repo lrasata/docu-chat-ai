@@ -240,7 +240,7 @@ jobs:
       - name: Deploy frontend application to S3
         working-directory: frontend/docu-chat-ai
         run: |
-          aws s3 sync ./build/ s3://${{ github.event.inputs.environment }}-${{ env.TF_VAR_app_id}}-static-web-app-bucket/ --delete
+          aws s3 sync ./dist/ s3://${{ github.event.inputs.environment }}-${{ env.TF_VAR_app_id}}-static-web-app-bucket/ --delete
 
       - name: Get CloudFront Distribution ID
         id: get_distribution_id
