@@ -15,12 +15,6 @@ variable "app_id" {
   default = "docu-chat-ai"
 }
 
-variable "static_web_app_bucket_name" {
-  description = "The name of the S3 bucket containing the build of the SPA"
-  type        = string
-  default     = "frontend-spa-bucket"
-}
-
 variable "cloudfront_certificate_arn" {
   description = "The ARN of the ACM certificate for CloudFront"
   type        = string

@@ -1,9 +1,9 @@
-data "terraform_remote_state" "security" {
+data "terraform_remote_state" "secrets" {
   backend = "s3"
   config = {
     bucket = "docu-chat-ai-app-states"
-    key    = "security/terraform.tfstate"
-    region = "eu-central-1"
+    key    = "secrets/${var.environment}/terraform.tfstate"
+    region = var.region
   }
 }
 
@@ -11,7 +11,7 @@ data "terraform_remote_state" "backend" {
   backend = "s3"
   config = {
     bucket = "docu-chat-ai-app-states"
-    key    = "backend/terraform.tfstate"
-    region = "eu-central-1"
+    key    = "backend/${var.environment}/terraform.tfstate"
+    region = var.region
   }
 }

@@ -10,13 +10,13 @@ resource "aws_cloudfront_distribution" "cdn" {
   is_ipv6_enabled     = true
 
   origin {
-    domain_name              = aws_s3_bucket.static_web_app_bucket.bucket_regional_domain_name
+    domain_name              = var.s3_static_web_files_bucket_regional_domain_name
     origin_access_control_id = aws_cloudfront_origin_access_control.oac.id # ensures that CloudFront can access the S3 bucket without making it public
     origin_id                = local.s3_static_web_files_bucket_origin
   }
 
   origin {
-    domain_name              = data.terraform_remote_state.backend.outputs.uploads_bucket_regional_domain_name
+    domain_name              = var.uploads_bucket_regional_domain_name
     origin_access_control_id = aws_cloudfront_origin_access_control.oac.id
     origin_id                = local.s3_uploads_bucket_origin
   }
@@ -34,7 +34,7 @@ resource "aws_cloudfront_distribution" "cdn" {
 
     custom_header {
       name  = "x-api-gateway-file-upload-auth"
-      value = data.terraform_remote_state.security.outputs.file_upload_auth_secret
+      value = var.file_upload_auth_secret
     }
   }
   # -------------------------

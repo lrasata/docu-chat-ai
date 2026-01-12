@@ -179,3 +179,79 @@ jobs:
         working-directory: terraform/layers/backend
         run: |
           terraform apply -auto-approve
+
+  apply-frontend:
+    name: Frontend - Apply to ${{ github.event.inputs.environment }} Env
+    runs-on: ubuntu-latest
+    environment: ${{ github.event.inputs.environment }}
+    needs: apply-backend
+    permissions:
+      id-token: write
+      contents: read
+      pull-requests: write
+    env:
+      TF_VAR_region: ${{ secrets.AWS_REGION }}
+      TF_VAR_environment: ${{ github.event.inputs.environment }}
+      TF_VAR_app_id: docu-chat-ai
+      TF_VAR_cloudfront_domain_name: ${{ github.event.inputs.environment }}.epic-trip-planner.com
+      TF_VAR_frontend_certificate_arn: ${{secrets.FRONTEND_CERTIFICATE_ARN}}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: 1.12.2
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::387836084035:role/githubDocuChatAIManager
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Terraform Init
+        working-directory: terraform/layers/frontend
+        run: |
+          terraform init \
+            -input=false -upgrade \
+            -backend-config="bucket=docu-chat-ai-app-states" \
+            -backend-config="key=frontend/${{ github.event.inputs.environment }}/terraform.tfstate" \
+            -backend-config="region=eu-central-1" \
+            -backend-config="dynamodb_table=${{ github.event.inputs.environment }}-docu-chat-ai-terraform-locks" \
+            -backend-config="encrypt=true"
+
+      - name: Terraform Apply
+        working-directory: terraform/layers/frontend
+        run: |
+          terraform apply -auto-approve
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      
+      - name: Build frontend application
+        working-directory: frontend/docu-chat-ai-webapp
+        run: |
+          npm ci --silent --no-audit
+          npm run build
+
+      - name: Deploy frontend application to S3
+        working-directory: frontend/docu-chat-ai-webapp
+        run: |
+          aws s3 sync ./build/ s3://${{ github.event.inputs.environment }}-${{ env.TF_VAR_app_id}}-static-web-app-bucket/ --delete
+
+      - name: Get CloudFront Distribution ID
+        id: get_distribution_id
+        working-directory: terraform/layers/frontend
+        run: |
+          echo "distribution_id=$(terraform output -raw cloudfront_distribution_id)" >> $GITHUB_OUTPUT
+
+      - name: Invalidate CloudFront Cache
+        run: |
+          aws cloudfront create-invalidation --distribution-id ${{ steps.get_distribution_id.outputs.distribution_id }} --paths '/*'
+        env:
+          AWS_REGION: ${{ secrets.AWS_REGION }}
+
+
