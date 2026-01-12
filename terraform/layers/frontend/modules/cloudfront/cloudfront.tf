@@ -22,7 +22,7 @@ resource "aws_cloudfront_distribution" "cdn" {
   }
 
   origin {
-    domain_name = data.terraform_remote_state.backend.outputs.api_file_upload_domain_name
+    domain_name = var.api_file_upload_domain_name
     origin_id   = local.api_gw_file_uploader_origin
 
     custom_origin_config {

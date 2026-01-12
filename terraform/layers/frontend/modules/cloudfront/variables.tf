@@ -28,3 +28,7 @@ variable "cloudfront_certificate_arn" {
 variable "cloudfront_domain_name" {
   type = string
 }
+
+variable "api_file_upload_domain_name" {
+  type = string
+}
