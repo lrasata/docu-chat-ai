@@ -5,6 +5,8 @@
 > 🚧 In construction
 >
 
+![Staging - Deployment pipeline](https://github.com/lrasata/serverless-docu-chat-ai/actions/workflows/deploy-to-staging.yml/badge.svg)
+
 ## Overview
 
 This project is a serverless, cloud-native application that allows users to chat with their own PDF documents using AI. It leverages AWS services, React frontend, and modern infrastructure-as-code for scalable, secure deployments.

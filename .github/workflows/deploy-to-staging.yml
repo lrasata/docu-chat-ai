@@ -194,7 +194,7 @@ jobs:
       TF_VAR_environment: ${{ github.event.inputs.environment }}
       TF_VAR_app_id: docu-chat-ai
       TF_VAR_cloudfront_domain_name: ${{ github.event.inputs.environment }}.epic-trip-planner.com
-      TF_VAR_frontend_certificate_arn: ${{secrets.FRONTEND_CERTIFICATE_ARN}}
+      TF_VAR_cloudfront_certificate_arn: ${{secrets.FRONTEND_CERTIFICATE_ARN}}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
