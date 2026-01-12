@@ -242,17 +242,16 @@ jobs:
         run: |
           aws s3 sync ./dist/ s3://${{ github.event.inputs.environment }}-${{ env.TF_VAR_app_id}}-static-web-app-bucket/ --delete
 
+      - name: Debug Terraform Output
+        working-directory: terraform/layers/frontend
+        run: terraform output
+
       - name: Get CloudFront Distribution ID
         id: get_distribution_id
         working-directory: terraform/layers/frontend
         run: |
           distribution_id=$(terraform output -raw cloudfront_distribution_id 2>/dev/null)
-          echo "distribution_id=$distribution_id" >> $GITHUB_OUTPUT
-
-      - name: Invalidate CloudFront Cache
-        run: |
-          aws cloudfront create-invalidation --distribution-id ${{ steps.get_distribution_id.outputs.distribution_id }} --paths '/*'
-        env:
-          AWS_REGION: ${{ secrets.AWS_REGION }}
+          echo "distribution_id=${distribution_id}" >> $GITHUB_OUTPUT
+          echo "CloudFront Distribution ID: ${distribution_id}"
 
 
