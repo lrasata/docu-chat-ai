@@ -1,4 +1,4 @@
-name: Apply to Staging Environment
+name: Apply to Staging Env
 
 on:
   workflow_dispatch:
