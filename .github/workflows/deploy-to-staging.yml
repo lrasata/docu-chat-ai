@@ -232,13 +232,13 @@ jobs:
           node-version: '20'
       
       - name: Build frontend application
-        working-directory: frontend/docu-chat-ai-webapp
+        working-directory: frontend/docu-chat-ai
         run: |
           npm ci --silent --no-audit
           npm run build
 
       - name: Deploy frontend application to S3
-        working-directory: frontend/docu-chat-ai-webapp
+        working-directory: frontend/docu-chat-ai
         run: |
           aws s3 sync ./build/ s3://${{ github.event.inputs.environment }}-${{ env.TF_VAR_app_id}}-static-web-app-bucket/ --delete
 
