@@ -246,13 +246,13 @@ jobs:
       - name: Debug Terraform Output
         working-directory: terraform/layers/frontend
         run: |
-          $TERRAFORM_CLI_PATH output
+          $TERRAFORM_CLI_PATH/terraform output
 
       - name: Get CloudFront Distribution ID
         id: get_distribution_id
         working-directory: terraform/layers/frontend
         run: |
-          $TERRAFORM_CLI_PATH output -raw cloudfront_distribution_id 2>/dev/null > cf_id.txt
+          $TERRAFORM_CLI_PATH/terraform output -raw cloudfront_distribution_id 2>/dev/null > cf_id.txt
           distribution_id=$(cat cf_id.txt | tr -d '\n')
           echo "distribution_id=$distribution_id" >> $GITHUB_OUTPUT
 
