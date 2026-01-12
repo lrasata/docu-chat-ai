@@ -35,6 +35,7 @@ jobs:
       TF_VAR_secret_store_name: ${{secrets.SECRET_STORE_NAME}}
       TF_VAR_notification_email: ${{secrets.ALERT_EMAIL}}
       TF_VAR_route53_zone_name: epic-trip-planner.com
+      TF_VAR_cloudfront_certificate_arn: ${{secrets.FRONTEND_CERTIFICATE_ARN}}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -49,6 +50,18 @@ jobs:
         with:
           role-to-assume: arn:aws:iam::387836084035:role/githubDocuChatAIManager
           aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Destroy Frontend Layer
+        working-directory: terraform/layers/frontend
+        run: |
+          terraform init \
+            -input=false \
+            -backend-config="bucket=docu-chat-ai-app-states" \
+            -backend-config="key=frontend/${{ github.event.inputs.environment }}/terraform.tfstate" \
+            -backend-config="region=${{ secrets.AWS_REGION }}" \
+            -backend-config="dynamodb_table=${{ github.event.inputs.environment }}-docu-chat-ai-terraform-locks" \
+            -backend-config="encrypt=true"
+          terraform destroy -auto-approve
 
       - name: Destroy Backend Layer
         working-directory: terraform/layers/backend
