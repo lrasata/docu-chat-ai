@@ -246,7 +246,8 @@ jobs:
         id: get_distribution_id
         working-directory: terraform/layers/frontend
         run: |
-          echo "distribution_id=$(terraform output -raw cloudfront_distribution_id)" >> $GITHUB_OUTPUT
+          distribution_id=$(terraform output -raw cloudfront_distribution_id)
+          echo "distribution_id=$distribution_id" >> $GITHUB_OUTPUT
 
       - name: Invalidate CloudFront Cache
         run: |
