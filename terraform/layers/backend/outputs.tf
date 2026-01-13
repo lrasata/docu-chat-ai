@@ -10,4 +10,10 @@ output "api_file_upload_domain_name" {
   value = var.api_file_upload_domain_name
 }
 
+output "uploads_bucket_id" {
+  value = module.file_uploader.uploads_bucket_id
+}
 
+output "uploads_bucket_arn" {
+  value = module.file_uploader.uploads_bucket_arn
+}
