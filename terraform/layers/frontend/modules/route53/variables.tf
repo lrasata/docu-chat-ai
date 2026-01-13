@@ -6,3 +6,8 @@ variable "cdn_hosted_zone_id" {
   type = string
 }
 
+variable "alt_domain_name" {
+  type = string
+}
+
+
