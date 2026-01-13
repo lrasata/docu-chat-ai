@@ -13,7 +13,7 @@ module "cloudfront" {
   uploads_bucket_regional_domain_name             = data.terraform_remote_state.backend.outputs.uploads_bucket_regional_domain_name
   file_upload_auth_secret                         = data.terraform_remote_state.secrets.outputs.file_upload_auth_secret
   cloudfront_certificate_arn                      = var.cloudfront_certificate_arn
-  cloudfront_domain_name                          = var.alt_cloudfront_domain_name
+  alt_cloudfront_domain_name                      = var.alt_cloudfront_domain_name
   api_file_upload_domain_name                     = data.terraform_remote_state.backend.outputs.api_file_upload_domain_name
 }
 
