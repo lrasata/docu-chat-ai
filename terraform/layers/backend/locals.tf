@@ -39,7 +39,8 @@ locals {
           Effect = "Allow"
           Action = [
             "s3:GetObject",
-            "s3:GetObjectTagging"
+            "s3:GetObjectTagging",
+            "s3:ListBucket"
           ]
           Resource = [
             "arn:aws:s3:::${module.file_uploader.uploads_bucket_id}",
