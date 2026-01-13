@@ -17,6 +17,26 @@ module "cloudfront" {
   api_file_upload_domain_name                     = data.terraform_remote_state.backend.outputs.api_file_upload_domain_name
 }
 
+# For the static web app bucket
+module "static_web_app_policy" {
+  source = "./modules/cloudfront_s3_bucket_policy"
+
+  bucket_id      = module.s3_static_web_files_bucket.bucket_id
+  bucket_arn     = module.s3_static_web_files_bucket.bucket_arn
+  cloudfront_arn = module.cloudfront.cloudfront_arn
+  paths          = ["*"]
+}
+
+# For the uploads bucket
+module "uploads_bucket_policy" {
+  source = "./modules/cloudfront_s3_bucket_policy"
+
+  bucket_id      = try(data.terraform_remote_state.backend.outputs.uploads_bucket_id, "uploads-bucket-id-placeholder")
+  bucket_arn     = try(data.terraform_remote_state.backend.outputs.uploads_bucket_arn, "uploads-bucket-arn-placeholder")
+  cloudfront_arn = module.cloudfront.cloudfront_arn
+  paths          = ["uploads/*", "thumbnails/*"]
+}
+
 module "route53" {
   source = "./modules/route53"
 
