@@ -21,8 +21,8 @@ module "cloudfront" {
 module "static_web_app_policy" {
   source = "./modules/cloudfront_s3_bucket_policy"
 
-  bucket_id      = module.s3_static_web_files_bucket.bucket_id
-  bucket_arn     = module.s3_static_web_files_bucket.bucket_arn
+  bucket_id      = module.s3_static_web_files_bucket.s3_bucket_name
+  bucket_arn     = module.s3_static_web_files_bucket.s3_bucket_arn
   cloudfront_arn = module.cloudfront.cloudfront_arn
   paths          = ["*"]
 }
