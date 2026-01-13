@@ -242,10 +242,11 @@ jobs:
         run: |
           aws s3 sync ./dist/ s3://${{ github.event.inputs.environment }}-${{ env.TF_VAR_app_id}}-static-web-app-bucket/ --delete
 
-
       - name: Get CloudFront Distribution ID
         id: get_distribution_id
         working-directory: terraform/layers/frontend
+        env:
+          TF_LOG: ERROR
         run: |
           distribution_id=$(terraform output -raw cloudfront_distribution_id)
           echo "distribution_id=$distribution_id" >> "$GITHUB_OUTPUT"
