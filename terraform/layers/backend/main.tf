@@ -38,7 +38,7 @@ module "api_gateway" {
   source = "./modules/api_gateway"
 
   app_id                                 = var.app_id
-  cloudfront_domain_name                 = var.cloudfront_domain_name
+  cloudfront_domain_name                 = var.alt_cloudfront_domain_name
   cognito_user_pool_client_id            = data.terraform_remote_state.cognito.outputs.cognito_user_pool_client_id
   cognito_user_pool_id                   = data.terraform_remote_state.cognito.outputs.cognito_user_pool_id
   environment                            = var.environment

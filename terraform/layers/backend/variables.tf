@@ -13,8 +13,8 @@ variable "region" {
   type        = string
 }
 
-variable "cloudfront_domain_name" {
-  description = "The domain name for CloudFront distribution"
+variable "alt_cloudfront_domain_name" {
+  description = "The Alternative domain name for CloudFront distribution"
   type        = string
 }
 

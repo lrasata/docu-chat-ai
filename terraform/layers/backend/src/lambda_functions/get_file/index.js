@@ -5,15 +5,17 @@ const s3Client = new S3Client();
 
 exports.handler = async (event) => {
     try {
-        const userId = event.requestContext.authorizer.jwt.claims.sub;
-        const fileId = event.pathParameters.id;
+        const userId = event.requestContext.authorizer.jwt.claims.sub; // email
+        const fileId = event.pathParameters.id; // filename
+        const resource = event.pathParameters.resource; //  users
+        const rootFolder = event.pathParameters.rootFolder; // uploads
         const bucket = process.env.UPLOADS_BUCKET;
 
         // Get file from S3
         const response = await s3Client.send(
             new GetObjectCommand({
                 Bucket: bucket,
-                Key: `${userId}/${fileId}`,
+                Key: `${rootFolder}/${resource}/${userId}/${fileId}`,
             })
         );
 

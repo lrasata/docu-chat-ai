@@ -14,7 +14,7 @@ variable "region" {
 }
 
 variable "cloudfront_domain_name" {
-  description = "The domain name for CloudFront distribution"
+  description = "The  domain name for CloudFront distribution"
   type        = string
 }
 
