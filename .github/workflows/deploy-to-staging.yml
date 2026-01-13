@@ -203,6 +203,7 @@ jobs:
         uses: hashicorp/setup-terraform@v2
         with:
           terraform_version: 1.12.2
+          terraform_wrapper: false
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
@@ -245,12 +246,9 @@ jobs:
       - name: Get CloudFront Distribution ID
         id: get_distribution_id
         working-directory: terraform/layers/frontend
-        env:
-          TF_LOG: ERROR
         run: |
           distribution_id=$(terraform output -raw cloudfront_distribution_id)
           echo "distribution_id=$distribution_id" >> "$GITHUB_OUTPUT"
-
 
       - name: Invalidate CloudFront Cache
         run: |
