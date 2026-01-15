@@ -1,14 +1,27 @@
 import Typography from "@mui/material/Typography";
 import InputFileUpload from "../components/InputFileUpload.tsx";
 import SelectFileCardContainer from "./SelectFileCardContainer.tsx";
-import { type ChangeEvent, useState } from "react";
+import { type ChangeEvent, useEffect, useState } from "react";
 import { getPresignedUrl } from "../utils/utils.ts";
 import { useAuth } from "react-oidc-context";
 import LoadingOverlay from "../../../shared/components/LoadingOverlay.tsx";
+import { fetchFiles } from "../../../shared/store/redux/FileSlice.ts";
+import { useDispatch, useSelector } from "react-redux";
+import type {
+  AppDispatch,
+  RootState,
+} from "../../../shared/store/redux/index.ts";
+import type { IFile } from "../../../../types.ts";
 
-const UploadFileContainer = () => {
+const FileManagementContainer = () => {
   const [loading, setLoading] = useState(false);
   const auth = useAuth();
+  const dispatch = useDispatch<AppDispatch>();
+  const files: IFile[] = useSelector((state: RootState) => state.files.files);
+
+  useEffect(() => {
+    dispatch(fetchFiles());
+  }, []);
 
   const handleFileChange = async (event: ChangeEvent<HTMLInputElement>) => {
     setLoading(true);
@@ -59,10 +72,10 @@ const UploadFileContainer = () => {
         Upload document
       </Typography>
       <InputFileUpload handleFileChange={handleFileChange} />
-      <SelectFileCardContainer />
+      <SelectFileCardContainer files={files} />
       <LoadingOverlay visible={loading} message="Uploading image..." />
     </>
   );
 };
 
-export default UploadFileContainer;
+export default FileManagementContainer;

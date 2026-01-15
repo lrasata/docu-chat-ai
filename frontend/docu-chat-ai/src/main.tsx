@@ -3,6 +3,7 @@ import { createRoot } from "react-dom/client";
 import "./index.css";
 import App from "./App.tsx";
 import { AuthProvider } from "react-oidc-context";
+import store from "./app/shared/store/redux";
 import {
   AWS_COGNITO_CLIENT_ID,
   AWS_COGNITO_USER_POOL_API_ENDPOINT,
@@ -11,6 +12,7 @@ import {
   AWS_COGNITO_SCOPE,
   AWS_HOSTED_COGNITO_LOGIN_DOMAIN,
 } from "./app/shared/constants/constants.ts";
+import { Provider } from "react-redux";
 
 const cognitoAuthConfig = {
   authority: AWS_COGNITO_USER_POOL_API_ENDPOINT,
@@ -31,7 +33,9 @@ const cognitoAuthConfig = {
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <AuthProvider {...cognitoAuthConfig}>
-      <App />
+      <Provider store={store}>
+        <App />
+      </Provider>
     </AuthProvider>
   </StrictMode>,
 );

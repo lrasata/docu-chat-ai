@@ -2,7 +2,7 @@ import { Container, ThemeProvider } from "@mui/material";
 import { Outlet } from "react-router-dom";
 import MainNavigationContainer from "../containers/MainNavigationContainer.tsx";
 import WorkspaceLayout from "../layouts/WorkspaceLayout.tsx";
-import UploadFileContainer from "../../features/files/containers/UploadFileContainer.tsx";
+import FileManagementContainer from "../../features/files/containers/FileManagementContainer.tsx";
 import ChatPage from "../../features/chat/page/ChatPage.tsx";
 import theme from "../../../theme.ts";
 import { useAuth } from "react-oidc-context";
@@ -29,7 +29,7 @@ const MainLayout = () => {
 
           {auth.isAuthenticated && (
             <WorkspaceLayout
-              sidebar={<UploadFileContainer />}
+              sidebar={<FileManagementContainer />}
               main={<ChatPage />}
             />
           )}
