@@ -36,6 +36,9 @@ variable "excludes" {
 # 3. LAMBDA CONFIGURATION VARIABLES
 # ==============================================================================
 
+variable "runtime" {
+  type = string
+}
 variable "handler_file" {
   description = "The function entry point in the format 'filename.handlerName' (e.g., 'index.handler')."
   type        = string

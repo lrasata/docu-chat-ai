@@ -6,7 +6,7 @@ const dynamoClient = new DynamoDBClient();
 
 exports.handler = async (event) => {
     try {
-        const userId = event.requestContext.authorizer.jwt.claims.sub; // Cognito user ID
+        const id = event.requestContext.authorizer.jwt.claims.sub; // Cognito user ID
         const bucket = process.env.UPLOADS_BUCKET;
         const tableName = process.env.DOCUMENTS_TABLE;
 
@@ -14,7 +14,7 @@ exports.handler = async (event) => {
         const s3Response = await s3Client.send(
             new ListObjectsV2Command({
                 Bucket: bucket,
-                Prefix: `${userId}/`, // Files organized by user
+                Prefix: `${id}/`, // Files organized by user
             })
         );
 
@@ -22,30 +22,38 @@ exports.handler = async (event) => {
         const dynamoResponse = await dynamoClient.send(
             new QueryCommand({
                 TableName: tableName,
-                KeyConditionExpression: "userId = :userId",
+                KeyConditionExpression: "id = :id",
                 ExpressionAttributeValues: {
-                    ":userId": { S: userId },
+                    ":id": { S: id },
                 },
             })
         );
 
-        const files = (s3Response.Contents || []).map((file) => ({
-            key: file.Key,
-            size: file.Size,
-            lastModified: file.LastModified,
-        }));
+        // Build a map from DynamoDB metadata by fileKey
+        const metadataMap = {};
+        (dynamoResponse.Items || []).forEach((item) => {
+            metadataMap[item.fileKey.S] = {
+                documentId: item.id.S,
+                resource: item.resource.S
+            };
+        });
 
-        const metadata = (dynamoResponse.Items || []).map((item) => ({
-            documentId: item.documentId.S,
-            fileName: item.fileName.S,
-            uploadedAt: item.uploadedAt.S,
-        }));
+        // Merge S3 files with DynamoDB metadata
+        const combined = (s3Response.Contents || []).map((file) => {
+            const meta = metadataMap[file.Key] || {};
+            return {
+                key: file.Key,
+                size: file.Size,
+                lastModified: file.LastModified,
+                documentId: meta.documentId || null,
+                resource: meta.resource || null
+            };
+        });
 
         return {
             statusCode: 200,
             body: JSON.stringify({
-                files,
-                metadata,
+                files: combined
             }),
             headers: {
                 "Content-Type": "application/json",

@@ -16,6 +16,14 @@ module "file_uploader" {
   route53_zone_name                             = var.route53_zone_name
 }
 
+module "opensearchserverless" {
+  source = "./modules/opensearch"
+
+  environment = var.environment
+  app_id      = var.app_id
+
+}
+
 module "lambda_functions" {
   source = "./modules/lambda_function"
 
@@ -30,8 +38,11 @@ module "lambda_functions" {
   lambda_name           = each.value.base_name
   source_dir            = each.value.source_dir
   handler_file          = each.value.handler_file
+  runtime               = each.value.runtime
   environment_vars      = each.value.environment_vars
   iam_policy_statements = each.value.iam_policy_statements
+
+  depends_on = [module.opensearchserverless]
 }
 
 module "api_gateway" {
@@ -49,4 +60,6 @@ module "api_gateway" {
   lambda_get_file_function_name          = module.lambda_functions["get_file"].function_name
   lambda_list_files_arn                  = module.lambda_functions["list_files"].function_arn
   lambda_list_files_function_name        = module.lambda_functions["list_files"].function_name
+
+  depends_on = [module.lambda_functions]
 }

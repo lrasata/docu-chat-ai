@@ -1,0 +1,6 @@
+boto3
+pdfplumber
+python-docx
+opensearch-py
+requests
+requests-aws4auth
