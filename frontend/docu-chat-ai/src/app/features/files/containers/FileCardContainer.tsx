@@ -6,14 +6,11 @@ import Typography from "@mui/material/Typography";
 import CardActionArea from "@mui/material/CardActionArea";
 import type { IFile } from "../../../../types";
 
-interface SelectFileCardContainerProps {
+interface FileCardContainerProps {
   files: IFile[];
 }
 
-const SelectFileCardContainer: React.FC<SelectFileCardContainerProps> = ({
-  files,
-}) => {
-  const [selectedCard, setSelectedCard] = React.useState(0);
+const FileCardContainer: React.FC<FileCardContainerProps> = ({ files }) => {
   return (
     <Box
       sx={{
@@ -24,11 +21,9 @@ const SelectFileCardContainer: React.FC<SelectFileCardContainerProps> = ({
       }}
       my={2}
     >
-      {files.map((file, index) => (
-        <Card key={file.id}>
+      {files.map((file) => (
+        <Card key={file.documentId}>
           <CardActionArea
-            onClick={() => setSelectedCard(index)}
-            data-active={selectedCard === index ? "" : undefined}
             sx={{
               height: "100%",
               "&[data-active]": {
@@ -41,11 +36,11 @@ const SelectFileCardContainer: React.FC<SelectFileCardContainerProps> = ({
           >
             <CardContent sx={{ height: "100%" }}>
               <Typography variant="h5" component="div">
-                {file.name}
+                {file.key}
               </Typography>
-              <Typography variant="body2" color="text.secondary">
+              {/* <Typography variant="body2" color="text.secondary">
                 {file.path}
-              </Typography>
+              </Typography> */}
             </CardContent>
           </CardActionArea>
         </Card>
@@ -54,4 +49,4 @@ const SelectFileCardContainer: React.FC<SelectFileCardContainerProps> = ({
   );
 };
 
-export default SelectFileCardContainer;
+export default FileCardContainer;

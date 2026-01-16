@@ -1,6 +1,6 @@
 import Typography from "@mui/material/Typography";
 import InputFileUpload from "../components/InputFileUpload.tsx";
-import SelectFileCardContainer from "./SelectFileCardContainer.tsx";
+import FileCardContainer from "./FileCardContainer.tsx";
 import { type ChangeEvent, useEffect, useState } from "react";
 import { getPresignedUrl } from "../utils/utils.ts";
 import { useAuth } from "react-oidc-context";
@@ -72,7 +72,7 @@ const FileManagementContainer = () => {
         Upload document
       </Typography>
       <InputFileUpload handleFileChange={handleFileChange} />
-      <SelectFileCardContainer files={files} />
+      <FileCardContainer files={files} />
       <LoadingOverlay visible={loading} message="Uploading image..." />
     </>
   );

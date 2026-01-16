@@ -1,5 +1,7 @@
 export interface IFile {
-  id: string;
-  name: string;
-  path: string;
+  documentId: string;
+  key: string; // "12345-abc/resume.pdf"
+  size: number;
+  lastModified: string;
+  resource: string;
 }
