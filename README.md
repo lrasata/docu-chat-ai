@@ -5,7 +5,8 @@
 > 🚧 In construction
 >
 
-![Staging - Deployment pipeline](https://github.com/lrasata/serverless-docu-chat-ai/actions/workflows/deploy-to-staging.yml/badge.svg)
+![Staging Backend - Deployment pipeline](https://github.com/lrasata/serverless-docu-chat-ai/actions/workflows/deploy-backend-to-staging.yml/badge.svg)
+![Staging Frontend - Deployment pipeline](https://github.com/lrasata/serverless-docu-chat-ai/actions/workflows/deploy-frontend-to-staging.yml/badge.svg)
 
 ## Overview
 
