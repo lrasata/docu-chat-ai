@@ -126,6 +126,7 @@ jobs:
       TF_VAR_secret_store_name: ${{secrets.SECRET_STORE_NAME}}
       TF_VAR_notification_email: ${{secrets.ALERT_EMAIL}}
       TF_VAR_route53_zone_name: epic-trip-planner.com
+      TF_VAR_alt_cloudfront_domain_name: ${{ github.event.inputs.environment }}.epic-trip-planner.com
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
