@@ -1,5 +1,5 @@
 locals {
-  collection = "${var.environment}-${var.app_id}-collection"
+  collection = "${var.environment}-${var.app_id}"
 }
 
 resource "aws_opensearchserverless_collection" "opensearch_collection" {
@@ -8,7 +8,7 @@ resource "aws_opensearchserverless_collection" "opensearch_collection" {
 }
 
 resource "aws_opensearchserverless_security_policy" "opensearch_encryption" {
-  name = "${local.collection}-encryption"
+  name = "${local.collection}"
   type = "encryption"
 
   policy = jsonencode({
@@ -22,7 +22,7 @@ resource "aws_opensearchserverless_security_policy" "opensearch_encryption" {
 
 
 resource "aws_opensearchserverless_security_policy" "opensearch_network" {
-  name = "${local.collection}-network"
+  name = "${local.collection}"
   type = "network"
 
   policy = jsonencode([{
