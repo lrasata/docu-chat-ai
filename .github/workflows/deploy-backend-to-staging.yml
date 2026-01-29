@@ -186,14 +186,10 @@ jobs:
           cd terraform/layers/backend/src/lambda_functions/s3_ingestion
           pip install -r requirements.txt -t build/
 
-      - name: Copy Lambda s3_ingestion code
+      - name: Copy and ZIP Lambda s3_ingestion code
         run: |
           cd terraform/layers/backend/src/lambda_functions/s3_ingestion
           cp s3_ingestion.py build/
-
-      # - name: Create ZIP
-      #   run: |
-      #     cd build && zip -r ../s3_ingestion.zip .
 
       - name: Terraform Apply
         working-directory: terraform/layers/backend
