@@ -5,10 +5,15 @@ locals {
 resource "aws_opensearchserverless_collection" "opensearch_collection" {
   name = local.collection
   type = "VECTORSEARCH"
+
+  depends_on = [
+    aws_opensearchserverless_security_policy.opensearch_encryption,
+    aws_opensearchserverless_security_policy.opensearch_network
+  ]
 }
 
 resource "aws_opensearchserverless_security_policy" "opensearch_encryption" {
-  name = "${local.collection}"
+  name = local.collection
   type = "encryption"
 
   policy = jsonencode({
@@ -22,7 +27,7 @@ resource "aws_opensearchserverless_security_policy" "opensearch_encryption" {
 
 
 resource "aws_opensearchserverless_security_policy" "opensearch_network" {
-  name = "${local.collection}"
+  name = local.collection
   type = "network"
 
   policy = jsonencode([{
