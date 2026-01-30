@@ -127,6 +127,8 @@ jobs:
       TF_VAR_notification_email: ${{secrets.ALERT_EMAIL}}
       TF_VAR_route53_zone_name: epic-trip-planner.com
       TF_VAR_alt_cloudfront_domain_name: ${{ github.event.inputs.environment }}.epic-trip-planner.com
+      TF_VAR_s3_ingestion_lambda_code_bucket: ${{ secrets.S3_INGESTION_LAMBDA_CODE_BUCKET }}
+      TF_VAR_s3_ingestion_lambda_code_key: "${{ github.event.inputs.environment }}/s3-ingestion.zip"
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -181,15 +183,32 @@ jobs:
         with:
           python-version: "3.10"
 
-      - name: Install dependencies
+      - name: Set up Lambda S3 Bucket for S3 Ingestion Lambda
         run: |
-          cd terraform/layers/backend/src/lambda_functions/s3_ingestion
-          pip install -r requirements.txt -t build/
+          # Check if bucket exists
+          if ! aws s3 ls "s3://$TF_VAR_s3_ingestion_lambda_code_bucket" 2>&1 | grep -q 'NoSuchBucket'; then
+            echo "Bucket exists."
+          else
+            echo "Bucket does not exist. Creating $TF_VAR_s3_ingestion_lambda_code_bucket..."
+            aws s3 mb "s3://$TF_VAR_s3_ingestion_lambda_code_bucket" --region ${{ secrets.AWS_REGION }}
+          fi
 
-      - name: Copy and ZIP Lambda s3_ingestion code
+      - name: Build S3 Ingestion Lambda Code
         run: |
           cd terraform/layers/backend/src/lambda_functions/s3_ingestion
+          # Install Python dependencies into build folder
+          pip install -r requirements.txt -t build/
+          # Copy handler file
           cp s3_ingestion.py build/
+          # Create ZIP
+          cd build
+          zip -r ../../lambda_s3_ingestion.zip .
+          cd ../../..
+
+      - name: Upload Lambda to S3
+        run: |
+          aws s3 cp terraform/layers/backend/src/lambda_functions/s3_ingestion/lambda_s3_ingestion.zip \
+                    s3://$TF_VAR_s3_ingestion_lambda_code_bucket/$TF_VAR_s3_ingestion_lambda_code_key
 
       - name: Terraform Apply
         working-directory: terraform/layers/backend

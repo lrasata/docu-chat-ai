@@ -18,6 +18,19 @@ variable "alt_cloudfront_domain_name" {
   type        = string
 }
 
+
+variable "s3_ingestion_lambda_code_bucket" {
+  type        = string
+  default     = ""
+  description = "Optional S3 bucket for large Lambda code"
+}
+
+variable "s3_ingestion_lambda_code_key" {
+  type        = string
+  default     = ""
+  description = "Optional S3 key for large Lambda code"
+}
+
 #-------------- File uploader variables -----------------------------------------------
 # START
 variable "api_file_upload_domain_name" {

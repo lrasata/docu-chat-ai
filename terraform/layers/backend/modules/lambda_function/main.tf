@@ -37,6 +37,7 @@ resource "aws_iam_policy" "lambda_custom_policy" {
 
 # --- 5. LAMBDA FUNCTION ---
 data "archive_file" "lambda_zip" {
+  count       = var.s3_bucket == "" && var.s3_key == "" ? 1 : 0
   type        = "zip"
   source_dir  = var.source_dir
   output_path = "${path.module}/lambda_${var.lambda_name}.zip"
@@ -48,8 +49,19 @@ resource "aws_lambda_function" "lambda_function" {
   runtime       = var.runtime
   handler       = var.handler_file
 
-  filename         = data.archive_file.lambda_zip.output_path
-  source_code_hash = data.archive_file.lambda_zip.output_base64sha256
+
+  # Use S3-backed code if provided
+  dynamic "code" {
+    for_each = var.s3_bucket != "" && var.s3_key != "" ? [1] : []
+    content {
+      s3_bucket = var.s3_bucket
+      s3_key    = var.s3_key
+    }
+  }
+
+  # Otherwise, default to inline ZIP
+  filename         = var.s3_bucket == "" ? data.archive_file.lambda_zip.output_path : null
+  source_code_hash = var.s3_bucket == "" ? data.archive_file.lambda_zip.output_base64sha256 : null
 
   role        = aws_iam_role.lambda_exec_role.arn
   timeout     = var.timeout

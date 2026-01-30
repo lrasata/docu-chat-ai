@@ -8,6 +8,8 @@ locals {
       source_dir   = "${path.module}/src/lambda_functions/list_files"
       handler_file = "index.handler"
       runtime      = "nodejs22.x"
+      s3_bucket    = null
+      s3_key       = null
       # Variables unique to this Lambda
       environment_vars = {
         UPLOADS_BUCKET  = module.file_uploader.uploads_bucket_id
@@ -31,6 +33,8 @@ locals {
       source_dir   = "${path.module}/src/lambda_functions/get_file"
       handler_file = "index.handler"
       runtime      = "nodejs22.x"
+      s3_bucket    = null
+      s3_key       = null
       # Variables unique to this Lambda
       environment_vars = {
         UPLOADS_BUCKET = module.file_uploader.uploads_bucket_id
@@ -59,6 +63,8 @@ locals {
       source_dir   = "${path.module}/src/lambda_functions/get_document_data"
       handler_file = "index.handler"
       runtime      = "nodejs22.x"
+      s3_bucket    = null
+      s3_key       = null
       # Variables unique to this Lambda
       environment_vars = {
         DOCUMENTS_TABLE = module.file_uploader.dynamo_db_table_name
@@ -82,6 +88,8 @@ locals {
       source_dir   = "${path.module}/src/lambda_functions/s3_ingestion"
       handler_file = "s3_ingestion.handler"
       runtime      = "python3.11"
+      s3_bucket    = var.s3_ingestion_lambda_code_bucket
+      s3_key       = var.s3_ingestion_lambda_code_key
       # Variables unique to this Lambda
       environment_vars = {
         OPENSEARCH_ENDPOINT = module.opensearchserverless.opensearch_collection_endpoint

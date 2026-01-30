@@ -74,3 +74,19 @@ variable "iam_policy_statements" {
     Resource = any # <--- Use 'any' to accept either a single string or a list(string)
   }))
 }
+
+
+# ==============================================================================
+# 5. OPTIONAL variables for S3-backed code
+# ==============================================================================
+variable "s3_bucket" {
+  type        = string
+  default     = ""
+  description = "Optional S3 bucket for large Lambda code"
+}
+
+variable "s3_key" {
+  type        = string
+  default     = ""
+  description = "Optional S3 key for large Lambda code"
+}

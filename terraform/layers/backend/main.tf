@@ -40,6 +40,8 @@ module "lambda_functions" {
   handler_file          = each.value.handler_file
   runtime               = each.value.runtime
   environment_vars      = each.value.environment_vars
+  s3_bucket             = each.value.s3_bucket != null ? each.value.s3_bucket : ""
+  s3_key                = each.value.s3_key != null ? each.value.s3_key : ""
   iam_policy_statements = each.value.iam_policy_statements
 
   depends_on = [module.opensearchserverless]
