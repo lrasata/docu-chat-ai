@@ -48,22 +48,18 @@ resource "aws_lambda_function" "lambda_function" {
   function_name = "${var.environment}-${var.lambda_name}-lambda"
   runtime       = var.runtime
   handler       = var.handler_file
-
-
-  # Use S3-backed code if provided
-  dynamic "code" {
-    for_each = var.s3_bucket != "" && var.s3_key != "" ? [1] : []
-    content {
-      s3_bucket = var.s3_bucket
-      s3_key    = var.s3_key
-    }
-  }
-
-  # Otherwise, default to inline ZIP
-  filename         = var.s3_bucket == "" ? data.archive_file.lambda_zip.output_path : null
-  source_code_hash = var.s3_bucket == "" ? data.archive_file.lambda_zip.output_base64sha256 : null
-
   role        = aws_iam_role.lambda_exec_role.arn
+
+
+  # S3-backed Lambda
+  s3_bucket = var.s3_bucket != "" ? var.s3_bucket : null
+  s3_key    = var.s3_key    != "" ? var.s3_key    : null
+
+  # Inline ZIP fallback (ONLY when archive_file exists)
+  filename = var.s3_bucket == "" ? data.archive_file.lambda_zip[0].output_path : null
+  source_code_hash = var.s3_bucket == "" ? data.archive_file.lambda_zip[0].output_base64sha256 : null
+
+  
   timeout     = var.timeout
   memory_size = var.memory_size
 
