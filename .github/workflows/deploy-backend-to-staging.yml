@@ -181,30 +181,29 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.10"
+          python-version: "3.11"
 
-      - name: Set up Lambda S3 Bucket for S3 Ingestion Lambda
-        run: |
-          # Check if bucket exists
-          if ! aws s3 ls "s3://$TF_VAR_s3_ingestion_lambda_code_bucket" 2>&1 | grep -q 'NoSuchBucket'; then
-            echo "Bucket exists."
-          else
-            echo "Bucket does not exist. Creating $TF_VAR_s3_ingestion_lambda_code_bucket..."
-            aws s3 mb "s3://$TF_VAR_s3_ingestion_lambda_code_bucket" --region ${{ secrets.AWS_REGION }}
-          fi
-
-      - name: Build S3 Ingestion Lambda Code
+      - name: Build S3 Ingestion Lambda dependencies (Amazon Linux)
         run: |
           cd terraform/layers/backend/src/lambda_functions/s3_ingestion
-          # Install Python dependencies into build folder
-          rm -rf build lambda_s3_ingestion.zip
+          rm -rf build
           mkdir build
-          pip install -r requirements.txt -t build/
+
+          docker run --rm \
+            --user "$(id -u):$(id -g)" \
+            --entrypoint "" \
+            -v "$PWD:/var/task" \
+            public.ecr.aws/sam/build-python3.11 \
+            bash -c "pip install -r requirements.txt -t build/"
+
+      - name: Package S3 Ingestion Lambda
+        run: |
+          cd terraform/layers/backend/src/lambda_functions/s3_ingestion
           cp s3_ingestion.py build/
           cd build
           zip -r ../lambda_s3_ingestion.zip .
 
-      - name: Upload Lambda to S3
+      - name: Upload S3 Ingestion Lambda to S3
         run: |
           aws s3 cp terraform/layers/backend/src/lambda_functions/s3_ingestion/lambda_s3_ingestion.zip \
                     s3://$TF_VAR_s3_ingestion_lambda_code_bucket/$TF_VAR_s3_ingestion_lambda_code_key
