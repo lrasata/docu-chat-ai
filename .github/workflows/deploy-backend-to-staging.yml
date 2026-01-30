@@ -197,13 +197,12 @@ jobs:
         run: |
           cd terraform/layers/backend/src/lambda_functions/s3_ingestion
           # Install Python dependencies into build folder
+          rm -rf build lambda_s3_ingestion.zip
+          mkdir build
           pip install -r requirements.txt -t build/
-          # Copy handler file
           cp s3_ingestion.py build/
-          # Create ZIP
           cd build
-          zip -r ../../lambda_s3_ingestion.zip .
-          cd ../../..
+          zip -r ../lambda_s3_ingestion.zip .
 
       - name: Upload Lambda to S3
         run: |
