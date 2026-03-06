@@ -38,3 +38,31 @@ resource "aws_opensearchserverless_security_policy" "opensearch_network" {
     AllowFromPublic = true
   }])
 }
+
+# Data access policy for Lambda execution roles
+resource "aws_opensearchserverless_access_policy" "opensearch_data_access" {
+  name = local.collection
+  type = "data"
+
+  policy = jsonencode([{
+    Rules = [
+      {
+        ResourceType = "index"
+        Resource     = ["index/${local.collection}/*"]
+        Permission = [
+          "aoss:CreateIndex",
+          "aoss:UpdateIndex",
+          "aoss:DescribeIndex",
+          "aoss:ReadDocument",
+          "aoss:WriteDocument"
+        ]
+      },
+      {
+        ResourceType = "collection"
+        Resource     = ["collection/${local.collection}"]
+        Permission   = ["aoss:DescribeCollectionItems"]
+      }
+    ]
+    Principal = ["*"]
+  }])
+}

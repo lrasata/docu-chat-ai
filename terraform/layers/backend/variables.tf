@@ -88,3 +88,18 @@ variable "bucket_av_sns_findings_topic_name" {
   type        = string
 }
 # END
+
+#-------------- Bedrock and Chat variables -----------------------------------------------
+# START
+variable "bedrock_model_id" {
+  description = "Bedrock model ID for chat LLM (e.g., anthropic.claude-3-sonnet-20240229-v1:0)"
+  type        = string
+  default     = "anthropic.claude-3-sonnet-20240229-v1:0"
+}
+
+variable "max_search_results" {
+  description = "Maximum number of document chunks to retrieve for context"
+  type        = number
+  default     = 5
+}
+# END

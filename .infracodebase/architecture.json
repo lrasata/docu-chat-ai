@@ -1,0 +1,255 @@
+{
+  "name": "Serverless Document Chat AI Architecture",
+  "nodes": [
+    {
+      "id": "user",
+      "label": "User",
+      "subtitle": "Web Browser",
+      "icon": "https://fd-infracodebase-v2-static-prd-hvdmeqbraxfjhdb9.z01.azurefd.net/public/icons/aws/general/user.png",
+      "x": 90,
+      "y": 90
+    },
+    {
+      "id": "cloudfront",
+      "label": "CloudFront",
+      "subtitle": "CDN",
+      "icon": "https://fd-infracodebase-v2-static-prd-hvdmeqbraxfjhdb9.z01.azurefd.net/public/icons/aws/network/cloudfront.png",
+      "x": 340,
+      "y": 400
+    },
+    {
+      "id": "s3_frontend",
+      "label": "S3",
+      "subtitle": "Frontend Hosting",
+      "icon": "https://fd-infracodebase-v2-static-prd-hvdmeqbraxfjhdb9.z01.azurefd.net/public/icons/aws/storage/s3-glacier.png",
+      "x": 90,
+      "y": 710
+    },
+    {
+      "id": "react",
+      "label": "React App",
+      "subtitle": "Frontend UI",
+      "icon": "https://fd-infracodebase-v2-static-prd-hvdmeqbraxfjhdb9.z01.azurefd.net/public/icons/programming/framework/react.png",
+      "x": 340,
+      "y": 710
+    },
+    {
+      "id": "cognito",
+      "label": "Cognito",
+      "subtitle": "Authentication",
+      "icon": "https://fd-infracodebase-v2-static-prd-hvdmeqbraxfjhdb9.z01.azurefd.net/public/icons/aws/security/cognito.png",
+      "x": 590,
+      "y": 710
+    },
+    {
+      "id": "api_gateway",
+      "label": "API Gateway",
+      "subtitle": "REST API",
+      "icon": "https://fd-infracodebase-v2-static-prd-hvdmeqbraxfjhdb9.z01.azurefd.net/public/icons/aws/network/api-gateway.png",
+      "x": 340,
+      "y": 1130
+    },
+    {
+      "id": "lambda_upload",
+      "label": "Upload Lambda",
+      "subtitle": "Get Presigned URL",
+      "icon": "https://fd-infracodebase-v2-static-prd-hvdmeqbraxfjhdb9.z01.azurefd.net/public/icons/aws/compute/lambda.png",
+      "x": 90,
+      "y": 1440
+    },
+    {
+      "id": "lambda_list",
+      "label": "List Files",
+      "subtitle": "Query DynamoDB",
+      "icon": "https://fd-infracodebase-v2-static-prd-hvdmeqbraxfjhdb9.z01.azurefd.net/public/icons/aws/compute/lambda.png",
+      "x": 340,
+      "y": 1440
+    },
+    {
+      "id": "lambda_query",
+      "label": "Query Document",
+      "subtitle": "Chat Handler",
+      "icon": "https://fd-infracodebase-v2-static-prd-hvdmeqbraxfjhdb9.z01.azurefd.net/public/icons/aws/compute/lambda.png",
+      "x": 613,
+      "y": 1440
+    },
+    {
+      "id": "s3_uploads",
+      "label": "S3",
+      "subtitle": "Document Storage",
+      "icon": "https://fd-infracodebase-v2-static-prd-hvdmeqbraxfjhdb9.z01.azurefd.net/public/icons/aws/storage/s3-glacier.png",
+      "x": 90,
+      "y": 1860
+    },
+    {
+      "id": "lambda_ingestion",
+      "label": "S3 Ingestion",
+      "subtitle": "Extract & Embed",
+      "icon": "https://fd-infracodebase-v2-static-prd-hvdmeqbraxfjhdb9.z01.azurefd.net/public/icons/aws/compute/lambda.png",
+      "x": 340,
+      "y": 1860
+    },
+    {
+      "id": "dynamodb",
+      "label": "DynamoDB",
+      "subtitle": "Metadata",
+      "icon": "https://fd-infracodebase-v2-static-prd-hvdmeqbraxfjhdb9.z01.azurefd.net/public/icons/aws/database/dynamodb.png",
+      "x": 590,
+      "y": 1860
+    },
+    {
+      "id": "opensearch",
+      "label": "OpenSearch",
+      "subtitle": "Vector Database",
+      "icon": "https://fd-infracodebase-v2-static-prd-hvdmeqbraxfjhdb9.z01.azurefd.net/public/icons/aws/ml/q.png",
+      "x": 340,
+      "y": 2280
+    },
+    {
+      "id": "bedrock_embed",
+      "label": "Bedrock Titan",
+      "subtitle": "Embeddings",
+      "icon": "https://fd-infracodebase-v2-static-prd-hvdmeqbraxfjhdb9.z01.azurefd.net/public/icons/aws/ml/bedrock.png",
+      "x": 590,
+      "y": 2280
+    },
+    {
+      "id": "bedrock_llm",
+      "label": "Bedrock Claude",
+      "x": 840,
+      "y": 2280,
+      "subtitle": "LLM Inference",
+      "icon": "https://fd-infracodebase-v2-static-prd-hvdmeqbraxfjhdb9.z01.azurefd.net/public/icons/aws/ml/bedrock.png"
+    }
+  ],
+  "edges": [
+    {
+      "id": "e1",
+      "source": "user",
+      "target": "cloudfront",
+      "label": "HTTPS"
+    },
+    {
+      "id": "e2",
+      "source": "cloudfront",
+      "target": "s3_frontend",
+      "label": "serves"
+    },
+    {
+      "id": "e3",
+      "source": "cloudfront",
+      "target": "react",
+      "label": "loads"
+    },
+    {
+      "id": "e4",
+      "source": "react",
+      "target": "cognito",
+      "label": "authenticates",
+      "color": "purple"
+    },
+    {
+      "id": "e5",
+      "source": "react",
+      "target": "api_gateway",
+      "label": "API calls"
+    },
+    {
+      "id": "e6",
+      "source": "api_gateway",
+      "target": "lambda_upload",
+      "label": "POST /upload"
+    },
+    {
+      "id": "e7",
+      "source": "api_gateway",
+      "target": "lambda_list",
+      "label": "GET /files"
+    },
+    {
+      "id": "e8",
+      "source": "api_gateway",
+      "target": "lambda_query",
+      "label": "POST /chat",
+      "color": "green"
+    },
+    {
+      "id": "e9",
+      "source": "lambda_upload",
+      "target": "s3_uploads",
+      "label": "presigned URL"
+    },
+    {
+      "id": "e10",
+      "source": "lambda_list",
+      "target": "dynamodb",
+      "label": "query"
+    },
+    {
+      "id": "e11",
+      "source": "s3_uploads",
+      "target": "lambda_ingestion",
+      "label": "S3 event",
+      "style": "dashed"
+    },
+    {
+      "id": "e12",
+      "source": "lambda_ingestion",
+      "target": "bedrock_embed",
+      "label": "create embeddings"
+    },
+    {
+      "id": "e13",
+      "source": "lambda_ingestion",
+      "target": "opensearch",
+      "label": "index chunks"
+    },
+    {
+      "id": "e14",
+      "source": "lambda_query",
+      "target": "bedrock_embed",
+      "label": "embed question",
+      "color": "green"
+    },
+    {
+      "id": "e15",
+      "source": "lambda_query",
+      "target": "opensearch",
+      "label": "vector search",
+      "color": "green"
+    },
+    {
+      "id": "e16",
+      "source": "lambda_query",
+      "target": "bedrock_llm",
+      "label": "generate answer",
+      "color": "green"
+    },
+    {
+      "id": "e17",
+      "source": "lambda_query",
+      "target": "dynamodb",
+      "label": "get metadata"
+    }
+  ],
+  "legend": {
+    "edges": [
+      {
+        "label": "User Interaction",
+        "style": "solid"
+      },
+      {
+        "label": "Authentication",
+        "color": "purple"
+      },
+      {
+        "label": "Chat Flow",
+        "color": "green"
+      },
+      {
+        "label": "Event Trigger",
+        "style": "dashed"
+      }
+    ]
+  }
+}

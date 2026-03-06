@@ -107,6 +107,52 @@ locals {
         }
       ]
     }
+
+    # Query document lambda for chat functionality
+    query_document = {
+      base_name    = "query-document"
+      source_dir   = "${path.module}/src/lambda_functions/query_document"
+      handler_file = "query_document.handler"
+      runtime      = "python3.11"
+      s3_bucket    = null
+      s3_key       = null
+      # Variables unique to this Lambda
+      environment_vars = {
+        OPENSEARCH_ENDPOINT = module.opensearchserverless.opensearch_collection_endpoint
+        OPENSEARCH_INDEX    = "${var.environment}-${var.app_id}-index"
+        REGION              = var.region
+        DOCUMENTS_TABLE     = module.file_uploader.dynamo_db_table_name
+        BEDROCK_MODEL_ID    = var.bedrock_model_id
+        MAX_SEARCH_RESULTS  = var.max_search_results
+      }
+      # Policy unique to this Lambda
+      iam_policy_statements = [
+        {
+          Effect = "Allow"
+          Action = [
+            "aoss:APIAccessAll"
+          ]
+          Resource = module.opensearchserverless.opensearch_collection_arn
+        },
+        {
+          Effect = "Allow"
+          Action = [
+            "bedrock:InvokeModel"
+          ]
+          Resource = [
+            "arn:aws:bedrock:${var.region}::foundation-model/amazon.titan-embed-text-v1",
+            "arn:aws:bedrock:${var.region}::foundation-model/${var.bedrock_model_id}"
+          ]
+        },
+        {
+          Effect = "Allow"
+          Action = [
+            "dynamodb:GetItem"
+          ]
+          Resource = module.file_uploader.dynamo_db_table_arn
+        }
+      ]
+    }
   }
 
 }

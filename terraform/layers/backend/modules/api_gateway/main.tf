@@ -106,3 +106,28 @@ resource "aws_lambda_permission" "get_document_data" {
   principal     = "apigateway.amazonaws.com"
   source_arn    = "${aws_apigatewayv2_api.api.execution_arn}/*/*"
 }
+
+# POST /chat - Query documents with AI
+resource "aws_apigatewayv2_integration" "query_document" {
+  api_id             = aws_apigatewayv2_api.api.id
+  integration_type   = "AWS_PROXY"
+  integration_method = "POST"
+  integration_uri    = "arn:aws:apigateway:${var.region}:lambda:path/2015-03-31/functions/${var.lambda_query_document_arn}/invocations"
+
+}
+
+resource "aws_apigatewayv2_route" "query_document" {
+  api_id             = aws_apigatewayv2_api.api.id
+  route_key          = "POST /chat"
+  target             = "integrations/${aws_apigatewayv2_integration.query_document.id}"
+  authorizer_id      = aws_apigatewayv2_authorizer.cognito.id
+  authorization_type = "JWT"
+}
+
+resource "aws_lambda_permission" "query_document" {
+  statement_id  = "AllowAPIGateway"
+  action        = "lambda:InvokeFunction"
+  function_name = var.lambda_query_document_function_name
+  principal     = "apigateway.amazonaws.com"
+  source_arn    = "${aws_apigatewayv2_api.api.execution_arn}/*/*"
+}

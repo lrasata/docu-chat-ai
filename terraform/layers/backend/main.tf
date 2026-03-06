@@ -63,6 +63,8 @@ module "api_gateway" {
   lambda_get_file_function_name          = module.lambda_functions["get_file"].function_name
   lambda_list_files_arn                  = module.lambda_functions["list_files"].function_arn
   lambda_list_files_function_name        = module.lambda_functions["list_files"].function_name
+  lambda_query_document_arn              = module.lambda_functions["query_document"].function_arn
+  lambda_query_document_function_name    = module.lambda_functions["query_document"].function_name
 
   depends_on = [module.lambda_functions]
 }
