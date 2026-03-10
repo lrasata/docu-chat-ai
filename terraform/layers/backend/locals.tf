@@ -23,7 +23,7 @@ locals {
             "dynamodb:Query",
             "dynamodb:Scan"
           ]
-          Resource = module.file_uploader.dynamo_db_table_arn
+          Resource = [module.file_uploader.dynamo_db_table_arn]
         }
       ]
     }
@@ -76,7 +76,7 @@ locals {
           Action = [
             "dynamodb:GetItem"
           ]
-          Resource = module.file_uploader.dynamo_db_table_arn
+          Resource = [module.file_uploader.dynamo_db_table_arn]
         },
 
       ]
@@ -103,7 +103,7 @@ locals {
           Action = [
             "aoss:APIAccessAll"
           ]
-          Resource = module.opensearchserverless.opensearch_collection_arn
+          Resource = [module.opensearchserverless.opensearch_collection_arn]
         }
       ]
     }
@@ -132,7 +132,7 @@ locals {
           Action = [
             "aoss:APIAccessAll"
           ]
-          Resource = module.opensearchserverless.opensearch_collection_arn
+          Resource = [module.opensearchserverless.opensearch_collection_arn]
         },
         {
           Effect = "Allow"
@@ -149,7 +149,7 @@ locals {
           Action = [
             "dynamodb:GetItem"
           ]
-          Resource = module.file_uploader.dynamo_db_table_arn
+          Resource = [module.file_uploader.dynamo_db_table_arn]
         }
       ]
     }
