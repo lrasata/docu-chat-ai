@@ -55,7 +55,7 @@ jobs:
         working-directory: terraform/layers/frontend
         run: |
           terraform init \
-            -input=false \
+            -input=false -upgrade \
             -backend-config="bucket=docu-chat-ai-app-states" \
             -backend-config="key=frontend/${{ github.event.inputs.environment }}/terraform.tfstate" \
             -backend-config="region=${{ secrets.AWS_REGION }}" \
@@ -67,7 +67,7 @@ jobs:
         working-directory: terraform/layers/backend
         run: |
           terraform init \
-            -input=false \
+            -input=false -upgrade \
             -backend-config="bucket=docu-chat-ai-app-states" \
             -backend-config="key=backend/${{ github.event.inputs.environment }}/terraform.tfstate" \
             -backend-config="region=${{ secrets.AWS_REGION }}" \
@@ -79,7 +79,7 @@ jobs:
         working-directory: terraform/layers/cognito
         run: |
           terraform init \
-            -input=false \
+            -input=false -upgrade \
             -backend-config="bucket=docu-chat-ai-app-states" \
             -backend-config="key=cognito/${{ github.event.inputs.environment }}/terraform.tfstate" \
             -backend-config="region=${{ secrets.AWS_REGION }}" \
@@ -91,7 +91,7 @@ jobs:
         working-directory: terraform/layers/cognito
         run: |
           terraform init \
-            -input=false \
+            -input=false -upgrade \
             -backend-config="bucket=docu-chat-ai-app-states" \
             -backend-config="key=cognito/${{ github.event.inputs.environment }}/terraform.tfstate" \
             -backend-config="region=${{ secrets.AWS_REGION }}" \
@@ -103,7 +103,7 @@ jobs:
         working-directory: terraform/layers/secrets
         run: |
           terraform init \
-            -input=false \
+            -input=false -upgrade \
             -backend-config="bucket=docu-chat-ai-app-states" \
             -backend-config="key=secrets/${{ github.event.inputs.environment }}/terraform.tfstate" \
             -backend-config="region=${{ secrets.AWS_REGION }}" \
