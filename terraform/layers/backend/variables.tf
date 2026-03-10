@@ -92,9 +92,9 @@ variable "bucket_av_sns_findings_topic_name" {
 #-------------- Bedrock and Chat variables -----------------------------------------------
 # START
 variable "bedrock_model_id" {
-  description = "Bedrock model ID for chat LLM (e.g., anthropic.claude-3-sonnet-20240229-v1:0)"
+  description = "Bedrock model ID for chat LLM (e.g., anthropic.claude-sonnet-4-20250514-v1:0)"
   type        = string
-  default     = "anthropic.claude-3-sonnet-20240229-v1:0"
+  default     = "anthropic.claude-sonnet-4-20250514-v1:0"
 }
 
 variable "max_search_results" {

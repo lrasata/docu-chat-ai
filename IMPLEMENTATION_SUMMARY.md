@@ -29,14 +29,14 @@ This document summarizes the implementation of the missing chat functionality fo
 - Performs KNN vector search in OpenSearch Serverless
 - Retrieves top 5 relevant document chunks
 - Constructs context-aware prompt
-- Calls Amazon Bedrock (Claude 3) to generate answers
+- Calls Amazon Bedrock (Claude 4) to generate answers
 - Returns answers with source citations
 - Comprehensive error handling and logging
 
 **Key Functions:**
 - `create_embedding()` - Uses Titan Embeddings model
 - `search_similar_chunks()` - KNN vector search in OpenSearch
-- `generate_answer_with_bedrock()` - Calls Claude 3 for inference
+- `generate_answer_with_bedrock()` - Calls Claude 4 for inference
 - `get_document_metadata()` - Fetches metadata from DynamoDB
 
 ### 2. Terraform Configuration Updates
@@ -81,7 +81,7 @@ This document summarizes the implementation of the missing chat functionality fo
 - `terraform/environments/prod.tfvars.example` - Production environment template
 
 **Configuration Options:**
-- Bedrock model selection (Claude 3 Sonnet/Haiku/Opus, Llama 3)
+- Bedrock model selection (Claude 4 Sonnet/Haiku/Opus, Llama 3)
 - Vector search parameters
 - Lambda memory and timeout settings
 - Domain and DNS configuration
@@ -136,15 +136,15 @@ This document summarizes the implementation of the missing chat functionality fo
 5. Lambda creates question embedding (Titan)
 6. Searches OpenSearch for relevant chunks (KNN)
 7. Constructs prompt with context
-8. Calls Bedrock Claude 3 for answer
+8. Calls Bedrock Claude 4 for answer
 9. Returns answer + sources to frontend
 10. Frontend displays with citations
 
 ## Key Technical Decisions
 
 ### 1. Bedrock Model Selection
-- **Default:** Claude 3 Sonnet (balanced performance/cost)
-- **Alternative:** Claude 3 Haiku (faster, cheaper)
+- **Default:** Claude 4 Sonnet (balanced performance/cost)
+- **Alternative:** Claude 4 Haiku (faster, cheaper)
 - **Configurable:** Via `bedrock_model_id` variable
 
 ### 2. Vector Search Configuration
@@ -199,7 +199,7 @@ aws opensearch-serverless list-collections
 - Lambda: ~$5-10/month
 - Bedrock (1K queries/month):
   - Titan Embeddings: ~$1
-  - Claude 3 Sonnet: ~$15-30
+  - Claude 4 Sonnet: ~$15-30
 - S3 + CloudFront: ~$2-5
 - DynamoDB: ~$1-2
 - **Total: ~$724-748/month**
@@ -209,13 +209,13 @@ aws opensearch-serverless list-collections
 - Lambda: ~$20-40/month
 - Bedrock:
   - Titan Embeddings: ~$10
-  - Claude 3 Sonnet: ~$150-300
+  - Claude 4 Sonnet: ~$150-300
 - S3 + CloudFront: ~$10-20
 - DynamoDB: ~$5-10
 - **Total: ~$895-1,080/month**
 
 ### Cost Optimization:
-- Use Claude 3 Haiku for 66% cost reduction (vs Sonnet)
+- Use Claude 4 Haiku for 66% cost reduction (vs Sonnet)
 - Enable CloudFront caching to reduce API calls
 - Implement Lambda response caching for common questions
 - Use OpenSearch reserved capacity for production
@@ -301,7 +301,7 @@ The serverless document chat AI application is now **fully functional** with com
 - ✅ Text extraction and chunking
 - ✅ Vector embeddings with Titan
 - ✅ Semantic search with OpenSearch
-- ✅ AI-powered Q&A with Claude 3
+- ✅ AI-powered Q&A with Claude 4
 - ✅ Source citation tracking
 - ✅ User authentication
 - ✅ Frontend chat interface

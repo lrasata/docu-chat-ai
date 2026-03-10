@@ -38,15 +38,14 @@ All the changes needed to complete your document chat AI with AWS Bedrock:
 # Go to AWS Console → Bedrock → Model access
 # Request access to:
 # - Amazon Titan Embeddings G1 - Text
-# - Anthropic Claude 3 Sonnet
+# - Anthropic Claude 4 Sonnet
 ```
 
 This usually takes 5-10 minutes to be approved.
 
 **Verify Access:**
 ```bash
-aws bedrock list-foundation-models --region us-east-1 \
-  --query 'modelSummaries[?modelId==`amazon.titan-embed-text-v1` || modelId==`anthropic.claude-3-sonnet-20240229-v1:0`]'
+aws bedrock list-foundation-models --region us-east-1 --query 'modelSummaries[?modelId==`amazon.titan-embed-text-v1` || modelId==`anthropic.claude-sonnet-4-20250514-v1:0`]'
 ```
 
 ### 2. AWS Credentials
@@ -90,7 +89,7 @@ backend_certificate_arn = "arn:aws:acm:us-east-1:YOUR_ACCOUNT:certificate/YOUR_C
 notification_email = "your-email@your-domain.com"
 
 # Bedrock configuration
-bedrock_model_id = "anthropic.claude-3-sonnet-20240229-v1:0"
+bedrock_model_id = "anthropic.claude-sonnet-4-20250514-v1:0"
 max_search_results = 5
 ```
 
@@ -173,7 +172,7 @@ export AWS_REGION=us-east-1
 export OPENSEARCH_ENDPOINT=your-opensearch-endpoint.us-east-1.aoss.amazonaws.com
 export OPENSEARCH_INDEX=staging-docu-chat-ai-index
 export DOCUMENTS_TABLE=staging-docu-chat-ai-documents
-export BEDROCK_MODEL_ID=anthropic.claude-3-sonnet-20240229-v1:0
+export BEDROCK_MODEL_ID=anthropic.claude-sonnet-4-20250514-v1:0
 
 # Test the function
 python3 -c "

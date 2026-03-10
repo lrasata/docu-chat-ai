@@ -10,7 +10,7 @@ A serverless, cloud-native application that allows users to chat with their PDF 
 - **Document Upload**: Upload PDF, DOCX, or TXT files
 - **AI-Powered Chat**: Ask questions about your documents using natural language
 - **Semantic Search**: Vector search with Amazon Titan embeddings
-- **LLM Integration**: Powered by Anthropic Claude 3 on AWS Bedrock
+- **LLM Integration**: Powered by Anthropic Claude 4 on AWS Bedrock
 - **Secure Authentication**: AWS Cognito with Google OAuth
 - **Real-time Interface**: Modern React UI with Material-UI
 - **Serverless Architecture**: Auto-scaling, pay-per-use infrastructure
@@ -40,7 +40,7 @@ A serverless, cloud-native application that allows users to chat with their PDF 
   - OpenSearch Serverless for vector search
 - **AI/ML**:
   - Amazon Titan for embeddings
-  - Anthropic Claude 3 for chat responses
+  - Anthropic Claude 4 for chat responses
 
 **Authentication:**
 - AWS Cognito User Pool with Google IdP
@@ -53,7 +53,7 @@ A serverless, cloud-native application that allows users to chat with their PDF 
 4. **Chunks indexed** → Stored in OpenSearch Serverless with vectors
 5. **User asks a question** → Question embedded with Titan
 6. **Vector search** → OpenSearch finds relevant chunks
-7. **LLM generates answer** → Claude 3 uses context to respond
+7. **LLM generates answer** → Claude 4 uses context to respond
 8. **User receives answer** → With source citations
 
 ## Quickstart
@@ -72,7 +72,7 @@ Before deploying, enable model access in AWS Bedrock console:
 1. Go to AWS Bedrock → Model access
 2. Request access to:
    - Amazon Titan Embeddings G1 - Text
-   - Anthropic Claude 3 Sonnet (or Haiku/Opus)
+   - Anthropic Claude 4 Sonnet (or Haiku/Opus)
 
 ### 1. Configure Deployment
 
@@ -171,9 +171,7 @@ All endpoints require JWT authentication via Cognito.
 ### Bedrock Models
 
 Available models (configure in `bedrock_model_id` variable):
-- `anthropic.claude-3-sonnet-20240229-v1:0` (Recommended - balanced)
-- `anthropic.claude-3-haiku-20240307-v1:0` (Fastest, most cost-effective)
-- `anthropic.claude-3-opus-20240229-v1:0` (Most capable)
+- `anthropic.claude-sonnet-4-20250514-v1:0` (Recommended - balanced)
 - `meta.llama3-70b-instruct-v1:0` (Open source)
 
 ### Vector Search
@@ -214,7 +212,7 @@ Estimated monthly costs (low usage):
 - **Lambda**: ~$5-10 (1M requests free tier)
 - **Bedrock**: Pay-per-token
   - Titan Embeddings: $0.0001/1K tokens
-  - Claude 3 Sonnet: $0.003/1K input tokens
+  - Claude 4 Sonnet: $0.003/1K input tokens
 - **S3 + CloudFront**: ~$1-5
 - **DynamoDB**: ~$1-2 (on-demand)
 

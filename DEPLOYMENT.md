@@ -19,8 +19,8 @@ Before you begin, ensure you have:
 2. Go to "Model access" in the left sidebar
 3. Request access to:
    - **Amazon Titan Embeddings G1 - Text** (required for embeddings)
-   - **Anthropic Claude 3 Sonnet** (recommended for chat)
-   - Or other LLM models like Claude 3 Haiku or Llama 3
+   - **Anthropic Claude 4 Sonnet** (recommended for chat)
+   - Or other LLM models like Claude 4 Haiku or Llama 3
 
 Access is usually granted within minutes.
 
@@ -71,8 +71,8 @@ backend_certificate_arn = "arn:aws:acm:us-east-1:123456789012:certificate/your-c
 # Notification email
 notification_email = "your-email@your-domain.com"
 
-# Bedrock model (default is Claude 3 Sonnet)
-bedrock_model_id = "anthropic.claude-3-sonnet-20240229-v1:0"
+# Bedrock model (default is Claude 4 Sonnet)
+bedrock_model_id = "anthropic.claude-sonnet-4-20250514-v1:0"
 ```
 
 ### 3. Deploy Backend Infrastructure
@@ -282,7 +282,7 @@ Expected monthly costs (staging/low usage):
 - **OpenSearch Serverless**: ~$700/month (always-on)
 - **Bedrock**: Pay per use
   - Titan Embeddings: $0.0001 per 1K tokens
-  - Claude 3 Sonnet: $0.003 per 1K input tokens
+  - Claude 4 Sonnet: $0.003 per 1K input tokens
 - **S3 + CloudFront**: ~$1-5 for low traffic
 - **DynamoDB**: ~$1-2 (on-demand)
 

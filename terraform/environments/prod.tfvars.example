@@ -28,7 +28,7 @@ notification_email                = "ops-team@your-domain.com"
 bucket_av_sns_findings_topic_name = "prod-bucket-av-findings"
 
 # Bedrock Configuration
-bedrock_model_id   = "anthropic.claude-3-sonnet-20240229-v1:0"
+bedrock_model_id   = "anthropic.claude-sonnet-4-20250514-v1:0"
 max_search_results = 5
 
 # Security

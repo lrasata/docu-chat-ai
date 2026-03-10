@@ -13,7 +13,7 @@ REGION = os.environ.get("REGION", os.environ.get("AWS_REGION", "us-east-1"))
 OPENSEARCH_HOST = os.environ["OPENSEARCH_ENDPOINT"]
 OPENSEARCH_INDEX = os.environ["OPENSEARCH_INDEX"]
 DOCUMENTS_TABLE = os.environ["DOCUMENTS_TABLE"]
-BEDROCK_MODEL_ID = os.environ.get("BEDROCK_MODEL_ID", "anthropic.claude-3-sonnet-20240229-v1:0")
+BEDROCK_MODEL_ID = os.environ.get("BEDROCK_MODEL_ID", "anthropic.claude-sonnet-4-20250514-v1:0")
 MAX_RESULTS = int(os.environ.get("MAX_SEARCH_RESULTS", "5"))
 
 # ---------- OpenSearch client ----------
@@ -140,7 +140,7 @@ Question: {question}
 
 Answer:"""
 
-        # Call Bedrock - Claude 3 format
+        # Call Bedrock - Claude 4 format
         request_body = {
             "anthropic_version": "bedrock-2023-05-31",
             "max_tokens": 2000,
