@@ -47,6 +47,34 @@ module "lambda_functions" {
   depends_on = [module.opensearchserverless]
 }
 
+# Data access policy for Lambda execution roles
+resource "aws_opensearchserverless_access_policy" "opensearch_data_access" {
+  name = module.opensearchserverless.opensearch_collection_name
+  type = "data"
+
+  policy = jsonencode([{
+    Rules = [
+      {
+        ResourceType = "index"
+        Resource     = ["index/${module.opensearchserverless.opensearch_collection_name}/*"]
+        Permission = [
+          "aoss:CreateIndex",
+          "aoss:UpdateIndex",
+          "aoss:DescribeIndex",
+          "aoss:ReadDocument",
+          "aoss:WriteDocument"
+        ]
+      },
+      {
+        ResourceType = "collection"
+        Resource     = ["collection/${module.opensearchserverless.opensearch_collection_name}"]
+        Permission   = ["aoss:DescribeCollectionItems"]
+      }
+    ]
+    Principal = [module.lambda_functions["s3_ingestion"].function_exec_role_arn, module.lambda_functions["query_document"].function_exec_role_arn]
+  }])
+}
+
 
 module "api_gateway" {
   source = "./modules/api_gateway"
