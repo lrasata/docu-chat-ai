@@ -21,6 +21,8 @@ module "lambda_functions" {
   source_dir            = each.value.source_dir
   handler_file          = each.value.handler_file
   runtime               = each.value.runtime
+  timeout               = each.value.timeout
+  memory_size           = each.value.memory_size
   environment_vars      = each.value.environment_vars
   s3_bucket             = each.value.s3_bucket != null ? each.value.s3_bucket : ""
   s3_key                = each.value.s3_key != null ? each.value.s3_key : ""

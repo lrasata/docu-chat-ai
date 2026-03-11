@@ -8,6 +8,8 @@ locals {
       source_dir   = "${path.module}/src/lambda_functions/list_files"
       handler_file = "index.handler"
       runtime      = "nodejs22.x"
+      timeout      = 5
+      memory_size  = 128
       s3_bucket    = null
       s3_key       = null
       # Variables unique to this Lambda
@@ -33,6 +35,8 @@ locals {
       source_dir   = "${path.module}/src/lambda_functions/get_file"
       handler_file = "index.handler"
       runtime      = "nodejs22.x"
+      timeout      = 5
+      memory_size  = 128
       s3_bucket    = null
       s3_key       = null
       # Variables unique to this Lambda
@@ -63,6 +67,8 @@ locals {
       source_dir   = "${path.module}/src/lambda_functions/get_document_data"
       handler_file = "index.handler"
       runtime      = "nodejs22.x"
+      timeout      = 5
+      memory_size  = 128
       s3_bucket    = null
       s3_key       = null
       # Variables unique to this Lambda
@@ -127,6 +133,8 @@ locals {
       source_dir   = "${path.module}/src/lambda_functions/query_document"
       handler_file = "query_document.handler"
       runtime      = "python3.11"
+      timeout      = 120
+      memory_size  = 512
       s3_bucket    = null
       s3_key       = null
       # Variables unique to this Lambda
