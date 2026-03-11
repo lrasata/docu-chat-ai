@@ -128,9 +128,14 @@ def ensure_index():
 ensure_index()
 
 def handler(event, context):
-    record = event["Records"][0]
-    bucket = record["s3"]["bucket"]["name"]
-    key = record["s3"]["object"]["key"]
+    # Unwrap SNS message
+    sns_record = event["Records"][0]["Sns"]
+    message = json.loads(sns_record["Message"])
+
+    print(f"Received SNS message: {json.dumps(message)}")
+
+    bucket = message["bucket"]
+    key = message["fileKey"]
 
     print(f"Processing file: s3://{bucket}/{key}")
 
