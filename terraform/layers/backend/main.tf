@@ -1,21 +1,3 @@
-module "file_uploader" {
-  source = "git::https://github.com/lrasata/infra-file-uploader//terraform/modules/file_uploader?ref=v1.6.3"
-
-  region                                        = var.region
-  app_id                                        = var.app_id
-  environment                                   = var.environment
-  secret_store_name                             = data.terraform_remote_state.secrets.outputs.secret_store_name
-  api_file_upload_domain_name                   = var.api_file_upload_domain_name
-  backend_certificate_arn                       = var.backend_certificate_arn
-  uploads_bucket_name                           = var.uploads_bucket_name
-  enable_transfer_acceleration                  = var.enable_transfer_acceleration
-  lambda_upload_presigned_url_expiration_time_s = var.lambda_upload_presigned_url_expiration_time_s
-  bucket_av_sns_findings_topic_name             = var.bucket_av_sns_findings_topic_name
-  lambda_memory_size_mb                         = var.lambda_memory_size_mb
-  notification_email                            = var.notification_email
-  route53_zone_name                             = var.route53_zone_name
-}
-
 module "opensearchserverless" {
   source = "./modules/opensearch"
 
@@ -95,6 +77,25 @@ module "api_gateway" {
   lambda_query_document_function_name    = module.lambda_functions["query_document"].function_name
 
   depends_on = [module.lambda_functions]
+}
+
+module "file_uploader" {
+  source = "git::https://github.com/lrasata/infra-file-uploader//terraform/modules/file_uploader?ref=fix/dynamic-lambda-arns-for-process-uploads"
+
+  region                                        = var.region
+  app_id                                        = var.app_id
+  environment                                   = var.environment
+  secret_store_name                             = data.terraform_remote_state.secrets.outputs.secret_store_name
+  api_file_upload_domain_name                   = var.api_file_upload_domain_name
+  backend_certificate_arn                       = var.backend_certificate_arn
+  uploads_bucket_name                           = var.uploads_bucket_name
+  enable_transfer_acceleration                  = var.enable_transfer_acceleration
+  lambda_upload_presigned_url_expiration_time_s = var.lambda_upload_presigned_url_expiration_time_s
+  bucket_av_sns_findings_topic_name             = var.bucket_av_sns_findings_topic_name
+  lambda_memory_size_mb                         = var.lambda_memory_size_mb
+  notification_email                            = var.notification_email
+  route53_zone_name                             = var.route53_zone_name
+  additional_trigger_lambda_arns                = [module.lambda_functions["s3_ingestion"].function_arn]
 }
 
 # For S3 Ingestion Lambda from S3 execution
