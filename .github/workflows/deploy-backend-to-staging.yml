@@ -212,3 +212,10 @@ jobs:
         working-directory: terraform/layers/backend
         run: |
           terraform apply -auto-approve
+
+      - name: Force Lambda code update
+        run: |
+          aws lambda update-function-code \
+            --function-name $(aws lambda list-functions --query 'Functions[?contains(FunctionName, `s3-ingestion`) && contains(FunctionName, `${{ github.event.inputs.environment }}`)].FunctionName' --output text) \
+            --s3-bucket $TF_VAR_s3_ingestion_lambda_code_bucket \
+            --s3-key $TF_VAR_s3_ingestion_lambda_code_key
