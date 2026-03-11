@@ -97,23 +97,3 @@ module "file_uploader" {
   route53_zone_name                             = var.route53_zone_name
   additional_trigger_lambda_arns                = [module.lambda_functions["s3_ingestion"].function_arn]
 }
-
-# For S3 Ingestion Lambda from S3 execution
-resource "aws_lambda_permission" "allow_execution_from_s3" {
-  statement_id  = "AllowExecutionFromS3"
-  action        = "lambda:InvokeFunction"
-  function_name = module.lambda_functions["s3_ingestion"].function_name
-  principal     = "s3.amazonaws.com"
-  source_arn    = module.file_uploader.uploads_bucket_arn
-}
-
-resource "aws_s3_bucket_notification" "uploads_trigger" {
-  bucket = module.file_uploader.uploads_bucket_id
-
-  lambda_function {
-    lambda_function_arn = module.lambda_functions["s3_ingestion"].function_arn
-    events              = ["s3:ObjectCreated:*"]
-  }
-
-  depends_on = [aws_lambda_permission.allow_execution_from_s3]
-}
