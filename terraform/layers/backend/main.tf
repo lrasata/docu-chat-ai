@@ -95,5 +95,4 @@ module "file_uploader" {
   lambda_memory_size_mb                         = var.lambda_memory_size_mb
   notification_email                            = var.notification_email
   route53_zone_name                             = var.route53_zone_name
-  additional_trigger_lambda_arns                = [module.lambda_functions["s3_ingestion"].function_arn]
 }
