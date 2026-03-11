@@ -123,6 +123,11 @@ locals {
             "arn:aws:s3:::${module.file_uploader.uploads_bucket_id}",
             "arn:aws:s3:::${module.file_uploader.uploads_bucket_id}/*"
           ]
+        },
+        {
+          Effect   = "Allow"
+          Action   = "bedrock:InvokeModel"
+          Resource = "arn:aws:bedrock:eu-central-1::foundation-model/amazon.titan-embed-text-v1"
         }
       ]
     }
