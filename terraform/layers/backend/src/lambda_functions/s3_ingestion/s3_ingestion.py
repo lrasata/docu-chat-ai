@@ -14,7 +14,7 @@ bedrock = boto3.client("bedrock-runtime")
 
 # ---------- OpenSearch ----------
 REGION = os.environ["AWS_REGION"]
-OPENSEARCH_HOST = os.environ["OPENSEARCH_ENDPOINT"]
+OPENSEARCH_HOST = os.environ["OPENSEARCH_ENDPOINT"].replace("https://", "")
 OPENSEARCH_INDEX = os.environ["OPENSEARCH_INDEX"]
 
 credentials = boto3.Session().get_credentials()
