@@ -96,3 +96,17 @@ module "file_uploader" {
   notification_email                            = var.notification_email
   route53_zone_name                             = var.route53_zone_name
 }
+
+resource "aws_lambda_permission" "allow_sns_to_invoke_s3_ingestion" {
+  statement_id  = "AllowExecutionFromSNS"
+  action        = "lambda:InvokeFunction"
+  function_name = module.lambda_functions["s3_ingestion"].function_name
+  principal     = "sns.amazonaws.com"
+  source_arn    = module.file_uploader.sns_topic_arn_processed_file_event
+}
+
+resource "aws_sns_topic_subscription" "s3_ingestion_lambda" {
+  topic_arn = module.file_uploader.sns_topic_arn_processed_file_event
+  protocol  = "lambda"
+  endpoint  = module.lambda_functions["s3_ingestion"].function_arn
+}
