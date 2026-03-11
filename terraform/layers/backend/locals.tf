@@ -126,8 +126,8 @@ locals {
         },
         {
           Effect   = "Allow"
-          Action   = "bedrock:InvokeModel"
-          Resource = "arn:aws:bedrock:eu-central-1::foundation-model/amazon.titan-embed-text-v1"
+          Action   = ["bedrock:InvokeModel"]
+          Resource = ["arn:aws:bedrock:${var.region}::foundation-model/amazon.titan-embed-text-v1"]
         }
       ]
     }
