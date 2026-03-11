@@ -88,6 +88,8 @@ locals {
       source_dir   = "${path.module}/src/lambda_functions/s3_ingestion"
       handler_file = "s3_ingestion.handler"
       runtime      = "python3.11"
+      timeout      = 120
+      memory_size  = 512
       s3_bucket    = var.s3_ingestion_lambda_code_bucket
       s3_key       = var.s3_ingestion_lambda_code_key
       # Variables unique to this Lambda
