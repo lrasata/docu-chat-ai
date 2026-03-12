@@ -9,7 +9,7 @@ bedrock_runtime = boto3.client("bedrock-runtime")
 dynamodb = boto3.client("dynamodb")
 
 # ---------- Environment variables ----------
-REGION = os.environ.get("REGION", os.environ.get("AWS_REGION", "us-east-1"))
+REGION = os.environ.get("REGION", os.environ.get("AWS_REGION", "eu-central-1"))
 OPENSEARCH_HOST = os.environ["OPENSEARCH_ENDPOINT"]
 OPENSEARCH_INDEX = os.environ["OPENSEARCH_INDEX"]
 DOCUMENTS_TABLE = os.environ["DOCUMENTS_TABLE"]
