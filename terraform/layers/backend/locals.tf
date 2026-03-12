@@ -140,8 +140,8 @@ locals {
       runtime      = "python3.11"
       timeout      = 120
       memory_size  = 512
-      s3_bucket    = null
-      s3_key       = null
+      s3_bucket    = var.s3_query_document_lambda_code_bucket
+      s3_key       = var.s3_query_document_lambda_code_key
       # Variables unique to this Lambda
       environment_vars = {
         OPENSEARCH_ENDPOINT = module.opensearchserverless.opensearch_collection_endpoint

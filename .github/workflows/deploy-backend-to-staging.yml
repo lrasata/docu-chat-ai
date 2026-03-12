@@ -129,6 +129,8 @@ jobs:
       TF_VAR_alt_cloudfront_domain_name: ${{ github.event.inputs.environment }}.epic-trip-planner.com
       TF_VAR_s3_ingestion_lambda_code_bucket: docu-chat-ai-lambda-s3-ingestion
       TF_VAR_s3_ingestion_lambda_code_key: "${{ github.event.inputs.environment }}/s3-ingestion.zip"
+      TF_VAR_s3_quey_document_lambda_code_bucket: docu-chat-ai-lambda-s3-query-document
+      TF_VAR_s3_query_document_lambda_code_key: "${{ github.event.inputs.environment }}/s3-query-document.zip"
       TF_VAR_bedrock_model_id: anthropic.claude-sonnet-4-20250514-v1:0
       TF_VAR_max_search_results: 5
     steps:
@@ -198,6 +200,19 @@ jobs:
             public.ecr.aws/sam/build-python3.11 \
             bash -c "pip install -r requirements.txt -t build/"
 
+      - name: Build Query Document Lambda dependencies (Amazon Linux)
+        run: |
+          cd terraform/layers/backend/src/lambda_functions/query_document
+          rm -rf build
+          mkdir build
+
+          docker run --rm \
+            --user "$(id -u):$(id -g)" \
+            --entrypoint "" \
+            -v "$PWD:/var/task" \
+            public.ecr.aws/sam/build-python3.11 \
+            bash -c "pip install -r requirements.txt -t build/"
+
       - name: Package S3 Ingestion Lambda
         run: |
           cd terraform/layers/backend/src/lambda_functions/s3_ingestion
@@ -205,10 +220,22 @@ jobs:
           cd build
           zip -r ../lambda_s3_ingestion.zip .
 
+      - name: Package Query Document Lambda
+        run: |
+          cd terraform/layers/backend/src/lambda_functions/query_document
+          cp query_document.py build/
+          cd build
+          zip -r ../lambda_query_document.zip .
+
       - name: Upload S3 Ingestion Lambda to S3
         run: |
           aws s3 cp terraform/layers/backend/src/lambda_functions/s3_ingestion/lambda_s3_ingestion.zip \
                     s3://$TF_VAR_s3_ingestion_lambda_code_bucket/$TF_VAR_s3_ingestion_lambda_code_key
+
+      - name: Upload Query Document Lambda to S3
+        run: |
+          aws s3 cp terraform/layers/backend/src/lambda_functions/query_document/lambda_query_document.zip \
+                    s3://$TF_VAR_query_document_lambda_code_bucket/$TF_VAR_query_document_lambda_code_key
 
       - name: Terraform Apply
         working-directory: terraform/layers/backend
@@ -221,3 +248,8 @@ jobs:
             --function-name $(aws lambda list-functions --query 'Functions[?contains(FunctionName, `s3-ingestion`) && contains(FunctionName, `${{ github.event.inputs.environment }}`)].FunctionName' --output text) \
             --s3-bucket $TF_VAR_s3_ingestion_lambda_code_bucket \
             --s3-key $TF_VAR_s3_ingestion_lambda_code_key
+          
+          aws lambda update-function-code \
+            --function-name $(aws lambda list-functions --query 'Functions[?contains(FunctionName, `query-document`) && contains(FunctionName, `${{ github.event.inputs.environment }}`)].FunctionName' --output text) \
+            --s3-bucket $TF_VAR_query_document_lambda_code_bucket \
+            --s3-key $TF_VAR_query_document_lambda_code_key
