@@ -10,7 +10,7 @@ dynamodb = boto3.client("dynamodb")
 
 # ---------- Environment variables ----------
 REGION = os.environ.get("REGION", os.environ.get("AWS_REGION", "eu-central-1"))
-OPENSEARCH_HOST = os.environ["OPENSEARCH_ENDPOINT"]
+OPENSEARCH_HOST = os.environ["OPENSEARCH_ENDPOINT"].replace("https://", "").replace("http://", "")
 OPENSEARCH_INDEX = os.environ["OPENSEARCH_INDEX"]
 DOCUMENTS_TABLE = os.environ["DOCUMENTS_TABLE"]
 BEDROCK_MODEL_ID = os.environ.get("BEDROCK_MODEL_ID", "anthropic.claude-sonnet-4-20250514-v1:0")
