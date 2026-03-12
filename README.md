@@ -170,7 +170,7 @@ All endpoints require JWT authentication via Cognito.
 
 ### Bedrock Models
 
-Available models (configure in `bedrock_model_id` variable):
+Available models (configure in `bedrock_model_inference_profile_arn` variable):
 - `anthropic.claude-sonnet-4-20250514-v1:0` (Recommended - balanced)
 - `meta.llama3-70b-instruct-v1:0` (Open source)
 

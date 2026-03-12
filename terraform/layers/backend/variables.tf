@@ -99,10 +99,9 @@ variable "bucket_av_sns_findings_topic_name" {
 
 #-------------- Bedrock and Chat variables -----------------------------------------------
 # START
-variable "bedrock_model_id" {
-  description = "Bedrock model ID for chat LLM (e.g., anthropic.claude-sonnet-4-20250514-v1:0)"
+variable "bedrock_model_inference_profile_arn" {
+  description = "Bedrock model Inference profile arn"
   type        = string
-  default     = "anthropic.claude-sonnet-4-20250514-v1:0"
 }
 
 variable "max_search_results" {

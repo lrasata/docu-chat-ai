@@ -72,7 +72,7 @@ backend_certificate_arn = "arn:aws:acm:us-east-1:123456789012:certificate/your-c
 notification_email = "your-email@your-domain.com"
 
 # Bedrock model (default is Claude 4 Sonnet)
-bedrock_model_id = "anthropic.claude-sonnet-4-20250514-v1:0"
+bedrock_model_inference_profile_arn = "" # see in Amazon Bedrock → Inference and assessment → Inference profiles
 ```
 
 ### 3. Deploy Backend Infrastructure

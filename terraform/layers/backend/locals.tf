@@ -148,7 +148,7 @@ locals {
         OPENSEARCH_INDEX    = "${var.environment}-${var.app_id}-index"
         REGION              = var.region
         DOCUMENTS_TABLE     = module.file_uploader.dynamo_db_table_name
-        BEDROCK_MODEL_ID    = var.bedrock_model_id
+        bedrock_model_inference_profile_arn    = var.bedrock_model_inference_profile_arn
         MAX_SEARCH_RESULTS  = var.max_search_results
       }
       # Policy unique to this Lambda
@@ -167,7 +167,7 @@ locals {
           ]
           Resource = [
             "arn:aws:bedrock:${var.region}::foundation-model/amazon.titan-embed-text-v1",
-            "arn:aws:bedrock:${var.region}::foundation-model/${var.bedrock_model_id}"
+            "arn:aws:bedrock:${var.region}::foundation-model/${var.bedrock_model_inference_profile_arn}"
           ]
         },
         {

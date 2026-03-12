@@ -13,7 +13,7 @@ REGION = os.environ.get("REGION", os.environ.get("AWS_REGION", "eu-central-1"))
 OPENSEARCH_HOST = os.environ["OPENSEARCH_ENDPOINT"].replace("https://", "").replace("http://", "")
 OPENSEARCH_INDEX = os.environ["OPENSEARCH_INDEX"]
 DOCUMENTS_TABLE = os.environ["DOCUMENTS_TABLE"]
-BEDROCK_MODEL_ID = os.environ.get("BEDROCK_MODEL_ID", "anthropic.claude-sonnet-4-20250514-v1:0")
+BEDROCK_MODEL_INFERENCE_PROFILE_ARN = os.environ.get("BEDROCK_MODEL_INFERENCE_PROFILE_ARN", "anthropic.claude-sonnet-4-20250514-v1:0")
 MAX_RESULTS = int(os.environ.get("MAX_SEARCH_RESULTS", "5"))
 
 # ---------- OpenSearch client ----------
@@ -123,7 +123,7 @@ def get_document_metadata(document_id, user_id):
         return None
 
 
-def generate_answer_with_bedrock(question, context_chunks, model_id=BEDROCK_MODEL_ID):
+def generate_answer_with_bedrock(question, context_chunks, model_id=BEDROCK_MODEL_INFERENCE_PROFILE_ARN):
     """Generate answer using Bedrock LLM (Claude)"""
     try:
         # Build context from retrieved chunks

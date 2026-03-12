@@ -145,7 +145,7 @@ This document summarizes the implementation of the missing chat functionality fo
 ### 1. Bedrock Model Selection
 - **Default:** Claude 4 Sonnet (balanced performance/cost)
 - **Alternative:** Claude 4 Haiku (faster, cheaper)
-- **Configurable:** Via `bedrock_model_id` variable
+- **Configurable:** Via `bedrock_model_inference_profile_arn` variable
 
 ### 2. Vector Search Configuration
 - **Chunk Size:** 500 words with 50-word overlap
