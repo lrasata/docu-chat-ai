@@ -169,8 +169,7 @@ locals {
           ]
           Resource = [
             "arn:aws:bedrock:${var.region}::foundation-model/amazon.titan-embed-text-v1",
-            "arn:aws:bedrock:${var.region}::foundation-model/eu.anthropic.claude-sonnet-4-20250514-v1:0",
-            "arn:aws:bedrock:${var.region}:${data.aws_caller_identity.current.account_id}:inference-profile/eu.anthropic.claude-sonnet-4-20250514-v1:0",
+            var.bedrock_model_inference_profile_arn
           ]
         },
         {
