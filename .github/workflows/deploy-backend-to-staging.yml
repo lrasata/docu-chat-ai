@@ -129,7 +129,7 @@ jobs:
       TF_VAR_alt_cloudfront_domain_name: ${{ github.event.inputs.environment }}.epic-trip-planner.com
       TF_VAR_s3_ingestion_lambda_code_bucket: docu-chat-ai-lambda-s3-ingestion
       TF_VAR_s3_ingestion_lambda_code_key: "${{ github.event.inputs.environment }}/s3-ingestion.zip"
-      TF_VAR_s3_quey_document_lambda_code_bucket: docu-chat-ai-lambda-s3-query-document
+      TF_VAR_s3_query_document_lambda_code_bucket: docu-chat-ai-lambda-s3-query-document
       TF_VAR_s3_query_document_lambda_code_key: "${{ github.event.inputs.environment }}/s3-query-document.zip"
       TF_VAR_bedrock_model_id: anthropic.claude-sonnet-4-20250514-v1:0
       TF_VAR_max_search_results: 5
@@ -235,7 +235,7 @@ jobs:
       - name: Upload Query Document Lambda to S3
         run: |
           aws s3 cp terraform/layers/backend/src/lambda_functions/query_document/lambda_query_document.zip \
-                    s3://$TF_VAR_query_document_lambda_code_bucket/$TF_VAR_query_document_lambda_code_key
+                    s3://$TF_VAR_s3_query_document_lambda_code_bucket/$TF_VAR_s3_query_document_lambda_code_key
 
       - name: Terraform Apply
         working-directory: terraform/layers/backend
@@ -251,5 +251,5 @@ jobs:
           
           aws lambda update-function-code \
             --function-name $(aws lambda list-functions --query 'Functions[?contains(FunctionName, `query-document`) && contains(FunctionName, `${{ github.event.inputs.environment }}`)].FunctionName' --output text) \
-            --s3-bucket $TF_VAR_query_document_lambda_code_bucket \
-            --s3-key $TF_VAR_query_document_lambda_code_key
+            --s3-bucket $TF_VAR_s3_query_document_lambda_code_bucket \
+            --s3-key $TF_VAR_s3_query_document_lambda_code_key
