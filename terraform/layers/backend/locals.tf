@@ -150,7 +150,7 @@ locals {
         OPENSEARCH_INDEX    = "${var.environment}-${var.app_id}-index"
         REGION              = var.region
         DOCUMENTS_TABLE     = module.file_uploader.dynamo_db_table_name
-        bedrock_model_inference_profile_arn    = var.bedrock_model_inference_profile_arn
+        BEDROCK_MODEL_INFERENCE_PROFILE_ARN    = var.bedrock_model_inference_profile_arn
         MAX_SEARCH_RESULTS  = var.max_search_results
       }
       # Policy unique to this Lambda
