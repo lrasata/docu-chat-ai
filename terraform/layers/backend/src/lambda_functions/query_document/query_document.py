@@ -5,7 +5,7 @@ from opensearchpy import OpenSearch, RequestsHttpConnection
 from requests_aws4auth import AWS4Auth
 
 # ---------- Environment variables ----------
-REGION = os.environ.get("REGION", os.environ.get("REGION", "eu-central-1"))
+REGION = os.environ["REGION"]
 OPENSEARCH_HOST = os.environ["OPENSEARCH_ENDPOINT"].replace("https://", "").replace("http://", "")
 OPENSEARCH_INDEX = os.environ["OPENSEARCH_INDEX"]
 DOCUMENTS_TABLE = os.environ["DOCUMENTS_TABLE"]
