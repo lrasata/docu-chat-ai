@@ -1,6 +1,5 @@
 import json
 import os
-import uuid
 import io
 import boto3
 import pdfplumber
@@ -16,6 +15,10 @@ bedrock = boto3.client("bedrock-runtime")
 REGION = os.environ["REGION"]
 OPENSEARCH_HOST = os.environ["OPENSEARCH_ENDPOINT"].replace("https://", "")
 OPENSEARCH_INDEX = os.environ["OPENSEARCH_INDEX"]
+
+# ---------- Dynamodb---------------
+dynamodb = boto3.client("dynamodb", region_name=REGION)
+DOCUMENTS_TABLE = os.environ["DOCUMENTS_TABLE"]
 
 credentials = boto3.Session().get_credentials()
 
@@ -152,7 +155,7 @@ def handler(event, context):
     chunks = chunk_text(text)
     print(f"Created {len(chunks)} chunks")
 
-    document_id = str(uuid.uuid4())
+    document_id = key # already unique
 
     # 4️⃣ Embed & index
     for idx, chunk in enumerate(chunks):
@@ -161,6 +164,18 @@ def handler(event, context):
         index_chunk(document_id, chunk_id, chunk, embedding)
 
     print("Document ingestion completed successfully")
+
+    dynamodb.update_item(
+        TableName=DOCUMENTS_TABLE,
+        Key={
+            "id": {"S": message["partitionKey"]},
+            "file_key": {"S": key}
+        },
+        UpdateExpression="SET document_id = :doc_id",
+        ExpressionAttributeValues={
+            ":doc_id": {"S": document_id}
+        }
+    )
 
     return {
         "statusCode": 200,
