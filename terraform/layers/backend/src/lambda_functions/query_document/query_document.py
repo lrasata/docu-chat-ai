@@ -4,10 +4,6 @@ import boto3
 from opensearchpy import OpenSearch, RequestsHttpConnection
 from requests_aws4auth import AWS4Auth
 
-# ---------- AWS clients ----------
-bedrock_runtime = boto3.client("bedrock-runtime")
-dynamodb = boto3.client("dynamodb")
-
 # ---------- Environment variables ----------
 REGION = os.environ.get("REGION", os.environ.get("AWS_REGION", "eu-central-1"))
 OPENSEARCH_HOST = os.environ["OPENSEARCH_ENDPOINT"].replace("https://", "").replace("http://", "")
@@ -15,6 +11,10 @@ OPENSEARCH_INDEX = os.environ["OPENSEARCH_INDEX"]
 DOCUMENTS_TABLE = os.environ["DOCUMENTS_TABLE"]
 BEDROCK_MODEL_INFERENCE_PROFILE_ARN = os.environ.get("BEDROCK_MODEL_INFERENCE_PROFILE_ARN", "anthropic.claude-sonnet-4-20250514-v1:0")
 MAX_RESULTS = int(os.environ.get("MAX_SEARCH_RESULTS", "5"))
+
+# ---------- AWS clients ----------
+bedrock_runtime = boto3.client("bedrock-runtime", region_name=REGION)
+dynamodb = boto3.client("dynamodb", region_name=REGION)
 
 # ---------- OpenSearch client ----------
 credentials = boto3.Session().get_credentials()
