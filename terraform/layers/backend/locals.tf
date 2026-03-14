@@ -186,7 +186,7 @@ locals {
           "aws-marketplace:Subscribe",
           "aws-marketplace:Unsubscribe"
         ]
-          Resource = "*"
+          Resource = ["*"]
         },
         {
           Effect = "Allow"
