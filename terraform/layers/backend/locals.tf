@@ -146,12 +146,13 @@ locals {
       s3_key       = var.s3_query_document_lambda_code_key
       # Variables unique to this Lambda
       environment_vars = {
-        OPENSEARCH_ENDPOINT = module.opensearchserverless.opensearch_collection_endpoint
-        OPENSEARCH_INDEX    = "${var.environment}-${var.app_id}-index"
-        REGION              = var.region
-        DOCUMENTS_TABLE     = module.file_uploader.dynamo_db_table_name
-        BEDROCK_MODEL_INFERENCE_PROFILE_ARN    = var.bedrock_model_inference_profile_arn
-        MAX_SEARCH_RESULTS  = var.max_search_results
+        OPENSEARCH_ENDPOINT                 = module.opensearchserverless.opensearch_collection_endpoint
+        OPENSEARCH_INDEX                    = "${var.environment}-${var.app_id}-index"
+        REGION                              = var.region
+        DOCUMENTS_TABLE                     = module.file_uploader.dynamo_db_table_name
+        BEDROCK_MODEL_INFERENCE_PROFILE_ARN = var.bedrock_model_inference_profile_arn
+        MAX_SEARCH_RESULTS                  = var.max_search_results
+        REGION                              = var.region
       }
       # Policy unique to this Lambda
       iam_policy_statements = [
