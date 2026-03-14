@@ -216,7 +216,8 @@ Estimated monthly costs (low usage):
 - **S3 + CloudFront**: ~$1-5
 - **DynamoDB**: ~$1-2 (on-demand)
 
-**Total: ~$720-750/month** for staging environment
+**Total: ~$720-750/month** for staging environment 
+> Note: This is quite expensive for a low-usage application. Looking into alternatives.
 
 See [DEPLOYMENT.md](./DEPLOYMENT.md) for cost optimization strategies.
 
