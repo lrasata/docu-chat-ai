@@ -182,6 +182,15 @@ locals {
         {
           Effect = "Allow"
           Action = [
+          "aws-marketplace:ViewSubscriptions",
+          "aws-marketplace:Subscribe",
+          "aws-marketplace:Unsubscribe"
+        ]
+          Resource = "*"
+        },
+        {
+          Effect = "Allow"
+          Action = [
             "dynamodb:GetItem"
           ]
           Resource = [module.file_uploader.dynamo_db_table_arn]
