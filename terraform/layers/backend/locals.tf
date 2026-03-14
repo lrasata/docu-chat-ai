@@ -170,8 +170,13 @@ locals {
           ]
           Resource = [
             "arn:aws:bedrock:${var.region}::foundation-model/amazon.titan-embed-text-v1",
-            "arn:aws:bedrock:${var.region}::foundation-model/anthropic.claude-sonnet-4-20250514-v1:0",
-            var.bedrock_model_inference_profile_arn
+            var.bedrock_model_inference_profile_arn,
+            "arn:aws:bedrock:eu-central-1::foundation-model/anthropic.claude-sonnet-4-20250514-v1:0",
+            "arn:aws:bedrock:eu-north-1::foundation-model/anthropic.claude-sonnet-4-20250514-v1:0",
+            "arn:aws:bedrock:eu-south-1::foundation-model/anthropic.claude-sonnet-4-20250514-v1:0",
+            "arn:aws:bedrock:eu-south-2::foundation-model/anthropic.claude-sonnet-4-20250514-v1:0",
+            "arn:aws:bedrock:eu-west-1::foundation-model/anthropic.claude-sonnet-4-20250514-v1:0",
+            "arn:aws:bedrock:eu-west-3::foundation-model/anthropic.claude-sonnet-4-20250514-v1:0"
           ]
         },
         {
