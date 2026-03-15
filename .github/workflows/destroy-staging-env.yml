@@ -21,11 +21,12 @@ jobs:
 
     env:
       TF_VAR_region: ${{ secrets.AWS_REGION }}
-      TF_VAR_app_id: docu-chat-ai
       TF_VAR_environment: ${{ github.event.inputs.environment }}
+      TF_VAR_app_id: docu-chat-ai
       TF_VAR_callback_urls: '["https://${{ github.event.inputs.environment }}.epic-trip-planner.com"]'
       TF_VAR_logout_urls: '["https://${{ github.event.inputs.environment }}.epic-trip-planner.com"]'
-      TF_VAR_api_backend_custom_domain_name: ${{ github.event.inputs.environment }}.epic-trip-planner.com
+      TF_VAR_cloudfront_domain_name: ${{ github.event.inputs.environment }}.epic-trip-planner.com
+      TF_VAR_api_backend_custom_domain_name: ${{ github.event.inputs.environment }}-backend-api.epic-trip-planner.com
       TF_VAR_api_file_upload_domain_name: ${{ github.event.inputs.environment }}-file-upload-api.epic-trip-planner.com
       TF_VAR_backend_certificate_arn: ${{secrets.BACKEND_CERTIFICATE_ARN}}
       TF_VAR_use_bucketav: false
@@ -35,6 +36,7 @@ jobs:
       TF_VAR_secret_store_name: ${{secrets.SECRET_STORE_NAME}}
       TF_VAR_notification_email: ${{secrets.ALERT_EMAIL}}
       TF_VAR_route53_zone_name: epic-trip-planner.com
+      TF_VAR_api_gateway_route53_zone_id: Z1U9ULNL0V5AJ3
       TF_VAR_cloudfront_certificate_arn: ${{secrets.FRONTEND_CERTIFICATE_ARN}}
       TF_VAR_s3_ingestion_lambda_code_bucket: docu-chat-ai-lambda-s3-ingestion
       TF_VAR_s3_ingestion_lambda_code_key: "${{ github.event.inputs.environment }}/s3-ingestion.zip"

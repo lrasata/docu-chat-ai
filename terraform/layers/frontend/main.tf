@@ -42,5 +42,5 @@ module "route53" {
 
   cdn_hosted_zone_id = module.cloudfront.cloudfront_hosted_zone_id
   cdn_domain_name    = module.cloudfront.cloudfront_domain_name
-  alt_domain_name    = var.api_backend_custom_domain_name
+  alt_domain_name    = var.cloudfront_domain_name
 }
