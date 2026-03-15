@@ -160,6 +160,11 @@ jobs:
             -backend-config="dynamodb_table=${{ github.event.inputs.environment }}-docu-chat-ai-terraform-locks" \
             -backend-config="encrypt=true"
 
+      - name: Terraform Validate
+        working-directory: terraform/layers/backend
+        run: |
+          terraform validate
+
       
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -241,7 +246,7 @@ jobs:
       - name: Terraform Apply
         working-directory: terraform/layers/backend
         run: |
-          terraform apply -auto-approve
+          terraform apply -input=false -auto-approve
 
       - name: Force Lambda code update
         run: |

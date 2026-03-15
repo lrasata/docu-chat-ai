@@ -2,6 +2,7 @@ locals {
   s3_static_web_files_bucket_origin = "${var.environment}-${var.app_id}-s3-static-web-files-bucket-origin"
   s3_uploads_bucket_origin          = "${var.environment}-${var.app_id}-s3-uploads-bucket-origin"
   api_gw_file_uploader_origin       = "${var.environment}-${var.app_id}-file-uploader-api-gateway-origin"
+  api_gw_backend_origin             = "${var.environment}-${var.app_id}-backend-api-gateway-origin"
 }
 
 resource "aws_cloudfront_distribution" "cdn" {
@@ -35,6 +36,18 @@ resource "aws_cloudfront_distribution" "cdn" {
     custom_header {
       name  = "x-api-gateway-file-upload-auth"
       value = var.file_upload_auth_secret
+    }
+  }
+
+  origin {
+    domain_name = var.api_backend_custom_domain_name
+    origin_id   = local.api_gw_backend_origin
+
+    custom_origin_config {
+      origin_protocol_policy = "https-only"
+      http_port              = 80 # required by Terraform but dont get confused only https is used
+      https_port             = 443
+      origin_ssl_protocols   = ["TLSv1.2"]
     }
   }
   # -------------------------
@@ -80,6 +93,24 @@ resource "aws_cloudfront_distribution" "cdn" {
     }
   }
 
+  # -------------------------
+  # Behavior for Backend API GW
+  # -------------------------
+  ordered_cache_behavior {
+    path_pattern           = "/api*"
+    target_origin_id       = local.api_gw_backend_origin
+    allowed_methods        = ["GET", "HEAD", "OPTIONS", "PUT", "POST", "PATCH", "DELETE"]
+    cached_methods         = ["GET", "HEAD"]
+    viewer_protocol_policy = "redirect-to-https"
+
+    forwarded_values {
+      query_string = true
+      cookies {
+        forward = "none"
+      }
+    }
+  }
+
   restrictions {
     geo_restriction {
       restriction_type = "none"
@@ -92,7 +123,7 @@ resource "aws_cloudfront_distribution" "cdn" {
     minimum_protocol_version = "TLSv1.2_2021"
   }
 
-  aliases = [var.api_backend_custom_domain_name]
+  aliases = [var.cloudfront_domain_name]
 
   depends_on = [
     aws_cloudfront_origin_access_control.oac

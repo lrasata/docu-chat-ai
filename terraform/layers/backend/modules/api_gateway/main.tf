@@ -61,7 +61,7 @@ resource "aws_apigatewayv2_integration" "list_files" {
 
 resource "aws_apigatewayv2_route" "list_files" {
   api_id             = aws_apigatewayv2_api.api.id
-  route_key          = "GET /files"
+  route_key          = "GET /api/files"
   target             = "integrations/${aws_apigatewayv2_integration.list_files.id}"
   authorizer_id      = aws_apigatewayv2_authorizer.cognito.id
   authorization_type = "JWT"
@@ -86,7 +86,7 @@ resource "aws_apigatewayv2_integration" "get_file" {
 
 resource "aws_apigatewayv2_route" "get_file" {
   api_id             = aws_apigatewayv2_api.api.id
-  route_key          = "GET /files/{id}"
+  route_key          = "GET /api/files/{id}"
   target             = "integrations/${aws_apigatewayv2_integration.get_file.id}"
   authorizer_id      = aws_apigatewayv2_authorizer.cognito.id
   authorization_type = "JWT"
@@ -111,7 +111,7 @@ resource "aws_apigatewayv2_integration" "get_document_data" {
 
 resource "aws_apigatewayv2_route" "get_document_data" {
   api_id             = aws_apigatewayv2_api.api.id
-  route_key          = "GET /documents/{id}"
+  route_key          = "GET /api/documents/{id}"
   target             = "integrations/${aws_apigatewayv2_integration.get_document_data.id}"
   authorizer_id      = aws_apigatewayv2_authorizer.cognito.id
   authorization_type = "JWT"
@@ -136,7 +136,7 @@ resource "aws_apigatewayv2_integration" "query_document" {
 
 resource "aws_apigatewayv2_route" "query_document" {
   api_id             = aws_apigatewayv2_api.api.id
-  route_key          = "POST /chat"
+  route_key          = "POST /api/chat"
   target             = "integrations/${aws_apigatewayv2_integration.query_document.id}"
   authorizer_id      = aws_apigatewayv2_authorizer.cognito.id
   authorization_type = "JWT"

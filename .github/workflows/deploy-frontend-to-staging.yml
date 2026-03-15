@@ -23,7 +23,7 @@ jobs:
       TF_VAR_region: ${{ secrets.AWS_REGION }}
       TF_VAR_environment: ${{ github.event.inputs.environment }}
       TF_VAR_app_id: docu-chat-ai
-      TF_VAR_api_backend_custom_domain_name: ${{ github.event.inputs.environment }}.epic-trip-planner.com
+      TF_VAR_cloudfront_domain_name: ${{ github.event.inputs.environment }}.epic-trip-planner.com
       TF_VAR_cloudfront_certificate_arn: ${{secrets.FRONTEND_CERTIFICATE_ARN}}
     steps:
       - name: Checkout repository
@@ -52,10 +52,15 @@ jobs:
             -backend-config="dynamodb_table=${{ github.event.inputs.environment }}-docu-chat-ai-terraform-locks" \
             -backend-config="encrypt=true"
 
+      - name: Terraform Validate
+        working-directory: terraform/layers/frontend
+        run: |
+          terraform validate
+
       - name: Terraform Apply
         working-directory: terraform/layers/frontend
         run: |
-          terraform apply -auto-approve
+          terraform apply -input=false -auto-approve
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -71,7 +76,7 @@ jobs:
           export VITE_AWS_HOSTED_COGNITO_LOGIN_DOMAIN=https://${{ github.event.inputs.environment }}-docu-chat-ai-auth-domain.auth.eu-central-1.amazoncognito.com
           export VITE_AWS_COGNITO_CLIENT_ID=${{ secrets.COGNITO_CLIENT_ID }}
           export VITE_AWS_COGNITO_REDIRECT_URI=https://${{ github.event.inputs.environment }}.epic-trip-planner.com
-          export VITE_API_GW_BACKEND_ENDPOINT=https://${{ github.event.inputs.environment }}-backend-api.epic-trip-planner.com-
+          export VITE_API_GW_BACKEND_ENDPOINT=https://${{ github.event.inputs.environment }}.epic-trip-planner.com/api
           
           # Install dependencies and build
           npm ci --silent --no-audit

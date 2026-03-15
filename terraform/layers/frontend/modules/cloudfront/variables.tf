@@ -25,7 +25,7 @@ variable "cloudfront_certificate_arn" {
   type = string
 }
 
-variable "api_backend_custom_domain_name" {
+variable "cloudfront_domain_name" {
   type = string
 }
 
