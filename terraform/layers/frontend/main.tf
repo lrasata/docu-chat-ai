@@ -13,8 +13,9 @@ module "cloudfront" {
   uploads_bucket_regional_domain_name             = data.terraform_remote_state.backend.outputs.uploads_bucket_regional_domain_name
   file_upload_auth_secret                         = data.terraform_remote_state.secrets.outputs.file_upload_auth_secret
   cloudfront_certificate_arn                      = var.cloudfront_certificate_arn
-  api_file_upload_domain_name                     = data.terraform_remote_state.backend.outputs.api_file_upload_domain_name
   cloudfront_domain_name                          = var.cloudfront_domain_name
+  api_file_upload_domain_name                     = data.terraform_remote_state.backend.outputs.api_file_upload_domain_name
+  api_backend_custom_domain_name                  = data.terraform_remote_state.backend.outputs.api_backend_domain_name
 }
 
 # For the static web app bucket
