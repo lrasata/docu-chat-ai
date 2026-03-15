@@ -25,7 +25,7 @@ jobs:
       TF_VAR_environment: ${{ github.event.inputs.environment }}
       TF_VAR_callback_urls: '["https://${{ github.event.inputs.environment }}.epic-trip-planner.com"]'
       TF_VAR_logout_urls: '["https://${{ github.event.inputs.environment }}.epic-trip-planner.com"]'
-      TF_VAR_alt_cloudfront_domain_name: ${{ github.event.inputs.environment }}.epic-trip-planner.com
+      TF_VAR_api_backend_custom_domain_name: ${{ github.event.inputs.environment }}.epic-trip-planner.com
       TF_VAR_api_file_upload_domain_name: ${{ github.event.inputs.environment }}-file-upload-api.epic-trip-planner.com
       TF_VAR_backend_certificate_arn: ${{secrets.BACKEND_CERTIFICATE_ARN}}
       TF_VAR_use_bucketav: false

@@ -118,7 +118,8 @@ jobs:
       TF_VAR_app_id: docu-chat-ai
       TF_VAR_route53_zone_name: epic-trip-planner.com
       TF_VAR_api_gateway_route53_zone_id: Z1U9ULNL0V5AJ3
-      TF_VAR_alt_cloudfront_domain_name: ${{ github.event.inputs.environment }}.epic-trip-planner.com
+      TF_VAR_cloudfront_domain_name: ${{ github.event.inputs.environment }}.epic-trip-planner.com
+      TF_VAR_api_backend_custom_domain_name: ${{ github.event.inputs.environment }}-backend-api.epic-trip-planner.com
       TF_VAR_api_file_upload_domain_name: ${{ github.event.inputs.environment }}-file-upload-api.epic-trip-planner.com
       TF_VAR_backend_certificate_arn: ${{secrets.BACKEND_CERTIFICATE_ARN}}
       TF_VAR_use_bucketav: false

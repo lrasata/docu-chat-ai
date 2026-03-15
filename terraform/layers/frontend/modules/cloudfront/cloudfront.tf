@@ -92,7 +92,7 @@ resource "aws_cloudfront_distribution" "cdn" {
     minimum_protocol_version = "TLSv1.2_2021"
   }
 
-  aliases = [var.alt_cloudfront_domain_name]
+  aliases = [var.api_backend_custom_domain_name]
 
   depends_on = [
     aws_cloudfront_origin_access_control.oac

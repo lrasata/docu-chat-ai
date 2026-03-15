@@ -3,7 +3,7 @@ variable "route53_zone_name" {
   type        = string
 }
 
-variable "api_file_upload_domain_name" {
+variable "api_domain_name" {
   description = "The domain name for the API Gateway"
   type        = string
 }

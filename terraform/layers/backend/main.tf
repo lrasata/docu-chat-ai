@@ -64,7 +64,8 @@ module "api_gateway" {
   source = "./modules/api_gateway"
 
   app_id                                 = var.app_id
-  cloudfront_domain_name                 = var.alt_cloudfront_domain_name
+  cloudfront_domain_name                 = var.cloudfront_domain_name
+  custom_domain_name                     = var.api_backend_custom_domain_name
   backend_certificate_arn                = var.backend_certificate_arn
   cognito_user_pool_client_id            = data.terraform_remote_state.cognito.outputs.cognito_user_pool_client_id
   cognito_user_pool_id                   = data.terraform_remote_state.cognito.outputs.cognito_user_pool_id
@@ -86,7 +87,7 @@ module "api_gateway" {
 module "route53" {
   source = "./modules/route53"
 
-  api_file_upload_domain_name      = var.alt_cloudfront_domain_name
+  api_domain_name                  = var.api_backend_custom_domain_name
   api_gateway_regional_domain_name = module.api_gateway.api_gateway_regional_domain_name
   api_gateway_regional_zone_id     = var.api_gateway_route53_zone_id
   route53_zone_name                = var.route53_zone_name

@@ -62,7 +62,7 @@ region      = "us-east-1"  # Choose your region
 
 # Domain configuration (use your own domain)
 api_file_upload_domain_name = "api-staging.your-domain.com"
-alt_cloudfront_domain_name  = "staging.your-domain.com"
+api_backend_custom_domain_name  = "staging.your-domain.com"
 route53_zone_name          = "your-domain.com"
 
 # SSL Certificate ARN (must be in us-east-1 for CloudFront)

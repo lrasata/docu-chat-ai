@@ -14,7 +14,12 @@ variable "region" {
 }
 
 variable "cloudfront_domain_name" {
-  description = "The  domain name for CloudFront distribution"
+  description = "The  domain name for CloudFront distribution for CORS settings"
+  type        = string
+}
+
+variable "custom_domain_name" {
+  description = "The custom domain name"
   type        = string
 }
 

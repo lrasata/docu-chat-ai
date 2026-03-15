@@ -79,7 +79,7 @@ app_id      = "docu-chat-ai"
 
 # Your domain configuration
 api_file_upload_domain_name = "api-staging.your-domain.com"
-alt_cloudfront_domain_name  = "staging.your-domain.com"
+api_backend_custom_domain_name  = "staging.your-domain.com"
 route53_zone_name          = "your-domain.com"
 
 # Your ACM certificate ARN

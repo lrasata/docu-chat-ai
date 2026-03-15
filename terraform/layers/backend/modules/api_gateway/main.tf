@@ -19,7 +19,7 @@ resource "aws_apigatewayv2_stage" "api" {
 
 # Custom domain name resource
 resource "aws_apigatewayv2_domain_name" "api" {
-  domain_name = var.cloudfront_domain_name
+  domain_name = var.custom_domain_name
 
   domain_name_configuration {
     certificate_arn = var.backend_certificate_arn # must be in same region (eu-central-1)
