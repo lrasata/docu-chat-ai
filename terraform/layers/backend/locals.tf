@@ -104,7 +104,7 @@ locals {
       environment_vars = {
         OPENSEARCH_ENDPOINT = module.opensearchserverless.opensearch_collection_endpoint
         OPENSEARCH_INDEX    = "${var.environment}-${var.app_id}-index"
-        DOCUMENTS_TABLE =  module.file_uploader.dynamo_db_table_name
+        DOCUMENTS_TABLE     = module.file_uploader.dynamo_db_table_name
         REGION              = var.region
       }
       # Policy unique to this Lambda
@@ -188,10 +188,10 @@ locals {
         {
           Effect = "Allow"
           Action = [
-          "aws-marketplace:ViewSubscriptions",
-          "aws-marketplace:Subscribe",
-          "aws-marketplace:Unsubscribe"
-        ]
+            "aws-marketplace:ViewSubscriptions",
+            "aws-marketplace:Subscribe",
+            "aws-marketplace:Unsubscribe"
+          ]
           Resource = ["*"]
         },
         {

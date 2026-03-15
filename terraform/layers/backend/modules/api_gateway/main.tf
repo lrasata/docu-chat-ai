@@ -50,7 +50,7 @@ resource "aws_apigatewayv2_route" "list_files" {
 }
 
 resource "aws_lambda_permission" "list_files" {
-  statement_id  = "AllowAPIGateway"
+  statement_id  = "AllowAPIGatewayListFiles"
   action        = "lambda:InvokeFunction"
   function_name = var.lambda_list_files_function_name
   principal     = "apigateway.amazonaws.com"
@@ -75,7 +75,7 @@ resource "aws_apigatewayv2_route" "get_file" {
 }
 
 resource "aws_lambda_permission" "get_file" {
-  statement_id  = "AllowAPIGateway"
+  statement_id  = "AllowAPIGatewayGetFile"
   action        = "lambda:InvokeFunction"
   function_name = var.lambda_get_file_function_name
   principal     = "apigateway.amazonaws.com"
@@ -100,7 +100,7 @@ resource "aws_apigatewayv2_route" "get_document_data" {
 }
 
 resource "aws_lambda_permission" "get_document_data" {
-  statement_id  = "AllowAPIGateway"
+  statement_id  = "AllowAPIGatewayGetDocumentData"
   action        = "lambda:InvokeFunction"
   function_name = var.lambda_get_document_data_function_name
   principal     = "apigateway.amazonaws.com"
@@ -125,7 +125,7 @@ resource "aws_apigatewayv2_route" "query_document" {
 }
 
 resource "aws_lambda_permission" "query_document" {
-  statement_id  = "AllowAPIGateway"
+  statement_id  = "AllowAPIGatewayQueryDocument"
   action        = "lambda:InvokeFunction"
   function_name = var.lambda_query_document_function_name
   principal     = "apigateway.amazonaws.com"

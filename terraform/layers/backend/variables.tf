@@ -18,6 +18,10 @@ variable "alt_cloudfront_domain_name" {
   type        = string
 }
 
+variable "api_gateway_route53_zone_id" {
+  type    = string
+  default = "Z1U9ULNL0V5AJ3" # eu-central-1 fixed value : https://docs.aws.amazon.com/general/latest/gr/apigateway.html
+}
 
 variable "s3_ingestion_lambda_code_bucket" {
   type        = string

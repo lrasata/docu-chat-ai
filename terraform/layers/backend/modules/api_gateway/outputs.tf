@@ -10,6 +10,11 @@ output "api_endpoint" {
   description = "The base endpoint URL for the API Gateway"
 }
 
+# Regional domain name
+output "api_gateway_regional_domain_name" {
+  value = "${aws_apigatewayv2_api.api.id}.execute-api.${var.region}.amazonaws.com"
+}
+
 # The stage for the environment
 output "stage_name" {
   value       = aws_apigatewayv2_stage.api.name

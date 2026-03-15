@@ -81,6 +81,15 @@ module "api_gateway" {
   depends_on = [module.lambda_functions]
 }
 
+module "route53" {
+  source = "./modules/route53"
+
+  api_file_upload_domain_name      = var.alt_cloudfront_domain_name
+  api_gateway_regional_domain_name = module.api_gateway.api_gateway_regional_domain_name
+  api_gateway_regional_zone_id     = var.api_gateway_route53_zone_id
+  route53_zone_name                = var.route53_zone_name
+}
+
 module "file_uploader" {
   source = "git::https://github.com/lrasata/infra-file-uploader//terraform/modules/file_uploader?ref=fix/dynamic-lambda-arns-for-process-uploads"
 
