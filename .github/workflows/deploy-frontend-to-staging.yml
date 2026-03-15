@@ -71,7 +71,7 @@ jobs:
         working-directory: frontend/docu-chat-ai
         run: |
           # Export env variables
-          export VITA_API_UPLOAD_URL=https://${{ github.event.inputs.environment }}.epic-trip-planner.com/upload-url
+          export VITE_API_UPLOAD_URL=https://${{ github.event.inputs.environment }}.epic-trip-planner.com/upload-url
           export VITE_AWS_COGNITO_USER_POOL_API_ENDPOINT=${{ secrets.COGNITO_USER_POOL_API_ENDPOINT}}
           export VITE_AWS_HOSTED_COGNITO_LOGIN_DOMAIN=https://${{ github.event.inputs.environment }}-docu-chat-ai-auth-domain.auth.eu-central-1.amazoncognito.com
           export VITE_AWS_COGNITO_CLIENT_ID=${{ secrets.COGNITO_CLIENT_ID }}
