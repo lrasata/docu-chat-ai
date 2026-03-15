@@ -71,6 +71,7 @@ jobs:
           export VITE_AWS_HOSTED_COGNITO_LOGIN_DOMAIN=https://${{ github.event.inputs.environment }}-docu-chat-ai-auth-domain.auth.eu-central-1.amazoncognito.com
           export VITE_AWS_COGNITO_CLIENT_ID=${{ secrets.COGNITO_CLIENT_ID }}
           export VITE_AWS_COGNITO_REDIRECT_URI=https://${{ github.event.inputs.environment }}.epic-trip-planner.com
+          export VITE_API_GW_BACKEND_ENDPOINT=https://${{ github.event.inputs.environment }}-backend-api.epic-trip-planner.com-
           
           # Install dependencies and build
           npm ci --silent --no-audit

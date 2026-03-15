@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Box, Alert, CircularProgress, Typography } from "@mui/material";
 import ChatWindow from "../components/ChatWindow";
 import MessageInput from "../components/MessageInput";
-import { chatApi, ChatResponse } from "../../../shared/api/chatApi";
+import { chatApi, type ChatResponse } from "../../../shared/api/chatApi";
 
 interface Message {
   id: number;
