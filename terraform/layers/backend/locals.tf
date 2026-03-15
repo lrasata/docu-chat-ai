@@ -131,6 +131,11 @@ locals {
           Effect   = "Allow"
           Action   = ["bedrock:InvokeModel"]
           Resource = ["arn:aws:bedrock:${var.region}::foundation-model/amazon.titan-embed-text-v1"]
+        },
+        {
+          Effect   = "Allow",
+          Action   = ["dynamodb:UpdateItem"],
+          Resource = [module.file_uploader.dynamo_db_table_arn]
         }
       ]
     }
