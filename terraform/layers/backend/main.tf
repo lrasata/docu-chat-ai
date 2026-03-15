@@ -65,6 +65,7 @@ module "api_gateway" {
 
   app_id                                 = var.app_id
   cloudfront_domain_name                 = var.alt_cloudfront_domain_name
+  backend_certificate_arn                = var.backend_certificate_arn
   cognito_user_pool_client_id            = data.terraform_remote_state.cognito.outputs.cognito_user_pool_client_id
   cognito_user_pool_id                   = data.terraform_remote_state.cognito.outputs.cognito_user_pool_id
   environment                            = var.environment
@@ -79,6 +80,7 @@ module "api_gateway" {
   lambda_query_document_function_name    = module.lambda_functions["query_document"].function_name
 
   depends_on = [module.lambda_functions]
+
 }
 
 module "route53" {
