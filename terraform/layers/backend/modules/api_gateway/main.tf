@@ -17,6 +17,24 @@ resource "aws_apigatewayv2_stage" "api" {
   auto_deploy = true
 }
 
+# Custom domain name resource
+resource "aws_apigatewayv2_domain_name" "api" {
+  domain_name = var.cloudfront_domain_name
+
+  domain_name_configuration {
+    certificate_arn = var.backend_certificate_arn # must be in same region (eu-central-1)
+    endpoint_type   = "REGIONAL"
+    security_policy = "TLS_1_2"
+  }
+}
+
+# API mapping - connects the custom domain to your API + stage
+resource "aws_apigatewayv2_api_mapping" "api" {
+  api_id      = aws_apigatewayv2_api.api.id
+  domain_name = aws_apigatewayv2_domain_name.api.id
+  stage       = aws_apigatewayv2_stage.api.id
+}
+
 # Cognito Authorizer for API Gateway
 resource "aws_apigatewayv2_authorizer" "cognito" {
   api_id           = aws_apigatewayv2_api.api.id

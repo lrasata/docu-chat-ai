@@ -18,6 +18,12 @@ variable "cloudfront_domain_name" {
   type        = string
 }
 
+variable "backend_certificate_arn" {
+  description = "The ARN of the ACM certificate"
+  type        = string
+}
+
+
 variable "cognito_user_pool_client_id" {
   type = string
 }
