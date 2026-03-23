@@ -6,7 +6,7 @@ const dynamoClient = new DynamoDBClient();
 
 exports.handler = async (event) => {
     try {
-        const id = event.requestContext.authorizer.jwt.claims.sub; // Cognito user ID
+        const id = event.requestContext.authorizer.claims.sub; // Cognito user ID
         const bucket = process.env.UPLOADS_BUCKET;
         const tableName = process.env.DOCUMENTS_TABLE;
 
