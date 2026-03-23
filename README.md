@@ -23,9 +23,7 @@ A serverless, cloud-native application that allows users to chat with their PDF 
 
 ## Architecture
 
-```file
-.infracodebase/architecture.json
-```
+<img src="docs/architecture.png" alt="infrastructure">
 
 **Frontend:**
 - React (Vite) app with TypeScript
