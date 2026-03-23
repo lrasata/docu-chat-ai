@@ -28,7 +28,17 @@ locals {
             "dynamodb:Scan"
           ]
           Resource = [module.file_uploader.dynamo_db_table_arn]
-        }
+        },
+        {
+          Effect = "Allow"
+          Action = [
+            "s3:ListBucket"
+          ]
+          Resource = [
+            "arn:aws:s3:::${module.file_uploader.uploads_bucket_id}",
+            "arn:aws:s3:::${module.file_uploader.uploads_bucket_id}/*"
+          ]
+        },
       ]
     }
     # Configuration for GET_FILE
