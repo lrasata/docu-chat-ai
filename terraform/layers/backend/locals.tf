@@ -16,6 +16,7 @@ locals {
       s3_key       = null
       # Variables unique to this Lambda
       environment_vars = {
+        RESOURCE        = "users"
         UPLOADS_BUCKET  = module.file_uploader.uploads_bucket_id
         DOCUMENTS_TABLE = module.file_uploader.dynamo_db_table_name
       }

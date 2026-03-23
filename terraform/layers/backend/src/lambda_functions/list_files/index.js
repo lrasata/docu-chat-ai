@@ -9,16 +9,17 @@ exports.handler = async (event) => {
         const id = event.requestContext.authorizer.claims.sub; // Cognito user ID
         const bucket = process.env.UPLOADS_BUCKET;
         const tableName = process.env.DOCUMENTS_TABLE;
+        const resource = process.env.RESOURCE;
 
         // Get file list from S3
         const s3Response = await s3Client.send(
             new ListObjectsV2Command({
                 Bucket: bucket,
-                Prefix: `${id}/`, // Files organized by user
+                Prefix: `${resource}/${id}/`, // Files organized by resources and id
             })
         );
 
-        // Get metadata from DynamoDB
+        // Get metadata from DynamoDB - TODO file uploader needs update as metadata is not saved in dynamodb
         const dynamoResponse = await dynamoClient.send(
             new QueryCommand({
                 TableName: tableName,
