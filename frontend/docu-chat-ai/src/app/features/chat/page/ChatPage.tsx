@@ -31,7 +31,7 @@ const ChatPage: React.FC = () => {
     const userMessage: Message = {
       id: Date.now(),
       sender: "user",
-      text
+      text,
     };
     setMessages((prev) => [...prev, userMessage]);
 
@@ -51,7 +51,8 @@ const ChatPage: React.FC = () => {
       };
       setMessages((prev) => [...prev, botMessage]);
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : "Failed to get response";
+      const errorMessage =
+        err instanceof Error ? err.message : "Failed to get response";
       setError(errorMessage);
 
       // Add error message to chat

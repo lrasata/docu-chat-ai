@@ -1,4 +1,4 @@
-import axios, {type AxiosInstance } from "axios";
+import axios, { type AxiosInstance } from "axios";
 
 export interface ChatRequest {
   question: string;
@@ -47,7 +47,7 @@ class ChatApiService {
       },
       (error) => {
         return Promise.reject(error);
-      }
+      },
     );
   }
 
@@ -58,13 +58,18 @@ class ChatApiService {
     } catch (error) {
       if (axios.isAxiosError(error) && error.response) {
         const errorData = error.response.data as ChatError;
-        throw new Error(errorData.message || errorData.error || "Failed to send message");
+        throw new Error(
+          errorData.message || errorData.error || "Failed to send message",
+        );
       }
       throw new Error("Network error. Please check your connection.");
     }
   }
 
-  async queryDocument(documentId: string, question: string): Promise<ChatResponse> {
+  async queryDocument(
+    documentId: string,
+    question: string,
+  ): Promise<ChatResponse> {
     return this.sendMessage({ question, documentId });
   }
 

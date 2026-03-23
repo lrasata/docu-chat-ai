@@ -1,5 +1,13 @@
 import React from "react";
-import { Box, Typography, Paper, Chip, Accordion, AccordionSummary, AccordionDetails } from "@mui/material";
+import {
+  Box,
+  Typography,
+  Paper,
+  Chip,
+  Accordion,
+  AccordionSummary,
+  AccordionDetails,
+} from "@mui/material";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import SourceIcon from "@mui/icons-material/Article";
 
@@ -36,8 +44,8 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ messages }) => {
               bgcolor: msg.error
                 ? "error.light"
                 : msg.sender === "user"
-                ? "primary.main"
-                : "grey.100",
+                  ? "primary.main"
+                  : "grey.100",
             }}
           >
             <Typography
@@ -75,7 +83,14 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ messages }) => {
                           borderRadius: 1,
                         }}
                       >
-                        <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1 }}>
+                        <Box
+                          sx={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 1,
+                            mb: 1,
+                          }}
+                        >
                           <Typography variant="caption" fontWeight="bold">
                             Source {idx + 1}
                           </Typography>
@@ -93,7 +108,11 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ messages }) => {
                         >
                           {source.preview}
                         </Typography>
-                        <Typography variant="caption" color="text.disabled" sx={{ mt: 0.5, display: "block" }}>
+                        <Typography
+                          variant="caption"
+                          color="text.disabled"
+                          sx={{ mt: 0.5, display: "block" }}
+                        >
                           Document ID: {source.documentId.substring(0, 8)}...
                         </Typography>
                       </Box>

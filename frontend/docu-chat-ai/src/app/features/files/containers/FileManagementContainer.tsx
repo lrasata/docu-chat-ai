@@ -15,12 +15,12 @@ import type { IFile } from "../../../../types.ts";
 
 const FileManagementContainer = () => {
   const [loading, setLoading] = useState(false);
-  const auth = useAuth();
   const dispatch = useDispatch<AppDispatch>();
   const files: IFile[] = useSelector((state: RootState) => state.files.files);
+  const auth = useAuth();
 
   useEffect(() => {
-    dispatch(fetchFiles());
+    dispatch(fetchFiles(auth.user?.access_token ?? ""));
   }, []);
 
   const handleFileChange = async (event: ChangeEvent<HTMLInputElement>) => {

@@ -7,7 +7,10 @@ interface MessageInputProps {
   disabled?: boolean;
 }
 
-const MessageInput: React.FC<MessageInputProps> = ({ onSend, disabled = false }) => {
+const MessageInput: React.FC<MessageInputProps> = ({
+  onSend,
+  disabled = false,
+}) => {
   const [value, setValue] = useState("");
 
   const handleSend = () => {
@@ -29,7 +32,11 @@ const MessageInput: React.FC<MessageInputProps> = ({ onSend, disabled = false })
         multiline
         maxRows={4}
       />
-      <IconButton color="primary" onClick={handleSend} disabled={disabled || !value.trim()}>
+      <IconButton
+        color="primary"
+        onClick={handleSend}
+        disabled={disabled || !value.trim()}
+      >
         <SendIcon />
       </IconButton>
     </Box>
