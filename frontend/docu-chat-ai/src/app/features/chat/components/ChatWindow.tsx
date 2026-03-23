@@ -11,6 +11,7 @@ import {
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import SourceIcon from "@mui/icons-material/Article";
 
+// TODO DRY interfaces below are duplicated
 interface ChatSource {
   documentId: string;
   chunkId: string;
@@ -19,7 +20,7 @@ interface ChatSource {
 }
 
 interface Message {
-  id: number;
+  id: string;
   sender: "user" | "bot";
   text: string;
   sources?: ChatSource[];

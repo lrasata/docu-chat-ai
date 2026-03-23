@@ -48,6 +48,7 @@ exports.handler = async (event) => {
                 lastModified: file.LastModified,
                 documentId: meta.documentId || null,
                 resource: meta.resource || null
+                // TODO provide original filename to be displayed by UI
             };
         });
 

@@ -3,9 +3,10 @@ import { Box, Alert, CircularProgress, Typography } from "@mui/material";
 import ChatWindow from "../components/ChatWindow";
 import MessageInput from "../components/MessageInput";
 import { chatApi, type ChatResponse } from "../../../shared/api/chatApi";
+import { useAuth } from "react-oidc-context";
 
 interface Message {
-  id: number;
+  id: string;
   sender: "user" | "bot";
   text: string;
   sources?: ChatResponse["sources"];
@@ -13,9 +14,10 @@ interface Message {
 }
 
 const ChatPage: React.FC = () => {
+  const auth = useAuth();
   const [messages, setMessages] = useState<Message[]>([
     {
-      id: 1,
+      id: crypto.randomUUID(),
       sender: "bot",
       text: "Hello! Upload your document and ask me anything about it.",
     },
@@ -24,45 +26,45 @@ const ChatPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
 
   const handleSend = async (text: string) => {
-    // Clear any previous errors
     setError(null);
 
-    // Add user message
-    const userMessage: Message = {
-      id: Date.now(),
-      sender: "user",
-      text,
-    };
-    setMessages((prev) => [...prev, userMessage]);
-
-    // Show loading indicator
+    setMessages((prev) => [
+      ...prev,
+      {
+        id: crypto.randomUUID(),
+        sender: "user",
+        text,
+      },
+    ]);
     setIsLoading(true);
 
     try {
-      // Call the chat API
-      const response = await chatApi.queryAllDocuments(text);
+      const token = auth.user?.access_token ?? "";
+      const response = await chatApi.queryAllDocuments(text, token);
 
-      // Add bot response
-      const botMessage: Message = {
-        id: Date.now() + 1,
-        sender: "bot",
-        text: response.answer,
-        sources: response.sources,
-      };
-      setMessages((prev) => [...prev, botMessage]);
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: crypto.randomUUID(),
+          sender: "bot",
+          text: response.answer,
+          sources: response.sources,
+        },
+      ]);
     } catch (err) {
       const errorMessage =
         err instanceof Error ? err.message : "Failed to get response";
       setError(errorMessage);
 
-      // Add error message to chat
-      const errorMsg: Message = {
-        id: Date.now() + 1,
-        sender: "bot",
-        text: `Sorry, I encountered an error: ${errorMessage}`,
-        error: true,
-      };
-      setMessages((prev) => [...prev, errorMsg]);
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: crypto.randomUUID(),
+          sender: "bot",
+          text: `Sorry, I encountered an error: ${errorMessage}`,
+          error: true,
+        },
+      ]);
     } finally {
       setIsLoading(false);
     }

@@ -1,4 +1,5 @@
 import axios, { type AxiosInstance } from "axios";
+import { API_BACKEND_URL } from "../constants/constants.ts";
 
 export interface ChatRequest {
   question: string;
@@ -27,33 +28,32 @@ class ChatApiService {
   private api: AxiosInstance;
 
   constructor() {
-    const baseURL = import.meta.env.VITE_API_BASE_URL || "";
-
     this.api = axios.create({
-      baseURL,
+      baseURL: API_BACKEND_URL || "",
       headers: {
         "Content-Type": "application/json",
       },
     });
-
-    // Add authorization interceptor
-    this.api.interceptors.request.use(
-      (config) => {
-        const token = localStorage.getItem("access_token");
-        if (token) {
-          config.headers.Authorization = `Bearer ${token}`;
-        }
-        return config;
-      },
-      (error) => {
-        return Promise.reject(error);
-      },
-    );
   }
 
-  async sendMessage(request: ChatRequest): Promise<ChatResponse> {
+  private withAuth(token: string) {
+    return {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    };
+  }
+
+  async sendMessage(
+    request: ChatRequest,
+    token: string,
+  ): Promise<ChatResponse> {
     try {
-      const response = await this.api.post<ChatResponse>("/chat", request);
+      const response = await this.api.post<ChatResponse>(
+        "/chat",
+        request,
+        this.withAuth(token),
+      );
       return response.data;
     } catch (error) {
       if (axios.isAxiosError(error) && error.response) {
@@ -69,12 +69,16 @@ class ChatApiService {
   async queryDocument(
     documentId: string,
     question: string,
+    token: string,
   ): Promise<ChatResponse> {
-    return this.sendMessage({ question, documentId });
+    return this.sendMessage({ question, documentId }, token);
   }
 
-  async queryAllDocuments(question: string): Promise<ChatResponse> {
-    return this.sendMessage({ question });
+  async queryAllDocuments(
+    question: string,
+    token: string,
+  ): Promise<ChatResponse> {
+    return this.sendMessage({ question }, token);
   }
 }
 
