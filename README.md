@@ -1,4 +1,4 @@
-# AI Powered Document Chat App
+# AI Powered Document Chat App [In construction 🚧]
 
 ![Staging Backend - Deployment pipeline](https://github.com/lrasata/serverless-docu-chat-ai/actions/workflows/deploy-backend-to-staging.yml/badge.svg)
 ![Staging Frontend - Deployment pipeline](https://github.com/lrasata/serverless-docu-chat-ai/actions/workflows/deploy-frontend-to-staging.yml/badge.svg)
@@ -15,6 +15,11 @@ A serverless, cloud-native application that allows users to chat with their PDF 
 - **Real-time Interface**: Modern React UI with Material-UI
 - **Serverless Architecture**: Auto-scaling, pay-per-use infrastructure
 - **Infrastructure as Code**: Complete Terraform deployment
+
+## Under Construction
+- [ ] Refactor File-uploader latest beta version to use Cognito auth and refactor this repo to use it
+- [ ] DynamoDB table metadata + code cleanup
+- [ ] OpenSearch is expensive, implement an alternative
 
 ## Architecture
 

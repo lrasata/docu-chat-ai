@@ -19,7 +19,7 @@ exports.handler = async (event) => {
             })
         );
 
-        // Get metadata from DynamoDB - TODO file uploader needs update as metadata is not saved in dynamodb
+        // Get metadata from DynamoDB
         const dynamoResponse = await dynamoClient.send(
             new QueryCommand({
                 TableName: tableName,
