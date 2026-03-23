@@ -203,7 +203,7 @@ def handler(event, context):
         # Get user ID from authorizer (if available)
         user_id = None
         if "requestContext" in event and "authorizer" in event["requestContext"]:
-            user_id = event["requestContext"]["authorizer"].get("jwt", {}).get("claims", {}).get("sub")
+            user_id = event["requestContext"]["authorizer"].get("claims", {}).get("sub")
 
         print(f"Processing question: {question}")
         print(f"Document ID: {document_id}")
