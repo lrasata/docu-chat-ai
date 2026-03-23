@@ -1,6 +1,6 @@
 export const APP_NAME = "DocuChat AI";
 
-export const API_UPLOAD_MEDIA = import.meta.env.VITE_API_UPLOAD_MEDIA;
+export const API_UPLOAD_URL = import.meta.env.VITE_API_UPLOAD_URL;
 export const API_BACKEND_URL = import.meta.env.VITE_API_GW_BACKEND_ENDPOINT;
 
 export const AWS_COGNITO_USER_POOL_API_ENDPOINT = import.meta.env

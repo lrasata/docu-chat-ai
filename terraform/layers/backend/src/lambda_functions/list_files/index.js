@@ -6,15 +6,16 @@ const dynamoClient = new DynamoDBClient();
 
 exports.handler = async (event) => {
     try {
-        const id = event.requestContext.authorizer.jwt.claims.sub; // Cognito user ID
+        const id = event.requestContext.authorizer.claims.sub; // Cognito user ID
         const bucket = process.env.UPLOADS_BUCKET;
         const tableName = process.env.DOCUMENTS_TABLE;
+        const resource = process.env.RESOURCE;
 
         // Get file list from S3
         const s3Response = await s3Client.send(
             new ListObjectsV2Command({
                 Bucket: bucket,
-                Prefix: `${id}/`, // Files organized by user
+                Prefix: `${resource}/${id}/`, // Files organized by resources and id
             })
         );
 
@@ -47,6 +48,7 @@ exports.handler = async (event) => {
                 lastModified: file.LastModified,
                 documentId: meta.documentId || null,
                 resource: meta.resource || null
+                // TODO provide original filename to be displayed by UI
             };
         });
 

@@ -20,7 +20,7 @@ variable "cloudfront_certificate_arn" {
   type        = string
 }
 
-variable "alt_cloudfront_domain_name" {
-  description = "The Alternative domain name for CloudFront distribution"
+variable "cloudfront_domain_name" {
+  description = "The domain name for CloudFront distribution"
   type        = string
 }

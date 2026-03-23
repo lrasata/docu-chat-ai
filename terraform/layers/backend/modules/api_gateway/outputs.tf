@@ -10,6 +10,16 @@ output "api_endpoint" {
   description = "The base endpoint URL for the API Gateway"
 }
 
+# domain name
+output "api_gateway_domain_name" {
+  value = aws_apigatewayv2_domain_name.api.domain_name_configuration[0].target_domain_name
+}
+
+# hosted zone id
+output "api_gateway_hosted_zone_id" {
+  value = aws_apigatewayv2_domain_name.api.domain_name_configuration[0].hosted_zone_id
+}
+
 # The stage for the environment
 output "stage_name" {
   value       = aws_apigatewayv2_stage.api.name

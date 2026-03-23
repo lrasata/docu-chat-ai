@@ -1,21 +1,3 @@
-module "file_uploader" {
-  source = "git::https://github.com/lrasata/infra-file-uploader//terraform/modules/file_uploader?ref=v1.6.3"
-
-  region                                        = var.region
-  app_id                                        = var.app_id
-  environment                                   = var.environment
-  secret_store_name                             = data.terraform_remote_state.secrets.outputs.secret_store_name
-  api_file_upload_domain_name                   = var.api_file_upload_domain_name
-  backend_certificate_arn                       = var.backend_certificate_arn
-  uploads_bucket_name                           = var.uploads_bucket_name
-  enable_transfer_acceleration                  = var.enable_transfer_acceleration
-  lambda_upload_presigned_url_expiration_time_s = var.lambda_upload_presigned_url_expiration_time_s
-  bucket_av_sns_findings_topic_name             = var.bucket_av_sns_findings_topic_name
-  lambda_memory_size_mb                         = var.lambda_memory_size_mb
-  notification_email                            = var.notification_email
-  route53_zone_name                             = var.route53_zone_name
-}
-
 module "opensearchserverless" {
   source = "./modules/opensearch"
 
@@ -39,6 +21,8 @@ module "lambda_functions" {
   source_dir            = each.value.source_dir
   handler_file          = each.value.handler_file
   runtime               = each.value.runtime
+  timeout               = each.value.timeout
+  memory_size           = each.value.memory_size
   environment_vars      = each.value.environment_vars
   s3_bucket             = each.value.s3_bucket != null ? each.value.s3_bucket : ""
   s3_key                = each.value.s3_key != null ? each.value.s3_key : ""
@@ -47,12 +31,42 @@ module "lambda_functions" {
   depends_on = [module.opensearchserverless]
 }
 
+# Data access policy for Lambda execution roles
+resource "aws_opensearchserverless_access_policy" "opensearch_data_access" {
+  name = module.opensearchserverless.opensearch_collection_name
+  type = "data"
+
+  policy = jsonencode([{
+    Rules = [
+      {
+        ResourceType = "index"
+        Resource     = ["index/${module.opensearchserverless.opensearch_collection_name}/*"]
+        Permission = [
+          "aoss:CreateIndex",
+          "aoss:UpdateIndex",
+          "aoss:DescribeIndex",
+          "aoss:ReadDocument",
+          "aoss:WriteDocument"
+        ]
+      },
+      {
+        ResourceType = "collection"
+        Resource     = ["collection/${module.opensearchserverless.opensearch_collection_name}"]
+        Permission   = ["aoss:DescribeCollectionItems"]
+      }
+    ]
+    Principal = [module.lambda_functions["s3_ingestion"].function_exec_role_arn, module.lambda_functions["query_document"].function_exec_role_arn]
+  }])
+}
+
 
 module "api_gateway" {
   source = "./modules/api_gateway"
 
   app_id                                 = var.app_id
-  cloudfront_domain_name                 = var.alt_cloudfront_domain_name
+  cloudfront_domain_name                 = var.cloudfront_domain_name
+  custom_domain_name                     = var.api_backend_custom_domain_name
+  backend_certificate_arn                = var.backend_certificate_arn
   cognito_user_pool_client_id            = data.terraform_remote_state.cognito.outputs.cognito_user_pool_client_id
   cognito_user_pool_id                   = data.terraform_remote_state.cognito.outputs.cognito_user_pool_id
   environment                            = var.environment
@@ -63,26 +77,50 @@ module "api_gateway" {
   lambda_get_file_function_name          = module.lambda_functions["get_file"].function_name
   lambda_list_files_arn                  = module.lambda_functions["list_files"].function_arn
   lambda_list_files_function_name        = module.lambda_functions["list_files"].function_name
+  lambda_query_document_arn              = module.lambda_functions["query_document"].function_arn
+  lambda_query_document_function_name    = module.lambda_functions["query_document"].function_name
 
   depends_on = [module.lambda_functions]
+
 }
 
-# For S3 Ingestion Lambda from S3 execution
-resource "aws_lambda_permission" "allow_execution_from_s3" {
-  statement_id  = "AllowExecutionFromS3"
+module "route53" {
+  source = "./modules/route53"
+
+  route53_zone_name          = var.route53_zone_name
+  api_custom_domain_name     = var.api_backend_custom_domain_name
+  api_gateway_domain_name    = module.api_gateway.api_gateway_domain_name
+  api_gateway_hosted_zone_id = module.api_gateway.api_gateway_hosted_zone_id
+}
+
+module "file_uploader" {
+  source = "git::https://github.com/lrasata/infra-file-uploader//terraform/modules/file_uploader?ref=fix/dynamic-lambda-arns-for-process-uploads"
+
+  region                                        = var.region
+  app_id                                        = var.app_id
+  environment                                   = var.environment
+  secret_store_name                             = data.terraform_remote_state.secrets.outputs.secret_store_name
+  api_file_upload_domain_name                   = var.api_file_upload_domain_name
+  backend_certificate_arn                       = var.backend_certificate_arn
+  uploads_bucket_name                           = var.uploads_bucket_name
+  enable_transfer_acceleration                  = var.enable_transfer_acceleration
+  lambda_upload_presigned_url_expiration_time_s = var.lambda_upload_presigned_url_expiration_time_s
+  bucket_av_sns_findings_topic_name             = var.bucket_av_sns_findings_topic_name
+  lambda_memory_size_mb                         = var.lambda_memory_size_mb
+  notification_email                            = var.notification_email
+  route53_zone_name                             = var.route53_zone_name
+}
+
+resource "aws_lambda_permission" "allow_sns_to_invoke_s3_ingestion" {
+  statement_id  = "AllowExecutionFromSNS"
   action        = "lambda:InvokeFunction"
   function_name = module.lambda_functions["s3_ingestion"].function_name
-  principal     = "s3.amazonaws.com"
-  source_arn    = module.file_uploader.uploads_bucket_arn
+  principal     = "sns.amazonaws.com"
+  source_arn    = module.file_uploader.sns_topic_arn_processed_file_event
 }
 
-resource "aws_s3_bucket_notification" "uploads_trigger" {
-  bucket = module.file_uploader.uploads_bucket_id
-
-  lambda_function {
-    lambda_function_arn = module.lambda_functions["s3_ingestion"].function_arn
-    events              = ["s3:ObjectCreated:*"]
-  }
-
-  depends_on = [aws_lambda_permission.allow_execution_from_s3]
+resource "aws_sns_topic_subscription" "s3_ingestion_lambda" {
+  topic_arn = module.file_uploader.sns_topic_arn_processed_file_event
+  protocol  = "lambda"
+  endpoint  = module.lambda_functions["s3_ingestion"].function_arn
 }

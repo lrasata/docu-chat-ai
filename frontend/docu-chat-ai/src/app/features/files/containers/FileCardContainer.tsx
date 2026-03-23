@@ -38,9 +38,6 @@ const FileCardContainer: React.FC<FileCardContainerProps> = ({ files }) => {
               <Typography variant="h5" component="div">
                 {file.key}
               </Typography>
-              {/* <Typography variant="body2" color="text.secondary">
-                {file.path}
-              </Typography> */}
             </CardContent>
           </CardActionArea>
         </Card>

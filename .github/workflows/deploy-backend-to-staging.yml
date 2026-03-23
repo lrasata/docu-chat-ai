@@ -34,7 +34,7 @@ jobs:
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: arn:aws:iam::387836084035:role/githubDocuChatAIManager
+          role-to-assume: ${{ secrets.AWS_GITHUB_DEPLOY_ROLE_ARN }}
           aws-region: ${{ secrets.AWS_REGION }}
 
       - name: Terraform Init
@@ -79,7 +79,7 @@ jobs:
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: arn:aws:iam::387836084035:role/githubDocuChatAIManager
+          role-to-assume: ${{ secrets.AWS_GITHUB_DEPLOY_ROLE_ARN }}
           aws-region: ${{ secrets.AWS_REGION }}
 
       - name: Terraform Init
@@ -116,19 +116,24 @@ jobs:
       TF_VAR_region: ${{ secrets.AWS_REGION }}
       TF_VAR_environment: ${{ github.event.inputs.environment }}
       TF_VAR_app_id: docu-chat-ai
+      TF_VAR_route53_zone_name: epic-trip-planner.com
+      TF_VAR_api_gateway_route53_zone_id: Z1U9ULNL0V5AJ3
       TF_VAR_cloudfront_domain_name: ${{ github.event.inputs.environment }}.epic-trip-planner.com
+      TF_VAR_api_backend_custom_domain_name: ${{ github.event.inputs.environment }}-backend-api.epic-trip-planner.com
       TF_VAR_api_file_upload_domain_name: ${{ github.event.inputs.environment }}-file-upload-api.epic-trip-planner.com
       TF_VAR_backend_certificate_arn: ${{secrets.BACKEND_CERTIFICATE_ARN}}
       TF_VAR_use_bucketav: false
       TF_VAR_bucket_av_sns_findings_topic_name: ""
-      TF_VAR_uploads_bucket_name: docu-chat-ai-file-uploads-bucket-${{ github.event.inputs.environment }}
+      TF_VAR_uploads_bucket_name: file-uploads
       TF_VAR_enable_transfer_acceleration: true
       TF_VAR_secret_store_name: ${{secrets.SECRET_STORE_NAME}}
       TF_VAR_notification_email: ${{secrets.ALERT_EMAIL}}
-      TF_VAR_route53_zone_name: epic-trip-planner.com
-      TF_VAR_alt_cloudfront_domain_name: ${{ github.event.inputs.environment }}.epic-trip-planner.com
       TF_VAR_s3_ingestion_lambda_code_bucket: docu-chat-ai-lambda-s3-ingestion
       TF_VAR_s3_ingestion_lambda_code_key: "${{ github.event.inputs.environment }}/s3-ingestion.zip"
+      TF_VAR_s3_query_document_lambda_code_bucket: docu-chat-ai-lambda-s3-query-document
+      TF_VAR_s3_query_document_lambda_code_key: "${{ github.event.inputs.environment }}/s3-query-document.zip"
+      TF_VAR_bedrock_model_inference_profile_arn: ${{secrets.BEDROCK_MODEL_INFERENCE_PROFILE_ARN}}
+      TF_VAR_max_search_results: 5
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -141,7 +146,7 @@ jobs:
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: arn:aws:iam::387836084035:role/githubDocuChatAIManager
+          role-to-assume: ${{ secrets.AWS_GITHUB_DEPLOY_ROLE_ARN }}
           aws-region: ${{ secrets.AWS_REGION }}
 
       - name: Terraform Init
@@ -155,11 +160,16 @@ jobs:
             -backend-config="dynamodb_table=${{ github.event.inputs.environment }}-docu-chat-ai-terraform-locks" \
             -backend-config="encrypt=true"
 
+      - name: Terraform Validate
+        working-directory: terraform/layers/backend
+        run: |
+          terraform validate
+
       
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
       
       - name: Module File Uploader - Build Lambda packages (${{ github.event.inputs.environment }})
         run: |
@@ -196,6 +206,19 @@ jobs:
             public.ecr.aws/sam/build-python3.11 \
             bash -c "pip install -r requirements.txt -t build/"
 
+      - name: Build Query Document Lambda dependencies (Amazon Linux)
+        run: |
+          cd terraform/layers/backend/src/lambda_functions/query_document
+          rm -rf build
+          mkdir build
+
+          docker run --rm \
+            --user "$(id -u):$(id -g)" \
+            --entrypoint "" \
+            -v "$PWD:/var/task" \
+            public.ecr.aws/sam/build-python3.11 \
+            bash -c "pip install -r requirements.txt -t build/"
+
       - name: Package S3 Ingestion Lambda
         run: |
           cd terraform/layers/backend/src/lambda_functions/s3_ingestion
@@ -203,12 +226,36 @@ jobs:
           cd build
           zip -r ../lambda_s3_ingestion.zip .
 
+      - name: Package Query Document Lambda
+        run: |
+          cd terraform/layers/backend/src/lambda_functions/query_document
+          cp query_document.py build/
+          cd build
+          zip -r ../lambda_query_document.zip .
+
       - name: Upload S3 Ingestion Lambda to S3
         run: |
           aws s3 cp terraform/layers/backend/src/lambda_functions/s3_ingestion/lambda_s3_ingestion.zip \
                     s3://$TF_VAR_s3_ingestion_lambda_code_bucket/$TF_VAR_s3_ingestion_lambda_code_key
 
+      - name: Upload Query Document Lambda to S3
+        run: |
+          aws s3 cp terraform/layers/backend/src/lambda_functions/query_document/lambda_query_document.zip \
+                    s3://$TF_VAR_s3_query_document_lambda_code_bucket/$TF_VAR_s3_query_document_lambda_code_key
+
       - name: Terraform Apply
         working-directory: terraform/layers/backend
         run: |
-          terraform apply -auto-approve
+          terraform apply -input=false -auto-approve
+
+      - name: Force Lambda code update
+        run: |
+          aws lambda update-function-code \
+            --function-name $(aws lambda list-functions --query 'Functions[?contains(FunctionName, `s3-ingestion`) && contains(FunctionName, `${{ github.event.inputs.environment }}`)].FunctionName' --output text) \
+            --s3-bucket $TF_VAR_s3_ingestion_lambda_code_bucket \
+            --s3-key $TF_VAR_s3_ingestion_lambda_code_key
+          
+          aws lambda update-function-code \
+            --function-name $(aws lambda list-functions --query 'Functions[?contains(FunctionName, `query-document`) && contains(FunctionName, `${{ github.event.inputs.environment }}`)].FunctionName' --output text) \
+            --s3-bucket $TF_VAR_s3_query_document_lambda_code_bucket \
+            --s3-key $TF_VAR_s3_query_document_lambda_code_key

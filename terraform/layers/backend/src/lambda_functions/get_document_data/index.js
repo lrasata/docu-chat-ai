@@ -7,7 +7,7 @@ const dynamoClient = new DynamoDBClient();
 
 exports.handler = async (event) => {
     try {
-        const userId = event.requestContext.authorizer.jwt.claims.sub;
+        const userId = event.requestContext.authorizer.claims.sub;
         const documentId = event.pathParameters.id;
         const tableName = process.env.DOCUMENTS_TABLE;
 

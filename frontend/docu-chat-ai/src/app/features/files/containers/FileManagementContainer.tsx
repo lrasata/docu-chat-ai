@@ -15,12 +15,12 @@ import type { IFile } from "../../../../types.ts";
 
 const FileManagementContainer = () => {
   const [loading, setLoading] = useState(false);
-  const auth = useAuth();
   const dispatch = useDispatch<AppDispatch>();
   const files: IFile[] = useSelector((state: RootState) => state.files.files);
+  const auth = useAuth();
 
   useEffect(() => {
-    dispatch(fetchFiles());
+    dispatch(fetchFiles(auth.user?.access_token ?? ""));
   }, []);
 
   const handleFileChange = async (event: ChangeEvent<HTMLInputElement>) => {
@@ -29,11 +29,10 @@ const FileManagementContainer = () => {
 
     if (file && auth.isAuthenticated) {
       try {
-        // Email from ID token
-        const email = auth.user?.profile.email;
+        const user_sub = auth.user?.profile.sub;
 
-        if (email) {
-          const presignedUrlData = await getPresignedUrl(email, file);
+        if (user_sub) {
+          const presignedUrlData = await getPresignedUrl(user_sub, file);
 
           if (
             presignedUrlData &&

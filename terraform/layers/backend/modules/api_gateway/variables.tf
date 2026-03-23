@@ -14,9 +14,20 @@ variable "region" {
 }
 
 variable "cloudfront_domain_name" {
-  description = "The  domain name for CloudFront distribution"
+  description = "The  domain name for CloudFront distribution for CORS settings"
   type        = string
 }
+
+variable "custom_domain_name" {
+  description = "The custom domain name"
+  type        = string
+}
+
+variable "backend_certificate_arn" {
+  description = "The ARN of the ACM certificate"
+  type        = string
+}
+
 
 variable "cognito_user_pool_client_id" {
   type = string
@@ -47,5 +58,13 @@ variable "lambda_get_document_data_arn" {
 }
 
 variable "lambda_get_document_data_function_name" {
+  type = string
+}
+
+variable "lambda_query_document_arn" {
+  type = string
+}
+
+variable "lambda_query_document_function_name" {
   type = string
 }

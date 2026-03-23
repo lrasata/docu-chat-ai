@@ -13,22 +13,39 @@ variable "region" {
   type        = string
 }
 
-variable "alt_cloudfront_domain_name" {
-  description = "The Alternative domain name for CloudFront distribution"
+variable "cloudfront_domain_name" {
+  description = "The  domain name for CloudFront distribution for CORS settings"
   type        = string
 }
 
+variable "api_backend_custom_domain_name" {
+  description = "The Alternative domain name for API gateway"
+  type        = string
+}
+
+variable "api_gateway_route53_zone_id" {
+  type    = string
+  default = "Z1U9ULNL0V5AJ3" # eu-central-1 fixed value : https://docs.aws.amazon.com/general/latest/gr/apigateway.html
+}
 
 variable "s3_ingestion_lambda_code_bucket" {
   type        = string
-  default     = ""
-  description = "Optional S3 bucket for large Lambda code"
+  description = "Optional S3 bucket for large ingestionLambda code"
 }
 
 variable "s3_ingestion_lambda_code_key" {
   type        = string
-  default     = ""
-  description = "Optional S3 key for large Lambda code"
+  description = "Optional S3 key for large ingestion Lambda code"
+}
+
+variable "s3_query_document_lambda_code_bucket" {
+  type        = string
+  description = "Optional S3 bucket for large query document Lambda code"
+}
+
+variable "s3_query_document_lambda_code_key" {
+  type        = string
+  description = "Optional S3 key for large query document Lambda code"
 }
 
 #-------------- File uploader variables -----------------------------------------------
@@ -86,5 +103,19 @@ variable "route53_zone_name" {
 variable "bucket_av_sns_findings_topic_name" {
   description = "SNS topic name for bucket AV findings"
   type        = string
+}
+# END
+
+#-------------- Bedrock and Chat variables -----------------------------------------------
+# START
+variable "bedrock_model_inference_profile_arn" {
+  description = "Bedrock model Inference profile arn"
+  type        = string
+}
+
+variable "max_search_results" {
+  description = "Maximum number of document chunks to retrieve for context"
+  type        = number
+  default     = 5
 }
 # END

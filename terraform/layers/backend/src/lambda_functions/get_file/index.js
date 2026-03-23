@@ -5,7 +5,7 @@ const s3Client = new S3Client();
 
 exports.handler = async (event) => {
     try {
-        const userId = event.requestContext.authorizer.jwt.claims.sub; // email
+        const userId = event.requestContext.authorizer.claims.sub; // email
         const fileId = event.pathParameters.id; // filename
         const resource = event.pathParameters.resource; //  users
         const rootFolder = event.pathParameters.rootFolder; // uploads

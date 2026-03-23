@@ -17,17 +17,17 @@ const initialFileState: IFileState = {
 
 export const fetchFiles = createAsyncThunk(
   "files/fetchFiles",
-  async (_, { rejectWithValue }) => {
+  async (accessToken: string, { rejectWithValue }) => {
     const url = new URL(`${API_BACKEND_URL}/files`);
 
     try {
       const response = await axios.get(url.toString(), {
-        withCredentials: true,
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
       });
       const data = response.data.files;
-      return {
-        files: data,
-      };
+      return { files: data };
     } catch (error) {
       console.error("Error fetching files:", error);
       return rejectWithValue("Oops unable to fetch files from API");

@@ -1,0 +1,35 @@
+# Environment Configuration
+environment = "prod"
+app_id      = "docu-chat-ai"
+region      = "us-east-1"
+
+# Domain and DNS Configuration
+api_file_upload_domain_name = "api.your-domain.com"
+api_backend_custom_domain_name  = "app.your-domain.com"
+route53_zone_name          = "your-domain.com"
+
+# SSL Certificate
+backend_certificate_arn = "arn:aws:acm:us-east-1:123456789012:certificate/your-certificate-id"
+
+# S3 Configuration
+uploads_bucket_name         = "prod-docu-chat-ai-uploads"
+enable_transfer_acceleration = true  # Enable for production for faster uploads
+
+# Lambda Configuration
+lambda_memory_size_mb                         = 1024  # Increase for production
+lambda_upload_presigned_url_expiration_time_s = 300
+
+# S3 Ingestion Lambda (optional - for large deployments)
+s3_ingestion_lambda_code_bucket = ""
+s3_ingestion_lambda_code_key    = ""
+
+# Notifications
+notification_email                = "ops-team@your-domain.com"
+bucket_av_sns_findings_topic_name = "prod-bucket-av-findings"
+
+# Bedrock Configuration
+bedrock_model_inference_profile_arn   = "anthropic.claude-sonnet-4-20250514-v1:0"
+max_search_results = 5
+
+# Security
+use_bucketav = true  # Enable malware scanning in production
