@@ -87,10 +87,10 @@ module "api_gateway" {
 module "route53" {
   source = "./modules/route53"
 
-  api_domain_name                  = var.api_backend_custom_domain_name
-  api_gateway_regional_domain_name = module.api_gateway.api_gateway_regional_domain_name
-  api_gateway_regional_zone_id     = var.api_gateway_route53_zone_id
-  route53_zone_name                = var.route53_zone_name
+  route53_zone_name          = var.route53_zone_name
+  api_custom_domain_name     = var.api_backend_custom_domain_name
+  api_gateway_domain_name    = module.api_gateway.api_gateway_domain_name
+  api_gateway_hosted_zone_id = module.api_gateway.api_gateway_hosted_zone_id
 }
 
 module "file_uploader" {
