@@ -25,10 +25,6 @@ export const getPresignedUrl = async (
 
     const response = await fetch(`${API_UPLOAD_URL}?${params}`, {
       method: "GET",
-      // TODO keep this only for local testing, when infra done, will be injected by cloudfront
-      // headers:{
-      //     "x-api-gateway-img-upload-auth": "",
-      // }
     });
 
     if (!response.ok) {

@@ -29,11 +29,10 @@ const FileManagementContainer = () => {
 
     if (file && auth.isAuthenticated) {
       try {
-        // Email from ID token
-        const email = auth.user?.profile.email;
+        const user_sub = auth.user?.profile.sub;
 
-        if (email) {
-          const presignedUrlData = await getPresignedUrl(email, file);
+        if (user_sub) {
+          const presignedUrlData = await getPresignedUrl(user_sub, file);
 
           if (
             presignedUrlData &&
