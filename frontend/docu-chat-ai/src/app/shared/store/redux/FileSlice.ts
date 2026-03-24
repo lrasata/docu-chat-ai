@@ -1,7 +1,7 @@
 import axios from "axios";
 import { API_BACKEND_URL } from "../../constants/constants";
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
-import type { IFile } from "../../../../types";
+import type { IFile } from "../../types/types.ts";
 
 interface IFileState {
   files: IFile[];

@@ -10,22 +10,7 @@ import {
 } from "@mui/material";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import SourceIcon from "@mui/icons-material/Article";
-
-// TODO DRY interfaces below are duplicated
-interface ChatSource {
-  documentId: string;
-  chunkId: string;
-  relevanceScore: number;
-  preview: string;
-}
-
-interface Message {
-  id: string;
-  sender: "user" | "bot";
-  text: string;
-  sources?: ChatSource[];
-  error?: boolean;
-}
+import type { Message } from "../../../shared/types/types.ts";
 
 interface ChatWindowProps {
   messages: Message[];

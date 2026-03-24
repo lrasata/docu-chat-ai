@@ -8,7 +8,7 @@ const SignInWithGoogleContainer = () => {
     <SignInWithGoogle
       googleImgSrc="https://developers.google.com/identity/images/g-logo.png"
       googleImgAlt="Google logo"
-      buttonText="Sign in with Google"
+      buttonText="Continue with Google"
       auth={auth}
     />
   );
