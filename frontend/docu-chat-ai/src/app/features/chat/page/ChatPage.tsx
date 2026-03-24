@@ -2,16 +2,9 @@ import React, { useState } from "react";
 import { Box, Alert, CircularProgress, Typography } from "@mui/material";
 import ChatWindow from "../components/ChatWindow";
 import MessageInput from "../components/MessageInput";
-import { chatApi, type ChatResponse } from "../../../shared/api/chatApi";
+import { chatApi } from "../../../shared/api/chatApi";
 import { useAuth } from "react-oidc-context";
-
-interface Message {
-  id: string;
-  sender: "user" | "bot";
-  text: string;
-  sources?: ChatResponse["sources"];
-  error?: boolean;
-}
+import type { Message } from "../../../shared/types/types.ts";
 
 const ChatPage: React.FC = () => {
   const auth = useAuth();

@@ -36,6 +36,7 @@ exports.handler = async (event) => {
             metadataMap[item.fileKey.S] = {
                 documentId: item.id.S,
                 resource: item.resource.S
+                // TODO add original filename
             };
         });
 
@@ -48,7 +49,6 @@ exports.handler = async (event) => {
                 lastModified: file.LastModified,
                 documentId: meta.documentId || null,
                 resource: meta.resource || null
-                // TODO provide original filename to be displayed by UI
             };
         });
 

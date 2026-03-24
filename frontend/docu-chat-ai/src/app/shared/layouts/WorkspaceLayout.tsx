@@ -11,7 +11,7 @@ const WorkspaceLayout: React.FC<WorkspaceLayoutProps> = ({ sidebar, main }) => {
     <Box sx={{ display: "flex", height: "100vh" }}>
       <Box
         sx={{
-          flex: "0 0 25%",
+          flex: "0 0 50%",
           bgcolor: "grey.100",
           p: "6rem 1rem 4rem 1rem",
           overflowY: "auto",
@@ -21,7 +21,7 @@ const WorkspaceLayout: React.FC<WorkspaceLayoutProps> = ({ sidebar, main }) => {
       </Box>
       <Box
         sx={{
-          flex: "0 0 75%",
+          flex: "0 0 50%",
           p: "6rem 1rem 4rem 1rem",
           overflowY: "auto",
         }}
