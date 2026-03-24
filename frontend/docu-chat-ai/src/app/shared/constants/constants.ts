@@ -1,4 +1,4 @@
-export const APP_NAME = "DocuChat AI";
+export const APP_NAME = "AI Powered PDF Chat";
 
 export const API_UPLOAD_URL = import.meta.env.VITE_API_UPLOAD_URL;
 export const API_BACKEND_URL = import.meta.env.VITE_API_GW_BACKEND_ENDPOINT;

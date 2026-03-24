@@ -10,13 +10,13 @@ import type {
   AppDispatch,
   RootState,
 } from "../../../shared/store/redux/index.ts";
-import type { IFile } from "../../../../types.ts";
 import { Box, LinearProgress, IconButton, Chip } from "@mui/material";
 import UploadFileIcon from "@mui/icons-material/UploadFile";
 import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
 import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
+import type { IFile } from "../../../shared/types/types.ts";
 
 interface UploadingFile {
   id: string;
