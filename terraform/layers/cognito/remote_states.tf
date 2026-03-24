@@ -3,6 +3,6 @@ data "terraform_remote_state" "secrets" {
   config = {
     bucket = "docu-chat-ai-app-states"
     key    = "secrets/${var.environment}/terraform.tfstate"
-    region = "${var.region}"
+    region = var.region
   }
 }

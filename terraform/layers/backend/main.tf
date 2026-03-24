@@ -63,25 +63,18 @@ resource "aws_opensearchserverless_access_policy" "opensearch_data_access" {
 module "api_gateway" {
   source = "./modules/api_gateway"
 
-  app_id                                 = var.app_id
-  cloudfront_domain_name                 = var.cloudfront_domain_name
-  custom_domain_name                     = var.api_backend_custom_domain_name
-  backend_certificate_arn                = var.backend_certificate_arn
-  cognito_user_pool_client_id            = data.terraform_remote_state.cognito.outputs.cognito_user_pool_client_id
-  cognito_user_pool_id                   = data.terraform_remote_state.cognito.outputs.cognito_user_pool_id
-  environment                            = var.environment
-  region                                 = var.region
-  lambda_get_document_data_arn           = module.lambda_functions["get_document_data"].function_arn
-  lambda_get_document_data_function_name = module.lambda_functions["get_document_data"].function_name
-  lambda_get_file_arn                    = module.lambda_functions["get_file"].function_arn
-  lambda_get_file_function_name          = module.lambda_functions["get_file"].function_name
-  lambda_list_files_arn                  = module.lambda_functions["list_files"].function_arn
-  lambda_list_files_function_name        = module.lambda_functions["list_files"].function_name
-  lambda_query_document_arn              = module.lambda_functions["query_document"].function_arn
-  lambda_query_document_function_name    = module.lambda_functions["query_document"].function_name
+  app_id                              = var.app_id
+  cloudfront_domain_name              = var.cloudfront_domain_name
+  custom_domain_name                  = var.api_backend_custom_domain_name
+  backend_certificate_arn             = var.backend_certificate_arn
+  cognito_user_pool_client_id         = data.terraform_remote_state.cognito.outputs.cognito_user_pool_client_id
+  cognito_user_pool_id                = data.terraform_remote_state.cognito.outputs.cognito_user_pool_id
+  environment                         = var.environment
+  region                              = var.region
+  lambda_query_document_arn           = module.lambda_functions["query_document"].function_arn
+  lambda_query_document_function_name = module.lambda_functions["query_document"].function_name
 
   depends_on = [module.lambda_functions]
-
 }
 
 module "route53" {
@@ -94,7 +87,7 @@ module "route53" {
 }
 
 module "file_uploader" {
-  source = "git::https://github.com/lrasata/infra-file-uploader//terraform/modules/file_uploader?ref=fix/dynamic-lambda-arns-for-process-uploads"
+  source = "git::https://github.com/lrasata/infra-file-uploader//terraform/modules/file_uploader?ref=feat/cognito-auth-sns-fan-out"
 
   region                                        = var.region
   app_id                                        = var.app_id
@@ -109,6 +102,9 @@ module "file_uploader" {
   lambda_memory_size_mb                         = var.lambda_memory_size_mb
   notification_email                            = var.notification_email
   route53_zone_name                             = var.route53_zone_name
+  cloudfront_domain_name                        = var.cloudfront_domain_name
+  cognito_user_pool_client_id                   = data.terraform_remote_state.cognito.outputs.cognito_user_pool_client_id
+  cognito_user_pool_id                          = data.terraform_remote_state.cognito.outputs.cognito_user_pool_id
 }
 
 resource "aws_lambda_permission" "allow_sns_to_invoke_s3_ingestion" {
