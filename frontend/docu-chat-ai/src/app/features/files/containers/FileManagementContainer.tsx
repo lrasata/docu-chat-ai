@@ -41,7 +41,7 @@ const FileManagementContainer = () => {
   const auth = useAuth();
 
   useEffect(() => {
-    dispatch(fetchFiles(auth.user?.access_token ?? ""));
+    dispatch(fetchFiles({ accessToken: auth.user?.access_token ?? "", user_sub: auth.user?.profile.sub ?? "", resource: "users" }));
   }, []);
 
   const uploadFile = async (file: File, id: string) => {
@@ -89,7 +89,7 @@ const FileManagementContainer = () => {
         ),
       );
 
-      dispatch(fetchFiles(auth.user?.access_token ?? ""));
+      dispatch(fetchFiles({ accessToken: auth.user?.access_token ?? "", user_sub: auth.user?.profile.sub ?? "", resource: "users" }));
     } catch (error) {
       setUploadingFiles((prev) =>
         prev.map((f) =>
