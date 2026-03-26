@@ -74,9 +74,9 @@ resource "aws_cloudfront_distribution" "cdn" {
   # Behavior for File-uploader API GW
   # -------------------------
   ordered_cache_behavior {
-    path_pattern           = "/upload*"
+    path_pattern           = "/api/upload*"
     target_origin_id       = local.api_gw_file_uploader_origin
-    allowed_methods        = ["GET", "HEAD", "OPTIONS", "PUT", "POST", "PATCH", "DELETE"]
+    allowed_methods        = ["GET", "HEAD", "OPTIONS"]
     cached_methods         = ["GET", "HEAD"]
     viewer_protocol_policy = "redirect-to-https"
 
@@ -86,6 +86,29 @@ resource "aws_cloudfront_distribution" "cdn" {
         forward = "none"
       }
     }
+  }
+
+  # -------------------------
+  # Behavior for File-uploader API GW (files metadata)
+  # -------------------------
+  ordered_cache_behavior {
+    path_pattern           = "/api/files*"
+    target_origin_id       = local.api_gw_file_uploader_origin
+    allowed_methods        = ["GET", "HEAD", "OPTIONS"]
+    cached_methods         = ["GET", "HEAD"]
+    viewer_protocol_policy = "redirect-to-https"
+
+    forwarded_values {
+      query_string = true
+      headers      = ["Authorization", "Content-Type"]
+      cookies {
+        forward = "none"
+      }
+    }
+
+    min_ttl     = 0
+    default_ttl = 0
+    max_ttl     = 0
   }
 
   # -------------------------

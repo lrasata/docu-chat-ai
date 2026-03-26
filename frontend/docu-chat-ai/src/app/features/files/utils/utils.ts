@@ -1,4 +1,4 @@
-import { API_UPLOAD_URL } from "../../../shared/constants/constants.ts";
+import {API_BACKEND_URL} from "../../../shared/constants/constants.ts";
 
 export const getPresignedUrl = async (
   id: number | string,
@@ -23,7 +23,7 @@ export const getPresignedUrl = async (
       params.append(key, value as string);
     }
 
-    const response = await fetch(`${API_UPLOAD_URL}?${params}`, {
+    const response = await fetch(`${API_BACKEND_URL}/upload?${params}`, {
       method: "GET",
     });
 
