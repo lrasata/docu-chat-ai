@@ -51,7 +51,7 @@ const FileManagementContainer = () => {
     if (!user_sub) return;
 
     try {
-      const presignedUrlData = await getPresignedUrl(user_sub, file);
+      const presignedUrlData = await getPresignedUrl(user_sub, file, auth.user?.access_token ?? "");
 
       if (!presignedUrlData?.upload_url || !presignedUrlData?.file_key) return;
 

@@ -3,6 +3,7 @@ import {API_BACKEND_URL} from "../../../shared/constants/constants.ts";
 export const getPresignedUrl = async (
   id: number | string,
   file: File,
+  accessToken: string,
   resource: string = "users",
 ): Promise<{ upload_url: string; file_key: string } | undefined> => {
   try {
@@ -25,6 +26,7 @@ export const getPresignedUrl = async (
 
     const response = await fetch(`${API_BACKEND_URL}/upload?${params}`, {
       method: "GET",
+      headers: { Authorization: `Bearer ${accessToken}` },
     });
 
     if (!response.ok) {
