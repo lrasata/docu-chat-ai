@@ -74,7 +74,7 @@ resource "aws_cloudfront_distribution" "cdn" {
   # Behavior for File-uploader API GW
   # -------------------------
   ordered_cache_behavior {
-    path_pattern           = "/upload-url*"
+    path_pattern           = "/upload*"
     target_origin_id       = local.api_gw_file_uploader_origin
     allowed_methods        = ["GET", "HEAD", "OPTIONS", "PUT", "POST", "PATCH", "DELETE"]
     cached_methods         = ["GET", "HEAD"]
