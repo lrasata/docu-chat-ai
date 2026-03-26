@@ -97,6 +97,9 @@ def search_similar_chunks(question_embedding, document_id=None, max_results=MAX_
 
         return chunks
     except Exception as e:
+        if "index_not_found_exception" in str(e):
+            print(f"OpenSearch index not found: {OPENSEARCH_INDEX}")
+            return []
         print(f"Error searching OpenSearch: {str(e)}")
         raise
 

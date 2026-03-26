@@ -19,10 +19,13 @@ const formatBytes = (bytes: number): string => {
 
 const formatDate = (dateStr: string | undefined): string => {
   if (!dateStr) return "—";
-  return new Date(dateStr).toLocaleDateString(undefined, {
+  const d = new Date(dateStr);
+  if (isNaN(d.getTime())) return "—";
+  return d.toLocaleDateString(undefined, {
     day: "2-digit",
     month: "short",
     year: "numeric",
+    timeZone: "UTC",
   });
 };
 
@@ -142,7 +145,7 @@ const FileCardContainer = ({
                 border: "1.5px solid",
                 borderColor: isSelected ? "primary.main" : "divider",
                 borderRadius: 2,
-                p: 1.5,
+                p: 2.5,
                 cursor: "pointer",
                 bgcolor: isSelected ? "primary.50" : "background.paper",
                 transition: "all 0.15s ease",
