@@ -82,10 +82,15 @@ resource "aws_cloudfront_distribution" "cdn" {
 
     forwarded_values {
       query_string = true
+      headers      = ["Authorization", "Content-Type"]
       cookies {
         forward = "none"
       }
     }
+
+    min_ttl     = 0
+    default_ttl = 0
+    max_ttl     = 0
   }
 
   # -------------------------
