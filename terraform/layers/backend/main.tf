@@ -92,7 +92,6 @@ module "file_uploader" {
   region                                        = var.region
   app_id                                        = var.app_id
   environment                                   = var.environment
-  secret_store_name                             = data.terraform_remote_state.secrets.outputs.secret_store_name
   api_file_upload_domain_name                   = var.api_file_upload_domain_name
   backend_certificate_arn                       = var.backend_certificate_arn
   uploads_bucket_name                           = var.uploads_bucket_name

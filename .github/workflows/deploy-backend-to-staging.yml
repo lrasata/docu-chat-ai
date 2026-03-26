@@ -240,14 +240,15 @@ jobs:
         working-directory: terraform/layers/backend
         env:
           TF_LOG: ERROR
-        run: terraform apply -input=false -auto-approve 2>&1 | tee /tmp/tf-backend-apply.log
+          TF_LOG_PATH: /tmp/tf-backend-apply.log
+        run: terraform apply -input=false -auto-approve 2>&1
 
       - name: Upload Terraform log
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: terraform-apply-log
-          path: /tmp/tf-apply.log
+          path: /tmp/tf-backend-apply.log
 
       - name: Force Lambda code update
         run: |

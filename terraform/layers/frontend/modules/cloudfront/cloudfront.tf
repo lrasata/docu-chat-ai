@@ -32,11 +32,6 @@ resource "aws_cloudfront_distribution" "cdn" {
       https_port             = 443
       origin_ssl_protocols   = ["TLSv1.2"]
     }
-
-    custom_header {
-      name  = "x-api-gateway-file-upload-auth"
-      value = var.file_upload_auth_secret
-    }
   }
 
   origin {

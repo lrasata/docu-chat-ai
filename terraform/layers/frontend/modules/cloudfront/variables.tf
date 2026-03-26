@@ -16,11 +16,6 @@ variable "uploads_bucket_regional_domain_name" {
   type = string
 }
 
-variable "file_upload_auth_secret" {
-  type      = string
-  sensitive = true
-}
-
 variable "cloudfront_certificate_arn" {
   type = string
 }
