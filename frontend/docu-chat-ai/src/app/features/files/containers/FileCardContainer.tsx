@@ -49,7 +49,7 @@ const FileCardContainer = ({
       setSelected(new Set());
       onSelectionChange?.([]);
     } else {
-      const all = new Set(files.map((f) => f.documentId));
+      const all = new Set(files.map((f) => f.file_key));
       setSelected(all);
       onSelectionChange?.([...all]);
     }
@@ -132,11 +132,11 @@ const FileCardContainer = ({
         }}
       >
         {files.map((file) => {
-          const isSelected = selected.has(file.documentId);
+          const isSelected = selected.has(file.file_key);
           return (
             <Box
-              key={file.documentId}
-              onClick={() => toggle(file.documentId)}
+              key={file.file_key}
+              onClick={() => toggle(file.file_key)}
               sx={{
                 position: "relative",
                 border: "1.5px solid",
@@ -174,7 +174,7 @@ const FileCardContainer = ({
                   "&.Mui-checked": { color: "primary.main" },
                 }}
                 onClick={(e) => e.stopPropagation()}
-                onChange={() => toggle(file.documentId)}
+                onChange={() => toggle(file.file_key)}
               />
 
               {/* PDF icon */}
@@ -202,7 +202,7 @@ const FileCardContainer = ({
               </Box>
 
               {/* File name */}
-              <Tooltip title={file.key} placement="top" enterDelay={600}>
+              <Tooltip title={file.filename} placement="top" enterDelay={600}>
                 <Typography
                   variant="body2"
                   fontWeight={500}
@@ -213,7 +213,7 @@ const FileCardContainer = ({
                     fontSize: "0.8rem",
                   }}
                 >
-                  {truncateName(file.key)}
+                  {truncateName(file.filename)}
                 </Typography>
               </Tooltip>
 
@@ -237,7 +237,7 @@ const FileCardContainer = ({
                   color="text.disabled"
                   sx={{ fontSize: "0.7rem" }}
                 >
-                  {formatDate(file.lastModified)}
+                  {formatDate(file.upload_timestamp)}
                 </Typography>
               </Box>
             </Box>
