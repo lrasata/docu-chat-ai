@@ -16,19 +16,16 @@ locals {
       s3_key       = var.s3_ingestion_lambda_code_key
       # Variables unique to this Lambda
       environment_vars = {
-        OPENSEARCH_ENDPOINT = module.opensearchserverless.opensearch_collection_endpoint
-        OPENSEARCH_INDEX    = "${var.environment}-${var.app_id}-index"
-        DOCUMENTS_TABLE     = module.file_uploader.dynamo_db_table_name
-        REGION              = var.region
+        RDS_SECRET_ARN  = module.rds.rds_secret_arn
+        DOCUMENTS_TABLE = module.file_uploader.dynamo_db_table_name
+        REGION          = var.region
       }
       # Policy unique to this Lambda
       iam_policy_statements = [
         {
-          Effect = "Allow"
-          Action = [
-            "aoss:APIAccessAll"
-          ]
-          Resource = [module.opensearchserverless.opensearch_collection_arn]
+          Effect   = "Allow"
+          Action   = ["secretsmanager:GetSecretValue"]
+          Resource = [module.rds.rds_secret_arn]
         },
         {
           Effect = "Allow"
@@ -66,22 +63,18 @@ locals {
       s3_key       = var.s3_query_document_lambda_code_key
       # Variables unique to this Lambda
       environment_vars = {
-        OPENSEARCH_ENDPOINT                 = module.opensearchserverless.opensearch_collection_endpoint
-        OPENSEARCH_INDEX                    = "${var.environment}-${var.app_id}-index"
+        RDS_SECRET_ARN                      = module.rds.rds_secret_arn
         REGION                              = var.region
         DOCUMENTS_TABLE                     = module.file_uploader.dynamo_db_table_name
         BEDROCK_MODEL_INFERENCE_PROFILE_ARN = var.bedrock_model_inference_profile_arn
         MAX_SEARCH_RESULTS                  = var.max_search_results
-        REGION                              = var.region
       }
       # Policy unique to this Lambda
       iam_policy_statements = [
         {
-          Effect = "Allow"
-          Action = [
-            "aoss:APIAccessAll"
-          ]
-          Resource = [module.opensearchserverless.opensearch_collection_arn]
+          Effect   = "Allow"
+          Action   = ["secretsmanager:GetSecretValue"]
+          Resource = [module.rds.rds_secret_arn]
         },
         {
           Effect = "Allow"

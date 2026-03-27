@@ -63,6 +63,14 @@ resource "aws_lambda_function" "lambda_function" {
   timeout     = var.timeout
   memory_size = var.memory_size
 
+  dynamic "vpc_config" {
+    for_each = length(var.vpc_subnet_ids) > 0 ? [1] : []
+    content {
+      subnet_ids         = var.vpc_subnet_ids
+      security_group_ids = var.vpc_security_group_ids
+    }
+  }
+
   tags = {
     Name        = "${var.environment}-${var.lambda_name}-lambda"
     Environment = var.environment
@@ -84,6 +92,6 @@ resource "aws_iam_role_policy_attachment" "lambda_custom_policy_attach" {
 
 resource "aws_iam_role_policy_attachment" "lambda_logging" {
   role       = aws_iam_role.lambda_exec_role.name
-  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole"
 }
 

@@ -240,7 +240,7 @@ const FileCardContainer = ({
                   color="text.disabled"
                   sx={{ fontSize: "0.7rem" }}
                 >
-                  {formatDate(file.upload_timestamp)}
+                  {formatDate(file.uploaded_timestamp)}
                 </Typography>
               </Box>
             </Box>

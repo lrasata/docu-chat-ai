@@ -1,15 +1,17 @@
-module "opensearchserverless" {
-  source = "./modules/opensearch"
+module "rds" {
+  source = "./modules/rds"
 
-  environment = var.environment
-  app_id      = var.app_id
-
+  environment        = var.environment
+  app_id             = var.app_id
+  region             = var.region
+  availability_zones = var.availability_zones
+  db_instance_class  = var.db_instance_class
 }
 
 module "lambda_functions" {
   source = "./modules/lambda_function"
 
-  # for_each to loop over lambda_configs to set up get_presigned_url and process_uploaded_file lambdas
+  # for_each to loop over lambda_configs to set up s3_ingestion and query_document lambdas
   for_each = local.lambda_configs
 
   # Pass common variables
@@ -28,37 +30,11 @@ module "lambda_functions" {
   s3_key                = each.value.s3_key != null ? each.value.s3_key : ""
   iam_policy_statements = each.value.iam_policy_statements
 
-  depends_on = [module.opensearchserverless]
+  vpc_subnet_ids         = module.rds.private_subnet_ids
+  vpc_security_group_ids = [module.rds.lambda_security_group_id]
+
+  depends_on = [module.rds]
 }
-
-# Data access policy for Lambda execution roles
-resource "aws_opensearchserverless_access_policy" "opensearch_data_access" {
-  name = module.opensearchserverless.opensearch_collection_name
-  type = "data"
-
-  policy = jsonencode([{
-    Rules = [
-      {
-        ResourceType = "index"
-        Resource     = ["index/${module.opensearchserverless.opensearch_collection_name}/*"]
-        Permission = [
-          "aoss:CreateIndex",
-          "aoss:UpdateIndex",
-          "aoss:DescribeIndex",
-          "aoss:ReadDocument",
-          "aoss:WriteDocument"
-        ]
-      },
-      {
-        ResourceType = "collection"
-        Resource     = ["collection/${module.opensearchserverless.opensearch_collection_name}"]
-        Permission   = ["aoss:DescribeCollectionItems"]
-      }
-    ]
-    Principal = [module.lambda_functions["s3_ingestion"].function_exec_role_arn, module.lambda_functions["query_document"].function_exec_role_arn]
-  }])
-}
-
 
 module "api_gateway" {
   source = "./modules/api_gateway"
@@ -87,7 +63,7 @@ module "route53" {
 }
 
 module "file_uploader" {
-  source = "git::https://github.com/lrasata/infra-file-uploader//terraform/modules/file_uploader?ref=feat/cognito-auth-sns-fan-out"
+  source = "git::https://github.com/lrasata/infra-file-uploader//terraform/modules/file_uploader?ref=v1.7.0"
 
   region                                        = var.region
   app_id                                        = var.app_id

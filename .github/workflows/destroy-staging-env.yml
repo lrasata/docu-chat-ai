@@ -44,6 +44,8 @@ jobs:
       TF_VAR_s3_query_document_lambda_code_key: "${{ github.event.inputs.environment }}/s3-query-document.zip"
       TF_VAR_bedrock_model_inference_profile_arn: ${{secrets.BEDROCK_MODEL_INFERENCE_PROFILE_ARN}}
       TF_VAR_max_search_results: 5
+      TF_VAR_availability_zones: '["eu-central-1a","eu-central-1b"]'
+      TF_VAR_db_instance_class: db.t4g.micro
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -70,6 +72,21 @@ jobs:
             -backend-config="dynamodb_table=${{ github.event.inputs.environment }}-docu-chat-ai-terraform-locks" \
             -backend-config="encrypt=true"
           terraform destroy -auto-approve
+
+      - name: Clean up VPC ENIs (unblock subnet/SG deletion)
+        run: |
+          VPC_ID=$(aws ec2 describe-vpcs \
+            --filters "Name=tag:Name,Values=${{ github.event.inputs.environment }}-docu-chat-ai-vpc" \
+            --query "Vpcs[0].VpcId" --output text)
+          if [ -n "$VPC_ID" ] && [ "$VPC_ID" != "None" ]; then
+            ENI_IDS=$(aws ec2 describe-network-interfaces \
+              --filters "Name=vpc-id,Values=$VPC_ID" "Name=status,Values=available" \
+              --query "NetworkInterfaces[*].NetworkInterfaceId" --output text)
+            for ENI_ID in $ENI_IDS; do
+              echo "Deleting ENI $ENI_ID"
+              aws ec2 delete-network-interface --network-interface-id "$ENI_ID"
+            done
+          fi
 
       - name: Destroy Backend Layer
         working-directory: terraform/layers/backend

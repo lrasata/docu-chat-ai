@@ -20,5 +20,5 @@ export interface IFile {
   file_key: string;
   url: string;
   size: number;
-  upload_timestamp: string;
+  uploaded_timestamp: string;
 }
