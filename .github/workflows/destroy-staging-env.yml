@@ -98,6 +98,31 @@ jobs:
             -backend-config="region=${{ secrets.AWS_REGION }}" \
             -backend-config="dynamodb_table=${{ github.event.inputs.environment }}-docu-chat-ai-terraform-locks" \
             -backend-config="encrypt=true"
+          terraform destroy -auto-approve || true
+
+      - name: Clean up remaining VPC ENIs and retry destroy
+        working-directory: terraform/layers/backend
+        run: |
+          VPC_ID=$(aws ec2 describe-vpcs \
+            --filters "Name=tag:Name,Values=${{ github.event.inputs.environment }}-docu-chat-ai-vpc" \
+            --query "Vpcs[0].VpcId" --output text)
+          if [ -n "$VPC_ID" ] && [ "$VPC_ID" != "None" ]; then
+            echo "Cleaning up ENIs in VPC $VPC_ID..."
+            for i in 1 2 3; do
+              ENI_IDS=$(aws ec2 describe-network-interfaces \
+                --filters "Name=vpc-id,Values=$VPC_ID" "Name=status,Values=available" \
+                --query "NetworkInterfaces[*].NetworkInterfaceId" --output text)
+              if [ -z "$ENI_IDS" ] || [ "$ENI_IDS" = "None" ]; then
+                echo "No available ENIs found"
+                break
+              fi
+              for ENI_ID in $ENI_IDS; do
+                echo "Deleting ENI $ENI_ID"
+                aws ec2 delete-network-interface --network-interface-id "$ENI_ID" || true
+              done
+              sleep 10
+            done
+          fi
           terraform destroy -auto-approve
 
       - name: Destroy Cognito Clients
