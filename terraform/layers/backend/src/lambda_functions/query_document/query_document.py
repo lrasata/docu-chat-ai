@@ -63,7 +63,7 @@ def create_embedding(text):
         print(f"Error creating embedding: {str(e)}")
         raise
 
-def search_similar_chunks(question_embedding, document_id=None, max_results=MAX_RESULTS):
+def search_similar_chunks(question_embedding, user_id, document_id=None, max_results=MAX_RESULTS):
     try:
         conn = get_db_connection()
         with conn.cursor() as cur:
@@ -85,10 +85,11 @@ def search_similar_chunks(question_embedding, document_id=None, max_results=MAX_
                     SELECT document_id, chunk_id, content,
                            1 - (embedding <=> %s::vector) AS score
                     FROM document_chunks
+                    WHERE document_id LIKE %s
                     ORDER BY embedding <=> %s::vector
                     LIMIT %s;
                     """,
-                    (question_embedding, question_embedding, max_results)
+                    (question_embedding, f"uploads/users/{user_id}/%", question_embedding, max_results)
                 )
             rows = cur.fetchall()
 
@@ -150,13 +151,14 @@ def handler(event, context):
 
         user_id = None
         if "requestContext" in event and "authorizer" in event["requestContext"]:
-            claims = event["requestContext"]["authorizer"].get("jwt", {}).get("claims", {})
+            authorizer = event["requestContext"]["authorizer"]
+            claims = authorizer.get("jwt", {}).get("claims") or authorizer.get("claims", {})
             user_id = claims.get("sub")
 
         print(f"Processing question: {question}, document_id: {document_id}, user_id: {user_id}")
 
         question_embedding = create_embedding(question)
-        relevant_chunks = search_similar_chunks(question_embedding, document_id)
+        relevant_chunks = search_similar_chunks(question_embedding, user_id, document_id)
 
         if not relevant_chunks:
             return {
