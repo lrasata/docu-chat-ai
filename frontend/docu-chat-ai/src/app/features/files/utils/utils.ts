@@ -7,7 +7,8 @@ export const getPresignedUrl = async (
   resource: string = "users",
 ): Promise<{ upload_url: string; file_key: string } | undefined> => {
   try {
-    const [filenameWithoutExt, extension] = file.name.split(".");
+    const sanitizedName = file.name.replace(/\s+/g, "_");
+    const [filenameWithoutExt, extension] = sanitizedName.split(".");
 
     const mimeType = file.type || "application/octet-stream";
 
