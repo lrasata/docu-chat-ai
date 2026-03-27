@@ -32,7 +32,11 @@ const formatBytes = (bytes: number): string => {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 };
 
-const FileManagementContainer = () => {
+interface FileManagementContainerProps {
+  onSelectionChange?: (selectedIds: string[]) => void;
+}
+
+const FileManagementContainer = ({ onSelectionChange }: FileManagementContainerProps) => {
   const [dragging, setDragging] = useState(false);
   const [uploadingFiles, setUploadingFiles] = useState<UploadingFile[]>([]);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -274,7 +278,7 @@ const FileManagementContainer = () => {
           <Typography variant="h3" mb={2}>
             Your documents
           </Typography>
-          <FileCardContainer files={files} />
+          <FileCardContainer files={files} onSelectionChange={onSelectionChange} />
         </Box>
       )}
 
