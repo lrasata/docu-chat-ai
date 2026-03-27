@@ -1,6 +1,6 @@
 boto3
+numpy<2.0
 pdfplumber
 python-docx
-opensearch-py
-requests
-requests-aws4auth
+psycopg2-binary
+pgvector

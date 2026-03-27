@@ -1,15 +1,17 @@
-module "opensearchserverless" {
-  source = "./modules/opensearch"
+module "rds" {
+  source = "./modules/rds"
 
-  environment = var.environment
-  app_id      = var.app_id
-
+  environment        = var.environment
+  app_id             = var.app_id
+  region             = var.region
+  availability_zones = var.availability_zones
+  db_instance_class  = var.db_instance_class
 }
 
 module "lambda_functions" {
   source = "./modules/lambda_function"
 
-  # for_each to loop over lambda_configs to set up get_presigned_url and process_uploaded_file lambdas
+  # for_each to loop over lambda_configs to set up s3_ingestion and query_document lambdas
   for_each = local.lambda_configs
 
   # Pass common variables
@@ -28,60 +30,27 @@ module "lambda_functions" {
   s3_key                = each.value.s3_key != null ? each.value.s3_key : ""
   iam_policy_statements = each.value.iam_policy_statements
 
-  depends_on = [module.opensearchserverless]
+  vpc_subnet_ids         = module.rds.private_subnet_ids
+  vpc_security_group_ids = [module.rds.lambda_security_group_id]
+
+  depends_on = [module.rds]
 }
-
-# Data access policy for Lambda execution roles
-resource "aws_opensearchserverless_access_policy" "opensearch_data_access" {
-  name = module.opensearchserverless.opensearch_collection_name
-  type = "data"
-
-  policy = jsonencode([{
-    Rules = [
-      {
-        ResourceType = "index"
-        Resource     = ["index/${module.opensearchserverless.opensearch_collection_name}/*"]
-        Permission = [
-          "aoss:CreateIndex",
-          "aoss:UpdateIndex",
-          "aoss:DescribeIndex",
-          "aoss:ReadDocument",
-          "aoss:WriteDocument"
-        ]
-      },
-      {
-        ResourceType = "collection"
-        Resource     = ["collection/${module.opensearchserverless.opensearch_collection_name}"]
-        Permission   = ["aoss:DescribeCollectionItems"]
-      }
-    ]
-    Principal = [module.lambda_functions["s3_ingestion"].function_exec_role_arn, module.lambda_functions["query_document"].function_exec_role_arn]
-  }])
-}
-
 
 module "api_gateway" {
   source = "./modules/api_gateway"
 
-  app_id                                 = var.app_id
-  cloudfront_domain_name                 = var.cloudfront_domain_name
-  custom_domain_name                     = var.api_backend_custom_domain_name
-  backend_certificate_arn                = var.backend_certificate_arn
-  cognito_user_pool_client_id            = data.terraform_remote_state.cognito.outputs.cognito_user_pool_client_id
-  cognito_user_pool_id                   = data.terraform_remote_state.cognito.outputs.cognito_user_pool_id
-  environment                            = var.environment
-  region                                 = var.region
-  lambda_get_document_data_arn           = module.lambda_functions["get_document_data"].function_arn
-  lambda_get_document_data_function_name = module.lambda_functions["get_document_data"].function_name
-  lambda_get_file_arn                    = module.lambda_functions["get_file"].function_arn
-  lambda_get_file_function_name          = module.lambda_functions["get_file"].function_name
-  lambda_list_files_arn                  = module.lambda_functions["list_files"].function_arn
-  lambda_list_files_function_name        = module.lambda_functions["list_files"].function_name
-  lambda_query_document_arn              = module.lambda_functions["query_document"].function_arn
-  lambda_query_document_function_name    = module.lambda_functions["query_document"].function_name
+  app_id                              = var.app_id
+  cloudfront_domain_name              = var.cloudfront_domain_name
+  custom_domain_name                  = var.api_backend_custom_domain_name
+  backend_certificate_arn             = var.backend_certificate_arn
+  cognito_user_pool_client_id         = data.terraform_remote_state.cognito.outputs.cognito_user_pool_client_id
+  cognito_user_pool_id                = data.terraform_remote_state.cognito.outputs.cognito_user_pool_id
+  environment                         = var.environment
+  region                              = var.region
+  lambda_query_document_arn           = module.lambda_functions["query_document"].function_arn
+  lambda_query_document_function_name = module.lambda_functions["query_document"].function_name
 
   depends_on = [module.lambda_functions]
-
 }
 
 module "route53" {
@@ -94,12 +63,11 @@ module "route53" {
 }
 
 module "file_uploader" {
-  source = "git::https://github.com/lrasata/infra-file-uploader//terraform/modules/file_uploader?ref=fix/dynamic-lambda-arns-for-process-uploads"
+  source = "git::https://github.com/lrasata/infra-file-uploader//terraform/modules/file_uploader?ref=main"
 
   region                                        = var.region
   app_id                                        = var.app_id
   environment                                   = var.environment
-  secret_store_name                             = data.terraform_remote_state.secrets.outputs.secret_store_name
   api_file_upload_domain_name                   = var.api_file_upload_domain_name
   backend_certificate_arn                       = var.backend_certificate_arn
   uploads_bucket_name                           = var.uploads_bucket_name
@@ -109,6 +77,9 @@ module "file_uploader" {
   lambda_memory_size_mb                         = var.lambda_memory_size_mb
   notification_email                            = var.notification_email
   route53_zone_name                             = var.route53_zone_name
+  cloudfront_domain_name                        = var.cloudfront_domain_name
+  cognito_user_pool_client_id                   = data.terraform_remote_state.cognito.outputs.cognito_user_pool_client_id
+  cognito_user_pool_id                          = data.terraform_remote_state.cognito.outputs.cognito_user_pool_id
 }
 
 resource "aws_lambda_permission" "allow_sns_to_invoke_s3_ingestion" {

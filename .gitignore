@@ -34,3 +34,6 @@ terraform/backend/src/lambda_functions/*/node_modules
 
 # Node modules
 **/node_modules/
+
+# AI Agent
+.claude

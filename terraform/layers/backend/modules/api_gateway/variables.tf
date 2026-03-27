@@ -37,30 +37,6 @@ variable "cognito_user_pool_id" {
   type = string
 }
 
-variable "lambda_list_files_arn" {
-  type = string
-}
-
-variable "lambda_list_files_function_name" {
-  type = string
-}
-
-variable "lambda_get_file_arn" {
-  type = string
-}
-
-variable "lambda_get_file_function_name" {
-  type = string
-}
-
-variable "lambda_get_document_data_arn" {
-  type = string
-}
-
-variable "lambda_get_document_data_function_name" {
-  type = string
-}
-
 variable "lambda_query_document_arn" {
   type = string
 }

@@ -32,11 +32,6 @@ resource "aws_cloudfront_distribution" "cdn" {
       https_port             = 443
       origin_ssl_protocols   = ["TLSv1.2"]
     }
-
-    custom_header {
-      name  = "x-api-gateway-file-upload-auth"
-      value = var.file_upload_auth_secret
-    }
   }
 
   origin {
@@ -79,18 +74,46 @@ resource "aws_cloudfront_distribution" "cdn" {
   # Behavior for File-uploader API GW
   # -------------------------
   ordered_cache_behavior {
-    path_pattern           = "/upload-url*"
+    path_pattern           = "/api/upload*"
     target_origin_id       = local.api_gw_file_uploader_origin
-    allowed_methods        = ["GET", "HEAD", "OPTIONS", "PUT", "POST", "PATCH", "DELETE"]
+    allowed_methods        = ["GET", "HEAD", "OPTIONS"]
     cached_methods         = ["GET", "HEAD"]
     viewer_protocol_policy = "redirect-to-https"
 
     forwarded_values {
       query_string = true
+      headers      = ["Authorization", "Content-Type"]
       cookies {
         forward = "none"
       }
     }
+
+    min_ttl     = 0
+    default_ttl = 0
+    max_ttl     = 0
+  }
+
+  # -------------------------
+  # Behavior for File-uploader API GW (files metadata)
+  # -------------------------
+  ordered_cache_behavior {
+    path_pattern           = "/api/files*"
+    target_origin_id       = local.api_gw_file_uploader_origin
+    allowed_methods        = ["GET", "HEAD", "OPTIONS"]
+    cached_methods         = ["GET", "HEAD"]
+    viewer_protocol_policy = "redirect-to-https"
+
+    forwarded_values {
+      query_string = true
+      headers      = ["Authorization", "Content-Type"]
+      cookies {
+        forward = "none"
+      }
+    }
+
+    min_ttl     = 0
+    default_ttl = 0
+    max_ttl     = 0
   }
 
   # -------------------------

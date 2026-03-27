@@ -6,7 +6,11 @@ import { chatApi } from "../../../shared/api/chatApi";
 import { useAuth } from "react-oidc-context";
 import type { Message } from "../../../shared/types/types.ts";
 
-const ChatPage: React.FC = () => {
+interface ChatPageProps {
+  selectedDocumentId?: string;
+}
+
+const ChatPage: React.FC<ChatPageProps> = ({ selectedDocumentId }) => {
   const auth = useAuth();
   const [messages, setMessages] = useState<Message[]>([
     {
@@ -33,7 +37,9 @@ const ChatPage: React.FC = () => {
 
     try {
       const token = auth.user?.access_token ?? "";
-      const response = await chatApi.queryAllDocuments(text, token);
+      const response = selectedDocumentId
+        ? await chatApi.queryDocument(selectedDocumentId, text, token)
+        : await chatApi.queryAllDocuments(text, token);
 
       setMessages((prev) => [
         ...prev,

@@ -32,7 +32,11 @@ const formatBytes = (bytes: number): string => {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 };
 
-const FileManagementContainer = () => {
+interface FileManagementContainerProps {
+  onSelectionChange?: (selectedIds: string[]) => void;
+}
+
+const FileManagementContainer = ({ onSelectionChange }: FileManagementContainerProps) => {
   const [dragging, setDragging] = useState(false);
   const [uploadingFiles, setUploadingFiles] = useState<UploadingFile[]>([]);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -41,7 +45,7 @@ const FileManagementContainer = () => {
   const auth = useAuth();
 
   useEffect(() => {
-    dispatch(fetchFiles(auth.user?.access_token ?? ""));
+    dispatch(fetchFiles({ accessToken: auth.user?.access_token ?? "", user_sub: auth.user?.profile.sub ?? "", resource: "users" }));
   }, []);
 
   const uploadFile = async (file: File, id: string) => {
@@ -51,7 +55,7 @@ const FileManagementContainer = () => {
     if (!user_sub) return;
 
     try {
-      const presignedUrlData = await getPresignedUrl(user_sub, file);
+      const presignedUrlData = await getPresignedUrl(user_sub, file, auth.user?.access_token ?? "");
 
       if (!presignedUrlData?.upload_url || !presignedUrlData?.file_key) return;
 
@@ -89,7 +93,7 @@ const FileManagementContainer = () => {
         ),
       );
 
-      dispatch(fetchFiles(auth.user?.access_token ?? ""));
+      dispatch(fetchFiles({ accessToken: auth.user?.access_token ?? "", user_sub: auth.user?.profile.sub ?? "", resource: "users" }));
     } catch (error) {
       setUploadingFiles((prev) =>
         prev.map((f) =>
@@ -274,7 +278,7 @@ const FileManagementContainer = () => {
           <Typography variant="h3" mb={2}>
             Your documents
           </Typography>
-          <FileCardContainer files={files} />
+          <FileCardContainer files={files} onSelectionChange={onSelectionChange} />
         </Box>
       )}
 

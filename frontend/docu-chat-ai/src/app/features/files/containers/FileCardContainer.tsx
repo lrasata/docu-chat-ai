@@ -19,10 +19,13 @@ const formatBytes = (bytes: number): string => {
 
 const formatDate = (dateStr: string | undefined): string => {
   if (!dateStr) return "—";
-  return new Date(dateStr).toLocaleDateString(undefined, {
+  const d = new Date(dateStr);
+  if (isNaN(d.getTime())) return "—";
+  return d.toLocaleDateString(undefined, {
     day: "2-digit",
     month: "short",
     year: "numeric",
+    timeZone: "UTC",
   });
 };
 
@@ -49,7 +52,7 @@ const FileCardContainer = ({
       setSelected(new Set());
       onSelectionChange?.([]);
     } else {
-      const all = new Set(files.map((f) => f.documentId));
+      const all = new Set(files.map((f) => f.file_key));
       setSelected(all);
       onSelectionChange?.([...all]);
     }
@@ -132,17 +135,17 @@ const FileCardContainer = ({
         }}
       >
         {files.map((file) => {
-          const isSelected = selected.has(file.documentId);
+          const isSelected = selected.has(file.file_key);
           return (
             <Box
-              key={file.documentId}
-              onClick={() => toggle(file.documentId)}
+              key={file.file_key}
+              onClick={() => toggle(file.file_key)}
               sx={{
                 position: "relative",
                 border: "1.5px solid",
                 borderColor: isSelected ? "primary.main" : "divider",
                 borderRadius: 2,
-                p: 1.5,
+                p: 2.5,
                 cursor: "pointer",
                 bgcolor: isSelected ? "primary.50" : "background.paper",
                 transition: "all 0.15s ease",
@@ -174,7 +177,7 @@ const FileCardContainer = ({
                   "&.Mui-checked": { color: "primary.main" },
                 }}
                 onClick={(e) => e.stopPropagation()}
-                onChange={() => toggle(file.documentId)}
+                onChange={() => toggle(file.file_key)}
               />
 
               {/* PDF icon */}
@@ -202,7 +205,7 @@ const FileCardContainer = ({
               </Box>
 
               {/* File name */}
-              <Tooltip title={file.key} placement="top" enterDelay={600}>
+              <Tooltip title={file.filename} placement="top" enterDelay={600}>
                 <Typography
                   variant="body2"
                   fontWeight={500}
@@ -213,7 +216,7 @@ const FileCardContainer = ({
                     fontSize: "0.8rem",
                   }}
                 >
-                  {truncateName(file.key)}
+                  {truncateName(file.filename)}
                 </Typography>
               </Tooltip>
 
@@ -237,7 +240,7 @@ const FileCardContainer = ({
                   color="text.disabled"
                   sx={{ fontSize: "0.7rem" }}
                 >
-                  {formatDate(file.lastModified)}
+                  {formatDate(file.uploaded_timestamp)}
                 </Typography>
               </Box>
             </Box>

@@ -134,6 +134,8 @@ jobs:
       TF_VAR_s3_query_document_lambda_code_key: "${{ github.event.inputs.environment }}/s3-query-document.zip"
       TF_VAR_bedrock_model_inference_profile_arn: ${{secrets.BEDROCK_MODEL_INFERENCE_PROFILE_ARN}}
       TF_VAR_max_search_results: 5
+      TF_VAR_availability_zones: '["eu-central-1a","eu-central-1b"]'
+      TF_VAR_db_instance_class: db.t4g.micro
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -174,19 +176,15 @@ jobs:
       - name: Module File Uploader - Build Lambda packages (${{ github.event.inputs.environment }})
         run: |
           sudo apt-get update && sudo apt-get install -y build-essential python3 libvips-dev
-          cd terraform/layers/backend/.terraform/modules/file_uploader/terraform/modules/file_uploader/src/lambdas/get_presigned_url
+          cd terraform/layers/backend/.terraform/modules/file_uploader/terraform/modules/file_uploader/src/lambdas/upload_file
           npm ci --silent --no-audit
+          npm run build
           cd ../process_uploaded_file
           npm ci --silent --no-audit
-
-      - name: Backend layer - Build Lambda packages (${{ github.event.inputs.environment }})
-        run: |
-          cd terraform/layers/backend/src/lambda_functions/get_document_data
+          npm run build
+          cd ../get_files
           npm ci --silent --no-audit
-          cd ../get_file
-          npm ci --silent --no-audit
-          cd ../list_files
-          npm ci --silent --no-audit
+          npm run build
       
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -245,8 +243,17 @@ jobs:
 
       - name: Terraform Apply
         working-directory: terraform/layers/backend
-        run: |
-          terraform apply -input=false -auto-approve
+        env:
+          TF_LOG: ERROR
+          TF_LOG_PATH: /tmp/tf-backend-apply.log
+        run: terraform apply -input=false -auto-approve 2>&1
+
+      - name: Upload Terraform log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: terraform-apply-log
+          path: /tmp/tf-backend-apply.log
 
       - name: Force Lambda code update
         run: |

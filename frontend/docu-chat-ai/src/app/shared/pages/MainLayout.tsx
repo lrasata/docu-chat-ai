@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Container, ThemeProvider } from "@mui/material";
 import { Outlet } from "react-router-dom";
 import MainNavigationContainer from "../containers/MainNavigationContainer.tsx";
@@ -11,6 +12,11 @@ import Spinner from "../components/Spinner.tsx";
 
 const MainLayout = () => {
   const auth = useAuth();
+  const [selectedDocumentId, setSelectedDocumentId] = useState<string | undefined>(undefined);
+
+  const handleSelectionChange = (selectedIds: string[]) => {
+    setSelectedDocumentId(selectedIds.length > 0 ? selectedIds[0] : undefined);
+  };
 
   if (auth.isLoading) {
     return <Spinner />;
@@ -29,8 +35,8 @@ const MainLayout = () => {
 
           {auth.isAuthenticated && (
             <WorkspaceLayout
-              sidebar={<FileManagementContainer />}
-              main={<ChatPage />}
+              sidebar={<FileManagementContainer onSelectionChange={handleSelectionChange} />}
+              main={<ChatPage selectedDocumentId={selectedDocumentId} />}
             />
           )}
           <Outlet />

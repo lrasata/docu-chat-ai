@@ -119,3 +119,16 @@ variable "max_search_results" {
   default     = 5
 }
 # END
+
+#-------------- RDS variables -----------------------------------------------
+variable "availability_zones" {
+  description = "Two AZs for RDS subnet group and Lambda subnets"
+  type        = list(string)
+  default     = ["eu-central-1a", "eu-central-1b"]
+}
+
+variable "db_instance_class" {
+  description = "RDS instance class"
+  type        = string
+  default     = "db.t4g.micro"
+}

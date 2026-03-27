@@ -1,12 +1,14 @@
-import { API_UPLOAD_URL } from "../../../shared/constants/constants.ts";
+import {API_BACKEND_URL} from "../../../shared/constants/constants.ts";
 
 export const getPresignedUrl = async (
   id: number | string,
   file: File,
+  accessToken: string,
   resource: string = "users",
 ): Promise<{ upload_url: string; file_key: string } | undefined> => {
   try {
-    const [filenameWithoutExt, extension] = file.name.split(".");
+    const sanitizedName = file.name.replace(/\s+/g, "_");
+    const [filenameWithoutExt, extension] = sanitizedName.split(".");
 
     const mimeType = file.type || "application/octet-stream";
 
@@ -23,8 +25,9 @@ export const getPresignedUrl = async (
       params.append(key, value as string);
     }
 
-    const response = await fetch(`${API_UPLOAD_URL}?${params}`, {
+    const response = await fetch(`${API_BACKEND_URL}/upload?${params}`, {
       method: "GET",
+      headers: { Authorization: `Bearer ${accessToken}` },
     });
 
     if (!response.ok) {

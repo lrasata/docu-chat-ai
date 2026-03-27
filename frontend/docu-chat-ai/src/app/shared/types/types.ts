@@ -16,9 +16,9 @@ export interface Message {
 }
 
 export interface IFile {
-  documentId: string;
-  key: string;
+  filename: string;
+  file_key: string;
+  url: string;
   size: number;
-  lastModified: string;
-  resource: string;
+  uploaded_timestamp: string;
 }

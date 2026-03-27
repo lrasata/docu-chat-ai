@@ -90,3 +90,13 @@ variable "s3_key" {
   default     = ""
   description = "Optional S3 key for large Lambda code"
 }
+
+variable "vpc_subnet_ids" {
+  type    = list(string)
+  default = []
+}
+
+variable "vpc_security_group_ids" {
+  type    = list(string)
+  default = []
+}

@@ -1,44 +1,55 @@
 import json
 import os
 import boto3
-from opensearchpy import OpenSearch, RequestsHttpConnection
-from requests_aws4auth import AWS4Auth
+import psycopg2
+from pgvector.psycopg2 import register_vector
 
 # ---------- Environment variables ----------
 REGION = os.environ["REGION"]
-OPENSEARCH_HOST = os.environ["OPENSEARCH_ENDPOINT"].replace("https://", "").replace("http://", "")
-OPENSEARCH_INDEX = os.environ["OPENSEARCH_INDEX"]
+RDS_SECRET_ARN = os.environ["RDS_SECRET_ARN"]
 DOCUMENTS_TABLE = os.environ["DOCUMENTS_TABLE"]
-BEDROCK_MODEL_INFERENCE_PROFILE_ARN = os.environ.get("BEDROCK_MODEL_INFERENCE_PROFILE_ARN", "anthropic.claude-sonnet-4-20250514-v1:0")
+BEDROCK_MODEL_INFERENCE_PROFILE_ARN = os.environ.get(
+    "BEDROCK_MODEL_INFERENCE_PROFILE_ARN", "anthropic.claude-sonnet-4-20250514-v1:0"
+)
 MAX_RESULTS = int(os.environ.get("MAX_SEARCH_RESULTS", "5"))
 
 # ---------- AWS clients ----------
 bedrock_runtime = boto3.client("bedrock-runtime", region_name=REGION)
 dynamodb = boto3.client("dynamodb", region_name=REGION)
+secretsmanager = boto3.client("secretsmanager")
 
-# ---------- OpenSearch client ----------
-credentials = boto3.Session().get_credentials()
+# ---------- Connection cache ----------
+_db_conn = None
 
-auth = AWS4Auth(
-    credentials.access_key,
-    credentials.secret_key,
-    REGION,
-    "aoss",
-    session_token=credentials.token
-)
+def get_db_credentials():
+    response = secretsmanager.get_secret_value(SecretId=RDS_SECRET_ARN)
+    return json.loads(response["SecretString"])
 
-os_client = OpenSearch(
-    hosts=[{"host": OPENSEARCH_HOST, "port": 443}],
-    http_auth=auth,
-    use_ssl=True,
-    verify_certs=True,
-    connection_class=RequestsHttpConnection
-)
+def get_db_connection():
+    global _db_conn
+    try:
+        if _db_conn is not None:
+            _db_conn.cursor().execute("SELECT 1")
+            return _db_conn
+    except Exception:
+        _db_conn = None
+
+    creds = get_db_credentials()
+    _db_conn = psycopg2.connect(
+        host=creds["host"],
+        port=creds["port"],
+        dbname=creds["dbname"],
+        user=creds["username"],
+        password=creds["password"],
+        connect_timeout=5,
+        sslmode="require",
+    )
+    _db_conn.autocommit = True
+    register_vector(_db_conn)
+    return _db_conn
 
 # ---------- Helper functions ----------
-
 def create_embedding(text):
-    """Create embedding using Amazon Titan Embeddings model"""
     try:
         response = bedrock_runtime.invoke_model(
             modelId="amazon.titan-embed-text-v1",
@@ -52,84 +63,47 @@ def create_embedding(text):
         print(f"Error creating embedding: {str(e)}")
         raise
 
-
-def search_similar_chunks(question_embedding, document_id=None, max_results=MAX_RESULTS):
-    """Search for similar document chunks using KNN vector search"""
+def search_similar_chunks(question_embedding, user_id, document_id=None, max_results=MAX_RESULTS):
     try:
-        query_body = {
-            "size": max_results,
-            "query": {
-                "bool": {
-                    "must": [
-                        {
-                            "knn": {
-                                "embedding": {
-                                    "vector": question_embedding,
-                                    "k": max_results
-                                }
-                            }
-                        }
-                    ]
-                }
-            },
-            "_source": ["text", "document_id", "chunk_id"]
-        }
+        conn = get_db_connection()
+        with conn.cursor() as cur:
+            if document_id:
+                cur.execute(
+                    """
+                    SELECT document_id, chunk_id, content,
+                           1 - (embedding <=> %s::vector) AS score
+                    FROM document_chunks
+                    WHERE document_id = %s
+                    ORDER BY embedding <=> %s::vector
+                    LIMIT %s;
+                    """,
+                    (question_embedding, document_id, question_embedding, max_results)
+                )
+            else:
+                cur.execute(
+                    """
+                    SELECT document_id, chunk_id, content,
+                           1 - (embedding <=> %s::vector) AS score
+                    FROM document_chunks
+                    WHERE document_id LIKE %s
+                    ORDER BY embedding <=> %s::vector
+                    LIMIT %s;
+                    """,
+                    (question_embedding, f"uploads/users/{user_id}/%", question_embedding, max_results)
+                )
+            rows = cur.fetchall()
 
-        # Filter by document_id if provided
-        if document_id:
-            query_body["query"]["bool"]["filter"] = [
-                {"term": {"document_id": document_id}}
-            ]
-
-        response = os_client.search(
-            index=OPENSEARCH_INDEX,
-            body=query_body
-        )
-
-        chunks = []
-        for hit in response["hits"]["hits"]:
-            chunks.append({
-                "text": hit["_source"]["text"],
-                "document_id": hit["_source"]["document_id"],
-                "chunk_id": hit["_source"]["chunk_id"],
-                "score": hit["_score"]
-            })
-
-        return chunks
+        return [
+            {"document_id": r[0], "chunk_id": r[1], "text": r[2], "score": float(r[3])}
+            for r in rows
+        ]
     except Exception as e:
-        print(f"Error searching OpenSearch: {str(e)}")
+        print(f"Error searching pgvector: {str(e)}")
         raise
 
-
-def get_document_metadata(document_id, user_id):
-    """Get document metadata from DynamoDB"""
-    try:
-        response = dynamodb.get_item(
-            TableName=DOCUMENTS_TABLE,
-            Key={
-                "userId": {"S": user_id},
-                "documentId": {"S": document_id}
-            }
-        )
-
-        if "Item" in response:
-            return {
-                "fileName": response["Item"].get("fileName", {}).get("S", "Unknown"),
-                "uploadedAt": response["Item"].get("uploadedAt", {}).get("S", "")
-            }
-        return None
-    except Exception as e:
-        print(f"Error fetching document metadata: {str(e)}")
-        return None
-
-
 def generate_answer_with_bedrock(question, context_chunks, model_id=BEDROCK_MODEL_INFERENCE_PROFILE_ARN):
-    """Generate answer using Bedrock LLM (Claude)"""
     try:
-        # Build context from retrieved chunks
         context = "\n\n".join([f"[Chunk {i+1}]\n{chunk['text']}" for i, chunk in enumerate(context_chunks)])
-
-        # Construct prompt
         prompt = f"""You are a helpful AI assistant that answers questions based on the provided document context.
 Only use information from the context below to answer the question. If the answer cannot be found in the context, say so.
 
@@ -139,52 +113,27 @@ Context:
 Question: {question}
 
 Answer:"""
-
-        # Call Bedrock - Claude 4 format
         request_body = {
             "anthropic_version": "bedrock-2023-05-31",
             "max_tokens": 2000,
             "temperature": 0.7,
-            "messages": [
-                {
-                    "role": "user",
-                    "content": prompt
-                }
-            ]
+            "messages": [{"role": "user", "content": prompt}]
         }
-
         response = bedrock_runtime.invoke_model(
             modelId=model_id,
             contentType="application/json",
             accept="application/json",
             body=json.dumps(request_body)
         )
-
         response_body = json.loads(response["body"].read())
-
-        # Extract answer from Claude response
-        answer = response_body["content"][0]["text"]
-
-        return answer
+        return response_body["content"][0]["text"]
     except Exception as e:
         print(f"Error calling Bedrock: {str(e)}")
         raise
 
-
 # ---------- Lambda handler ----------
-
 def handler(event, context):
-    """
-    Main Lambda handler for document Q&A
-
-    Expected input:
-    {
-        "question": "What is this document about?",
-        "documentId": "optional-document-id" (if omitted, searches all documents)
-    }
-    """
     try:
-        # Parse request
         if "body" in event:
             body = json.loads(event["body"]) if isinstance(event["body"], str) else event["body"]
         else:
@@ -200,20 +149,16 @@ def handler(event, context):
                 "body": json.dumps({"error": "Question is required"})
             }
 
-        # Get user ID from authorizer (if available)
         user_id = None
         if "requestContext" in event and "authorizer" in event["requestContext"]:
-            user_id = event["requestContext"]["authorizer"].get("claims", {}).get("sub")
+            authorizer = event["requestContext"]["authorizer"]
+            claims = authorizer.get("jwt", {}).get("claims") or authorizer.get("claims", {})
+            user_id = claims.get("sub")
 
-        print(f"Processing question: {question}")
-        print(f"Document ID: {document_id}")
-        print(f"User ID: {user_id}")
+        print(f"Processing question: {question}, document_id: {document_id}, user_id: {user_id}")
 
-        # Step 1: Create embedding for the question
         question_embedding = create_embedding(question)
-
-        # Step 2: Search for relevant document chunks
-        relevant_chunks = search_similar_chunks(question_embedding, document_id)
+        relevant_chunks = search_similar_chunks(question_embedding, user_id, document_id)
 
         if not relevant_chunks:
             return {
@@ -226,13 +171,10 @@ def handler(event, context):
             }
 
         print(f"Found {len(relevant_chunks)} relevant chunks")
-
-        # Step 3: Generate answer using Bedrock
         answer = generate_answer_with_bedrock(question, relevant_chunks)
 
-        # Step 4: Prepare sources information
         sources = []
-        for chunk in relevant_chunks[:3]:  # Return top 3 sources
+        for chunk in relevant_chunks[:3]:
             sources.append({
                 "documentId": chunk["document_id"],
                 "chunkId": chunk["chunk_id"],
@@ -240,27 +182,18 @@ def handler(event, context):
                 "preview": chunk["text"][:200] + "..." if len(chunk["text"]) > 200 else chunk["text"]
             })
 
-        # Return response
         return {
             "statusCode": 200,
             "headers": {"Content-Type": "application/json"},
-            "body": json.dumps({
-                "answer": answer,
-                "sources": sources,
-                "question": question
-            })
+            "body": json.dumps({"answer": answer, "sources": sources, "question": question})
         }
 
     except Exception as e:
         print(f"Error in handler: {str(e)}")
         import traceback
         traceback.print_exc()
-
         return {
             "statusCode": 500,
             "headers": {"Content-Type": "application/json"},
-            "body": json.dumps({
-                "error": "Internal server error",
-                "message": str(e)
-            })
+            "body": json.dumps({"error": "Internal server error", "message": str(e)})
         }

@@ -44,7 +44,7 @@
     {
       "id": "api_gateway",
       "label": "API Gateway",
-      "subtitle": "REST API",
+      "subtitle": "REST API + JWT auth",
       "icon": "https://fd-infracodebase-v2-static-prd-hvdmeqbraxfjhdb9.z01.azurefd.net/public/icons/aws/network/api-gateway.png",
       "x": 340,
       "y": 1130
@@ -59,7 +59,7 @@
     },
     {
       "id": "lambda_list",
-      "label": "List Files",
+      "label": "Get Files Lambda",
       "subtitle": "Query DynamoDB",
       "icon": "https://fd-infracodebase-v2-static-prd-hvdmeqbraxfjhdb9.z01.azurefd.net/public/icons/aws/compute/lambda.png",
       "x": 340,
@@ -68,7 +68,7 @@
     {
       "id": "lambda_query",
       "label": "Query Document",
-      "subtitle": "Chat Handler",
+      "subtitle": "RAG Chat Handler",
       "icon": "https://fd-infracodebase-v2-static-prd-hvdmeqbraxfjhdb9.z01.azurefd.net/public/icons/aws/compute/lambda.png",
       "x": 613,
       "y": 1440
@@ -82,26 +82,34 @@
       "y": 1860
     },
     {
-      "id": "lambda_ingestion",
-      "label": "S3 Ingestion",
-      "subtitle": "Extract & Embed",
-      "icon": "https://fd-infracodebase-v2-static-prd-hvdmeqbraxfjhdb9.z01.azurefd.net/public/icons/aws/compute/lambda.png",
+      "id": "dynamodb",
+      "label": "DynamoDB",
+      "subtitle": "File Metadata",
+      "icon": "https://fd-infracodebase-v2-static-prd-hvdmeqbraxfjhdb9.z01.azurefd.net/public/icons/aws/database/dynamodb.png",
       "x": 340,
       "y": 1860
     },
     {
-      "id": "dynamodb",
-      "label": "DynamoDB",
-      "subtitle": "Metadata",
-      "icon": "https://fd-infracodebase-v2-static-prd-hvdmeqbraxfjhdb9.z01.azurefd.net/public/icons/aws/database/dynamodb.png",
-      "x": 590,
+      "id": "lambda_process",
+      "label": "Process Upload",
+      "subtitle": "Metadata + SNS publish",
+      "icon": "https://fd-infracodebase-v2-static-prd-hvdmeqbraxfjhdb9.z01.azurefd.net/public/icons/aws/compute/lambda.png",
+      "x": 613,
       "y": 1860
     },
     {
-      "id": "opensearch",
-      "label": "OpenSearch",
-      "subtitle": "Vector Database",
-      "icon": "https://fd-infracodebase-v2-static-prd-hvdmeqbraxfjhdb9.z01.azurefd.net/public/icons/aws/ml/q.png",
+      "id": "sns",
+      "label": "SNS",
+      "subtitle": "File Processed Event",
+      "icon": "https://fd-infracodebase-v2-static-prd-hvdmeqbraxfjhdb9.z01.azurefd.net/public/icons/aws/integration/sns.png",
+      "x": 613,
+      "y": 2280
+    },
+    {
+      "id": "lambda_ingestion",
+      "label": "S3 Ingestion",
+      "subtitle": "Chunk + Embed + Index",
+      "icon": "https://fd-infracodebase-v2-static-prd-hvdmeqbraxfjhdb9.z01.azurefd.net/public/icons/aws/compute/lambda.png",
       "x": 340,
       "y": 2280
     },
@@ -110,16 +118,32 @@
       "label": "Bedrock Titan",
       "subtitle": "Embeddings",
       "icon": "https://fd-infracodebase-v2-static-prd-hvdmeqbraxfjhdb9.z01.azurefd.net/public/icons/aws/ml/bedrock.png",
-      "x": 590,
+      "x": 90,
       "y": 2280
     },
     {
+      "id": "rds_pgvector",
+      "label": "RDS PostgreSQL",
+      "subtitle": "pgvector — Vector DB",
+      "icon": "https://fd-infracodebase-v2-static-prd-hvdmeqbraxfjhdb9.z01.azurefd.net/public/icons/aws/database/rds.png",
+      "x": 340,
+      "y": 2700
+    },
+    {
       "id": "bedrock_llm",
-      "label": "Bedrock Claude",
-      "x": 840,
-      "y": 2280,
+      "label": "Bedrock Claude 4",
       "subtitle": "LLM Inference",
-      "icon": "https://fd-infracodebase-v2-static-prd-hvdmeqbraxfjhdb9.z01.azurefd.net/public/icons/aws/ml/bedrock.png"
+      "icon": "https://fd-infracodebase-v2-static-prd-hvdmeqbraxfjhdb9.z01.azurefd.net/public/icons/aws/ml/bedrock.png",
+      "x": 840,
+      "y": 1440
+    },
+    {
+      "id": "secrets_manager",
+      "label": "Secrets Manager",
+      "subtitle": "RDS Credentials",
+      "icon": "https://fd-infracodebase-v2-static-prd-hvdmeqbraxfjhdb9.z01.azurefd.net/public/icons/aws/security/secrets-manager.png",
+      "x": 613,
+      "y": 2700
     }
   ],
   "edges": [
@@ -152,13 +176,13 @@
       "id": "e5",
       "source": "react",
       "target": "api_gateway",
-      "label": "API calls"
+      "label": "API calls + JWT"
     },
     {
       "id": "e6",
       "source": "api_gateway",
       "target": "lambda_upload",
-      "label": "POST /upload"
+      "label": "GET /upload"
     },
     {
       "id": "e7",
@@ -183,53 +207,79 @@
       "id": "e10",
       "source": "lambda_list",
       "target": "dynamodb",
-      "label": "query"
+      "label": "query metadata"
     },
     {
       "id": "e11",
       "source": "s3_uploads",
-      "target": "lambda_ingestion",
+      "target": "lambda_process",
       "label": "S3 event",
       "style": "dashed"
     },
     {
       "id": "e12",
-      "source": "lambda_ingestion",
-      "target": "bedrock_embed",
-      "label": "create embeddings"
+      "source": "lambda_process",
+      "target": "dynamodb",
+      "label": "write metadata"
     },
     {
       "id": "e13",
-      "source": "lambda_ingestion",
-      "target": "opensearch",
-      "label": "index chunks"
+      "source": "lambda_process",
+      "target": "sns",
+      "label": "publish FileProcessed"
     },
     {
       "id": "e14",
+      "source": "sns",
+      "target": "lambda_ingestion",
+      "label": "trigger",
+      "style": "dashed"
+    },
+    {
+      "id": "e15",
+      "source": "lambda_ingestion",
+      "target": "bedrock_embed",
+      "label": "embed chunks"
+    },
+    {
+      "id": "e16",
+      "source": "lambda_ingestion",
+      "target": "rds_pgvector",
+      "label": "index vectors"
+    },
+    {
+      "id": "e17",
+      "source": "lambda_ingestion",
+      "target": "secrets_manager",
+      "label": "get credentials"
+    },
+    {
+      "id": "e18",
       "source": "lambda_query",
       "target": "bedrock_embed",
       "label": "embed question",
       "color": "green"
     },
     {
-      "id": "e15",
+      "id": "e19",
       "source": "lambda_query",
-      "target": "opensearch",
-      "label": "vector search",
+      "target": "rds_pgvector",
+      "label": "cosine similarity search",
       "color": "green"
     },
     {
-      "id": "e16",
+      "id": "e20",
+      "source": "lambda_query",
+      "target": "secrets_manager",
+      "label": "get credentials",
+      "color": "green"
+    },
+    {
+      "id": "e21",
       "source": "lambda_query",
       "target": "bedrock_llm",
       "label": "generate answer",
       "color": "green"
-    },
-    {
-      "id": "e17",
-      "source": "lambda_query",
-      "target": "dynamodb",
-      "label": "get metadata"
     }
   ],
   "legend": {
@@ -243,7 +293,7 @@
         "color": "purple"
       },
       {
-        "label": "Chat Flow",
+        "label": "RAG Chat Flow",
         "color": "green"
       },
       {
