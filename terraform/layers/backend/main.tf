@@ -63,7 +63,7 @@ module "route53" {
 }
 
 module "file_uploader" {
-  source = "git::https://github.com/lrasata/infra-file-uploader//terraform/modules/file_uploader?ref=v1.7.0"
+  source = "git::https://github.com/lrasata/infra-file-uploader//terraform/modules/file_uploader?ref=main"
 
   region                                        = var.region
   app_id                                        = var.app_id

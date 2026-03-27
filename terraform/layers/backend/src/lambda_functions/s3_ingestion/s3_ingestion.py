@@ -43,6 +43,9 @@ def get_db_connection():
         connect_timeout=5,
         sslmode="require",
     )
+    _db_conn.autocommit = True
+    with _db_conn.cursor() as cur:
+        cur.execute("CREATE EXTENSION IF NOT EXISTS vector;")
     _db_conn.autocommit = False
     register_vector(_db_conn)
     return _db_conn
@@ -50,7 +53,6 @@ def get_db_connection():
 def ensure_table():
     conn = get_db_connection()
     with conn.cursor() as cur:
-        cur.execute("CREATE EXTENSION IF NOT EXISTS vector;")
         cur.execute("""
             CREATE TABLE IF NOT EXISTS document_chunks (
                 id          BIGSERIAL PRIMARY KEY,
