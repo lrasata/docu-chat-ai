@@ -1,4 +1,4 @@
-# AI Powered Document Chat App [In construction 🚧]
+# AI Powered Document Chat App
 
 ![Staging Backend - Deployment pipeline](https://github.com/lrasata/serverless-docu-chat-ai/actions/workflows/deploy-backend-to-staging.yml/badge.svg)
 ![Staging Frontend - Deployment pipeline](https://github.com/lrasata/serverless-docu-chat-ai/actions/workflows/deploy-frontend-to-staging.yml/badge.svg)
@@ -7,7 +7,7 @@ A serverless, cloud-native application that allows users to chat with their PDF 
 
 ## Features
 
-- **Document Upload**: Upload PDF, DOCX, or TXT files
+- **Document Upload**: Tested with PDFs
 - **AI-Powered Chat**: Ask questions about your documents using natural language
 - **Semantic Search**: Vector similarity search with Amazon Titan embeddings and pgvector
 - **LLM Integration**: Powered by Anthropic Claude 4 on AWS Bedrock
@@ -41,11 +41,16 @@ A serverless, cloud-native application that allows users to chat with their PDF 
 3. **Generation** — The top matching chunks are assembled into a context prompt and sent to Anthropic Claude 4 on AWS Bedrock. Claude answers the question using only the retrieved context, then the response is returned to the frontend with source citations.
 
 ## Architecture
+<img src="docs/architecture.png" alt="infrastructure">
 
 **Frontend:**
 - React (Vite) app with TypeScript
 - Material-UI components
 - Hosted on S3 + CloudFront
+
+<img src="docs/frontend-UI-1.png" alt="frontend-ui-1" width="300px">
+<img src="docs/frontend-UI-2.png" alt="frontend-ui-2" width="360px">
+
 
 **Backend:**
 - **API Gateway**: RESTful endpoints with JWT authentication
@@ -86,8 +91,8 @@ A serverless, cloud-native application that allows users to chat with their PDF 
 
 - **AWS Account** with Bedrock access enabled
 - **AWS CLI** configured
-- **Terraform** >= 1.0
-- **Node.js** >= 18.x
+- **Terraform** >= 1.12.x
+- **Node.js** >= 22.x
 - **Domain name** (optional for custom domains)
 
 ### Enable Bedrock Models
@@ -96,7 +101,7 @@ Before deploying, enable model access in AWS Bedrock console:
 1. Go to AWS Bedrock → Model access
 2. Request access to:
    - Amazon Titan Embeddings G1 - Text
-   - Anthropic Claude 4 Sonnet (or Haiku/Opus)
+   - Anthropic Claude 4 Sonnet
 
 ### 1. Configure Deployment
 
@@ -144,7 +149,7 @@ aws s3 sync dist/ s3://your-frontend-bucket/ --delete
 
 ### 5. Test
 
-Navigate to your CloudFront URL, sign in, upload a document, and start chatting!
+Navigate to your CloudFront URL, sign in, upload a PDF document, and start chatting!
 
 ## Repository Structure
 
@@ -201,31 +206,6 @@ Available models (configure in `bedrock_model_inference_profile_arn` variable):
 Adjust the number of chunks retrieved per query:
 ```hcl
 max_search_results = 5  # Number of chunks to retrieve per query
-```
-
-## Development
-
-### Run Frontend Locally
-
-```bash
-cd frontend/docu-chat-ai
-npm install
-npm run dev
-```
-
-### Test Lambda Functions
-
-```bash
-cd terraform/layers/backend/src/lambda_functions/query_document
-pip install -r requirements.txt
-python -c "from query_document import handler; print(handler({'body': '{\"question\": \"test\"}'}, None))"
-```
-
-### View Logs
-
-```bash
-aws logs tail /aws/lambda/staging-docu-chat-ai-query-document --follow
-aws logs tail /aws/lambda/staging-docu-chat-ai-s3-ingestion --follow
 ```
 
 ## Costs
