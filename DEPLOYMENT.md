@@ -1,6 +1,6 @@
 # Deployment Guide
 
-This guide walks you through deploying the Serverless Document Chat AI application to AWS.
+This guide covers configuration and deployment of the Serverless Document Chat AI application to AWS.
 
 ## Prerequisites
 
@@ -8,10 +8,11 @@ Before you begin, ensure you have:
 
 1. **AWS Account** with administrator access
 2. **AWS CLI** configured with credentials
-3. **Terraform** >= 1.0 installed
-4. **Node.js** >= 18.x for frontend development
-5. **Domain name** (optional, but recommended for production)
-6. **Bedrock Model Access** enabled in your AWS account
+3. **Terraform** >= 1.12.x installed
+4. **Node.js** >= 22.x for frontend development
+5. **Docker** (required to build Python Lambda dependencies via SAM build container)
+6. **Domain name** (optional, but recommended)
+7. **Bedrock Model Access** enabled in your AWS account
 
 ### Enable Bedrock Model Access
 
@@ -20,33 +21,30 @@ Before you begin, ensure you have:
 3. Request access to:
    - **Amazon Titan Embeddings G1 - Text** (required for embeddings)
    - **Anthropic Claude 4 Sonnet** (recommended for chat)
-   - Or other LLM models like Claude 4 Haiku or Llama 3
 
 Access is usually granted within minutes.
 
-## Architecture Overview
+## Terraform Layers
 
-The application consists of several AWS services:
+The infrastructure is split into four independent Terraform layers that must be deployed in order:
 
-- **Frontend**: React app hosted on S3 + CloudFront
-- **Authentication**: Cognito User Pool with Google OAuth
-- **API**: API Gateway + Lambda functions
-- **Storage**: S3 for documents, DynamoDB for metadata
-- **Vector Search**: OpenSearch Serverless with embeddings
-- **AI**: Amazon Bedrock (Titan for embeddings, Claude for chat)
+| Layer | Path | Description |
+|-------|------|-------------|
+| `secrets` | `terraform/layers/secrets` | API keys and application secrets |
+| `cognito` | `terraform/layers/cognito` | Cognito User Pool + Google IdP |
+| `backend` | `terraform/layers/backend` | Lambda, API Gateway, RDS, VPC |
+| `frontend` | `terraform/layers/frontend` | S3, CloudFront, Route53 |
 
 ## Deployment Steps
 
-### 1. Clone and Configure
+### 1. Clone the Repository
 
 ```bash
 git clone <your-repo-url>
 cd serverless-docu-chat-ai
 ```
 
-### 2. Configure Variables
-
-Copy the example tfvars file and customize it:
+### 2. Configure Terraform Variables
 
 ```bash
 cd terraform/environments
@@ -56,14 +54,14 @@ cp staging.tfvars.example staging.tfvars
 Edit `staging.tfvars` with your values:
 
 ```hcl
-# Required changes:
 environment = "staging"
-region      = "us-east-1"  # Choose your region
+region      = "eu-central-1"
 
-# Domain configuration (use your own domain)
-api_file_upload_domain_name = "api-staging.your-domain.com"
-api_backend_custom_domain_name  = "staging.your-domain.com"
-route53_zone_name          = "your-domain.com"
+# Domain configuration
+api_backend_custom_domain_name = "staging-backend-api.your-domain.com"
+api_file_upload_domain_name    = "staging-file-upload-api.your-domain.com"
+cloudfront_domain_name         = "staging.your-domain.com"
+route53_zone_name              = "your-domain.com"
 
 # SSL Certificate ARN (must be in us-east-1 for CloudFront)
 backend_certificate_arn = "arn:aws:acm:us-east-1:123456789012:certificate/your-cert-id"
@@ -71,15 +69,17 @@ backend_certificate_arn = "arn:aws:acm:us-east-1:123456789012:certificate/your-c
 # Notification email
 notification_email = "your-email@your-domain.com"
 
-# Bedrock model (default is Claude 4 Sonnet)
-bedrock_model_inference_profile_arn = "" # see in Amazon Bedrock → Inference and assessment → Inference profiles
+# Bedrock inference profile ARN
+# Find in: AWS Bedrock → Inference and assessment → Inference profiles
+bedrock_model_inference_profile_arn = "arn:aws:bedrock:..."
+
+# RDS instance size
+db_instance_class    = "db.t4g.micro"
+availability_zones   = ["eu-central-1a", "eu-central-1b"]
+max_search_results   = 5
 ```
 
-### 3. Deploy Backend Infrastructure
-
-Deploy in this order:
-
-#### Step 3.1: Deploy Secrets Layer
+### 3. Deploy Secrets Layer
 
 ```bash
 cd terraform/layers/secrets
@@ -87,257 +87,262 @@ terraform init
 terraform apply -var-file="../../environments/staging.tfvars"
 ```
 
-#### Step 3.2: Deploy Cognito Layer
+### 4. Deploy Cognito Layer
 
 ```bash
-cd ../cognito
+cd terraform/layers/cognito
 terraform init
-terraform apply -var-file="../../environments/staging.tfvars"
+terraform apply -target="module.cognito_base" -var-file="../../environments/staging.tfvars"
+terraform apply -target="module.cognito_clients" -var-file="../../environments/staging.tfvars"
 ```
 
-**Note:** After Cognito deployment, configure Google OAuth:
-1. Go to [Google Cloud Console](https://console.cloud.google.com)
+After deployment, configure Google OAuth:
+1. Go to [Google Cloud Console](https://console.cloud.google.com) → APIs & Services → Credentials
 2. Create OAuth 2.0 credentials
-3. Add the Cognito callback URL from the Terraform output
-4. Update Cognito with Google Client ID and Secret
+3. Add the Cognito callback URL from the Terraform output as an authorized redirect URI
+4. Store the Google Client ID and Secret in Secrets Manager (key configured in `secret_store_name`)
 
-#### Step 3.3: Deploy Backend Layer
+### 5. Deploy Backend Layer
+
+The backend layer includes Lambda functions (Python + TypeScript), API Gateway, RDS PostgreSQL with pgvector, and the VPC with private subnets.
+
+#### Build Lambda packages locally (or use GitHub Actions)
+
+Python Lambdas must be built inside an Amazon Linux container to match the Lambda runtime:
 
 ```bash
-cd ../backend
-terraform init
+# S3 Ingestion Lambda
+cd terraform/layers/backend/src/lambda_functions/s3_ingestion
+rm -rf build && mkdir build
+docker run --rm --user "$(id -u):$(id -g)" --entrypoint "" \
+  -v "$PWD:/var/task" public.ecr.aws/sam/build-python3.11 \
+  bash -c "pip install -r requirements.txt --only-binary numpy -t build/"
+cp s3_ingestion.py build/
+cd build && zip -r ../lambda_s3_ingestion.zip .
+
+# Query Document Lambda
+cd ../../query_document
+rm -rf build && mkdir build
+docker run --rm --user "$(id -u):$(id -g)" --entrypoint "" \
+  -v "$PWD:/var/task" public.ecr.aws/sam/build-python3.11 \
+  bash -c "pip install -r requirements.txt --only-binary numpy -t build/"
+cp query_document.py build/
+cd build && zip -r ../lambda_query_document.zip .
+```
+
+Upload the zips to S3:
+
+```bash
+aws s3 cp lambda_s3_ingestion.zip s3://docu-chat-ai-lambda-s3-ingestion/staging/s3-ingestion.zip
+aws s3 cp lambda_query_document.zip s3://docu-chat-ai-lambda-s3-query-document/staging/s3-query-document.zip
+```
+
+#### Deploy
+
+```bash
+cd terraform/layers/backend
+terraform init -upgrade
 terraform apply -var-file="../../environments/staging.tfvars"
 ```
 
-This will create:
-- Lambda functions (upload, list, query, s3_ingestion)
-- API Gateway with endpoints
-- OpenSearch Serverless collection
-- S3 bucket for uploads
-- DynamoDB table for metadata
+This creates:
+- Private VPC with 2 subnets, security groups, and VPC endpoints
+- RDS PostgreSQL instance (db.t4g.micro, encrypted, not publicly accessible)
+- RDS credentials stored in Secrets Manager
+- Lambda functions with VPC access (s3-ingestion, query-document)
+- Lambda functions for file upload/listing (upload, get-files, process-upload)
+- API Gateway with Cognito JWT authorizer
+- SNS topic for file processing fan-out
+- DynamoDB table for file metadata
 
-**Important:** The first apply might take 10-15 minutes as OpenSearch Serverless provisions.
+> **Note:** The `pgvector` extension is created automatically on the first Lambda cold start. No manual DB setup required.
 
-#### Step 3.4: Deploy Frontend Layer
+### 6. Deploy Frontend Layer
 
 ```bash
-cd ../frontend
-terraform init
+cd terraform/layers/frontend
+terraform init -upgrade
 terraform apply -var-file="../../environments/staging.tfvars"
 ```
 
 This creates:
 - S3 bucket for static hosting
-- CloudFront distribution
+- CloudFront distribution with OAC
 - Route53 DNS records
 
-### 4. Configure Frontend Environment
+### 7. Build and Deploy Frontend App
 
-After backend deployment, get the API Gateway URL:
+Get the required values from Terraform outputs:
 
 ```bash
-cd terraform/layers/backend
-terraform output api_gateway_url
+cd terraform/layers/cognito && terraform output
+cd terraform/layers/backend && terraform output
 ```
 
-Create frontend environment file:
+Build the frontend:
 
 ```bash
 cd frontend/docu-chat-ai
-cp .env.example .env
-```
-
-Edit `.env`:
-
-```bash
-VITE_API_BASE_URL=https://your-api-id.execute-api.us-east-1.amazonaws.com/staging
-VITE_COGNITO_USER_POOL_ID=us-east-1_XXXXXXXXX
-VITE_COGNITO_CLIENT_ID=xxxxxxxxxxxxxxxxxxxxxxxxxx
-VITE_COGNITO_DOMAIN=your-domain.auth.us-east-1.amazoncognito.com
-VITE_FILE_UPLOAD_API_URL=https://api-staging.your-domain.com
-```
-
-Get these values from Terraform outputs:
-
-```bash
-cd terraform/layers/cognito
-terraform output
-```
-
-### 5. Build and Deploy Frontend
-
-```bash
-cd frontend/docu-chat-ai
-npm install
+export VITE_AWS_COGNITO_USER_POOL_API_ENDPOINT=<cognito_user_pool_endpoint>
+export VITE_AWS_HOSTED_COGNITO_LOGIN_DOMAIN=https://<cognito_domain>
+export VITE_AWS_COGNITO_CLIENT_ID=<client_id>
+export VITE_AWS_COGNITO_REDIRECT_URI=https://staging.your-domain.com
+export VITE_API_GW_BACKEND_ENDPOINT=https://staging.your-domain.com/api
+npm ci
 npm run build
 ```
 
-Upload to S3:
+Deploy to S3 and invalidate CloudFront:
 
 ```bash
-aws s3 sync dist/ s3://your-frontend-bucket/ --delete
+aws s3 sync dist/ s3://staging-docu-chat-ai-static-web-app-bucket/ --delete
+aws cloudfront create-invalidation --distribution-id <distribution_id> --paths "/*"
 ```
 
-Invalidate CloudFront cache:
+### 8. Test
 
-```bash
-aws cloudfront create-invalidation \
-  --distribution-id YOUR_DISTRIBUTION_ID \
-  --paths "/*"
-```
-
-### 6. Test the Application
-
-1. Navigate to your CloudFront domain: `https://staging.your-domain.com`
+1. Navigate to `https://staging.your-domain.com`
 2. Sign in with Google
 3. Upload a PDF document
-4. Wait for processing (check CloudWatch logs for s3_ingestion Lambda)
-5. Go to Chat page and ask questions about your document
+4. Wait a few seconds for ingestion (check CloudWatch logs for the `s3-ingestion` Lambda)
+5. Ask a question about the document in the chat
+
+## CI/CD with GitHub Actions
+
+The repository includes GitHub Actions workflows for automated deployment. Required secrets per environment:
+
+| Secret                                | Description                            |
+|---------------------------------------|----------------------------------------|
+| `AWS_REGION`                          | AWS region (e.g. `eu-central-1`)       |
+| `AWS_GITHUB_DEPLOY_ROLE_ARN`          | IAM role ARN for OIDC-based deployment |
+| `BACKEND_CERTIFICATE_ARN`             | ACM certificate ARN for API domain     |
+| `FRONTEND_CERTIFICATE_ARN`            | ACM certificate ARN for CloudFront     |
+| `COGNITO_USER_POOL_API_ENDPOINT`      | Cognito User Pool endpoint             |
+| `COGNITO_CLIENT_ID`                   | Cognito app client ID                  |
+| `SECRET_STORE_NAME`                   | Secrets Manager secret name            |
+| `ALERT_EMAIL`                         | Email for SNS notifications            |
+| `BEDROCK_MODEL_INFERENCE_PROFILE_ARN` | Bedrock inference profile ARN          |
+
+Workflows:
+- `deploy-backend-to-staging.yml` — deploys secrets, cognito, and backend layers in sequence
+- `deploy-frontend-to-staging.yml` — deploys frontend layer and React app
+- `destroy-staging-env.yml` — tears down all layers in reverse order
 
 ## Verification Checklist
 
-After deployment, verify:
-
 - [ ] Frontend loads at CloudFront URL
 - [ ] Google sign-in works
-- [ ] File upload returns presigned URL
-- [ ] S3 ingestion Lambda processes uploaded files
-- [ ] OpenSearch index contains document chunks
-- [ ] Chat endpoint responds to questions
+- [ ] File upload returns presigned URL and file appears in the list
+- [ ] CloudWatch logs for `s3-ingestion` show `Document ingestion completed successfully`
+- [ ] Chat endpoint responds with a grounded answer
 - [ ] Bedrock API calls succeed (check Lambda logs)
 
 ## Troubleshooting
 
-### Lambda Functions Timing Out
+### Lambda cannot connect to RDS
 
-**Symptom:** Query Lambda times out after 30 seconds
+- Verify Lambda security group allows outbound on port 5432
+- Verify RDS security group allows inbound from Lambda security group on port 5432
+- Both must be in the same VPC
 
-**Solution:** Increase Lambda timeout and memory:
+### pgvector extension error on cold start
 
-```hcl
-# In terraform/layers/backend/modules/lambda_function/main.tf
-timeout     = 120  # seconds
-memory_size = 1024 # MB
-```
+The `CREATE EXTENSION IF NOT EXISTS vector` runs automatically at Lambda init. If it fails, check that the RDS user (`pgvector_admin`) has `SUPERUSER` or `rds_superuser` privileges.
 
-### OpenSearch Access Denied
+### Lambda timeout on first invocation
 
-**Symptom:** Lambda gets 403 errors from OpenSearch
+Cold start includes DB connection + extension check. Increase Lambda timeout to 120s if needed.
 
-**Solution:** Check data access policy includes Lambda execution role:
+### Subnet/SG deletion stuck during destroy
+
+Lambda VPC ENIs can take up to 45 minutes to be released by AWS. The destroy pipeline includes an automatic ENI cleanup step. If running manually:
 
 ```bash
-cd terraform/layers/backend/modules/opensearch
-# Review main.tf data access policy
+# Find and delete available ENIs in the VPC
+aws ec2 describe-network-interfaces \
+  --filters "Name=vpc-id,Values=<vpc-id>" "Name=status,Values=available" \
+  --query "NetworkInterfaces[*].NetworkInterfaceId" --output text | \
+  xargs -I {} aws ec2 delete-network-interface --network-interface-id {}
 ```
 
-### Bedrock Throttling
+### Secrets Manager conflict on redeploy
 
-**Symptom:** "ThrottlingException" in Lambda logs
+If a secret is scheduled for deletion (7-day window in prod, 0 in staging), force-delete it before redeploying:
 
-**Solution:**
-1. Request service quota increase in AWS Service Quotas
-2. Add exponential backoff retry logic to Lambda
-3. Consider using reserved capacity for production
+```bash
+aws secretsmanager delete-secret \
+  --secret-id "staging/docu-chat-ai/rds-pgvector" \
+  --force-delete-without-recovery
+```
 
-### S3 Ingestion Not Triggering
+### CloudFront OAC already exists
 
-**Symptom:** Files upload but never get indexed
+If the OAC exists in AWS but not in Terraform state, the deploy pipeline deletes it automatically before apply. To do it manually:
 
-**Solution:**
-1. Check S3 bucket notification configuration
-2. Verify Lambda has permission to be invoked by S3
-3. Check CloudWatch logs for the s3_ingestion Lambda
+```bash
+OAC_ID=$(aws cloudfront list-origin-access-controls \
+  --query "OriginAccessControlList.Items[?Name=='staging-s3-oac'].Id" --output text)
+ETAG=$(aws cloudfront get-origin-access-control --id "$OAC_ID" --query ETag --output text)
+aws cloudfront delete-origin-access-control --id "$OAC_ID" --if-match "$ETAG"
+```
 
-### CORS Errors
+### Bedrock throttling
 
-**Symptom:** Frontend can't call API Gateway
+Request a service quota increase in AWS Service Quotas, or switch to Claude Haiku for lower-cost use cases.
 
-**Solution:**
-1. Verify API Gateway CORS configuration includes your CloudFront domain
-2. Check that Authorization header is allowed
-3. Ensure frontend sends correct Origin header
+### CORS errors
+
+Verify API Gateway CORS configuration includes your CloudFront domain and that the `Authorization` header is allowed.
 
 ## Monitoring
 
-Key metrics to monitor:
+Key CloudWatch metrics to watch:
 
-1. **Lambda Invocations**: CloudWatch Metrics for each Lambda
-2. **API Gateway 4xx/5xx**: Check for authentication or server errors
-3. **OpenSearch Indexing Rate**: Monitor chunk ingestion
-4. **Bedrock API Calls**: Track usage and costs
-5. **S3 Upload Success Rate**: Monitor presigned URL usage
+- **Lambda errors/duration** — per function
+- **API Gateway 4xx/5xx** — authentication and server errors
+- **RDS connections** — monitor for connection pool exhaustion
+- **Bedrock API calls** — track usage and costs
 
-Set up CloudWatch Alarms for:
-- Lambda errors > threshold
-- API Gateway 5xx errors
-- OpenSearch indexing failures
+Useful log tails:
 
-## Cost Optimization
+```bash
+aws logs tail /aws/lambda/staging-docu-chat-ai-s3-ingestion --follow
+aws logs tail /aws/lambda/staging-docu-chat-ai-query-document --follow
+```
 
-Expected monthly costs (staging/low usage):
+## Costs
 
-- **Lambda**: ~$5-10 (first 1M requests free)
-- **API Gateway**: ~$3.50 per million requests
-- **OpenSearch Serverless**: ~$700/month (always-on)
-- **Bedrock**: Pay per use
-  - Titan Embeddings: $0.0001 per 1K tokens
-  - Claude 4 Sonnet: $0.003 per 1K input tokens
-- **S3 + CloudFront**: ~$1-5 for low traffic
-- **DynamoDB**: ~$1-2 (on-demand)
+Estimated monthly costs (staging / low usage):
 
-**Total:** ~$720-750/month for staging
+| Service                                                 | Cost                           |
+|---------------------------------------------------------|--------------------------------|
+| RDS PostgreSQL db.t4g.micro                             | ~$13/month                     |
+| VPC Interface Endpoints (Bedrock, Secrets Manager, SNS) | ~$30-45/month                  |
+| Lambda                                                  | ~$5-10 (1M requests free tier) |
+| Bedrock — Titan Embeddings                              | $0.0001/1K tokens              |
+| Bedrock — Claude 4 Sonnet                               | $0.003/1K input tokens         |
+| S3 + CloudFront                                         | ~$1-5                          |
+| DynamoDB                                                | ~$1-2 (on-demand)              |
+| **Total**                                               | **~$55-80/month**              |
 
-**Production cost optimization:**
-- Use Reserved Capacity for OpenSearch
-- Enable CloudFront caching
-- Implement request caching in Lambda
-- Use Bedrock Haiku for cost-sensitive use cases
-
-## Security Best Practices
-
-1. **Enable WAF** on CloudFront and API Gateway
-2. **Encrypt at rest**: Enable for S3, DynamoDB, and OpenSearch
-3. **Rotate secrets**: Use AWS Secrets Manager for API keys
-4. **Least privilege IAM**: Review Lambda execution roles
-5. **Enable CloudTrail**: Monitor all API calls
-6. **VPC Endpoints**: Use for Bedrock API calls (optional)
-7. **MFA**: Enforce for Cognito users in production
+**Cost tips:**
+- Use `db.t4g.micro` for staging (burstable, cheapest RDS tier)
+- VPC Interface Endpoints are the largest fixed cost — consider removing non-critical ones for dev environments
+- Switch to Claude Haiku for cost-sensitive use cases
 
 ## Cleanup
 
-To destroy all resources:
+To destroy all resources (staging):
 
 ```bash
 # Destroy in reverse order
-cd terraform/layers/frontend
-terraform destroy -var-file="../../environments/staging.tfvars"
-
-cd ../backend
-terraform destroy -var-file="../../environments/staging.tfvars"
-
-cd ../cognito
-terraform destroy -var-file="../../environments/staging.tfvars"
-
-cd ../secrets
-terraform destroy -var-file="../../environments/staging.tfvars"
+cd terraform/layers/frontend && terraform destroy -auto-approve
+cd ../backend && terraform destroy -auto-approve
+cd ../cognito && terraform destroy -auto-approve -target=module.cognito_clients
+cd ../cognito && terraform destroy -auto-approve -target=module.cognito_base
+cd ../secrets && terraform destroy -auto-approve
 ```
 
-**Warning:** This will delete all data including uploaded documents and indexed content.
+Or use the `destroy-staging-env.yml` GitHub Actions workflow.
 
-## Next Steps
-
-- Set up CI/CD with GitHub Actions (see `.github/workflows/`)
-- Configure custom domain with Route53
-- Add conversation history to DynamoDB
-- Implement streaming responses with WebSockets
-- Add multi-document chat support
-- Implement citation tracking for answers
-
-## Support
-
-For issues or questions:
-1. Check CloudWatch Logs for Lambda functions
-2. Review Terraform outputs for endpoint URLs
-3. Verify Bedrock model access in AWS Console
-4. Check GitHub Issues for known problems
+**Warning:** This deletes all data including uploaded documents and indexed vectors.

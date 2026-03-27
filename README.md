@@ -41,6 +41,7 @@ A serverless, cloud-native application that allows users to chat with their PDF 
 3. **Generation** — The top matching chunks are assembled into a context prompt and sent to Anthropic Claude 4 on AWS Bedrock. Claude answers the question using only the retrieved context, then the response is returned to the frontend with source citations.
 
 ## Architecture
+
 <img src="docs/architecture.png" alt="infrastructure">
 
 **Frontend:**
@@ -50,7 +51,6 @@ A serverless, cloud-native application that allows users to chat with their PDF 
 
 <img src="docs/frontend-UI-1.png" alt="frontend-ui-1" width="300px">
 <img src="docs/frontend-UI-2.png" alt="frontend-ui-2" width="360px">
-
 
 **Backend:**
 - **API Gateway**: RESTful endpoints with JWT authentication
@@ -85,72 +85,6 @@ A serverless, cloud-native application that allows users to chat with their PDF 
 7. **LLM generates answer** → Claude 4 uses retrieved context to respond
 8. **User receives answer** → With source citations and relevance scores
 
-## Quickstart
-
-### Prerequisites
-
-- **AWS Account** with Bedrock access enabled
-- **AWS CLI** configured
-- **Terraform** >= 1.12.x
-- **Node.js** >= 22.x
-- **Domain name** (optional for custom domains)
-
-### Enable Bedrock Models
-
-Before deploying, enable model access in AWS Bedrock console:
-1. Go to AWS Bedrock → Model access
-2. Request access to:
-   - Amazon Titan Embeddings G1 - Text
-   - Anthropic Claude 4 Sonnet
-
-### 1. Configure Deployment
-
-```bash
-cd terraform/environments
-cp staging.tfvars.example staging.tfvars
-```
-
-Edit `staging.tfvars` with your AWS account details.
-
-### 2. Deploy Infrastructure
-
-```bash
-# Deploy in order:
-cd terraform/layers/secrets
-terraform init && terraform apply -var-file="../../environments/staging.tfvars"
-
-cd ../cognito
-terraform init && terraform apply -var-file="../../environments/staging.tfvars"
-
-cd ../backend
-terraform init && terraform apply -var-file="../../environments/staging.tfvars"
-
-cd ../frontend
-terraform init && terraform apply -var-file="../../environments/staging.tfvars"
-```
-
-See [DEPLOYMENT.md](./DEPLOYMENT.md) for detailed instructions.
-
-### 3. Configure Frontend
-
-```bash
-cd frontend/docu-chat-ai
-cp .env.example .env
-# Edit .env with API Gateway URL and Cognito details from Terraform outputs
-npm install
-npm run build
-```
-
-### 4. Deploy Frontend
-
-```bash
-aws s3 sync dist/ s3://your-frontend-bucket/ --delete
-```
-
-### 5. Test
-
-Navigate to your CloudFront URL, sign in, upload a PDF document, and start chatting!
-
 ## Repository Structure
 
 ```
@@ -183,7 +117,7 @@ Navigate to your CloudFront URL, sign in, upload a PDF document, and start chatt
 │       ├── cognito/           # Authentication
 │       ├── secrets/           # Secrets Manager
 │       └── frontend/          # S3 + CloudFront
-└── DEPLOYMENT.md              # Detailed deployment guide
+└── DEPLOYMENT.md              # Deployment and configuration guide
 ```
 
 ## API Endpoints
@@ -193,46 +127,6 @@ Navigate to your CloudFront URL, sign in, upload a PDF document, and start chatt
 - `GET /api/upload` - Get a presigned S3 URL for uploading
 
 All endpoints require JWT authentication via Cognito.
-
-## Configuration
-
-### Bedrock Models
-
-Available models (configure in `bedrock_model_inference_profile_arn` variable):
-- `anthropic.claude-sonnet-4-20250514-v1:0` (Recommended - balanced)
-
-### Vector Search
-
-Adjust the number of chunks retrieved per query:
-```hcl
-max_search_results = 5  # Number of chunks to retrieve per query
-```
-
-## Costs
-
-Estimated monthly costs (low usage):
-- **RDS PostgreSQL** (db.t4g.micro): ~$13/month
-- **VPC Interface Endpoints** (Bedrock, Secrets Manager, SNS): ~$30-45/month
-- **Lambda**: ~$5-10 (1M requests free tier)
-- **Bedrock**: Pay-per-token
-  - Titan Embeddings: $0.0001/1K tokens
-  - Claude 4 Sonnet: $0.003/1K input tokens
-- **S3 + CloudFront**: ~$1-5
-- **DynamoDB**: ~$1-2 (on-demand)
-
-**Total: ~$55-80/month** for staging environment
-
-## Troubleshooting
-
-**Lambda timeout**: Increase timeout to 120s and memory to 512MB
-
-**pgvector type not found**: The `vector` extension is created automatically on first Lambda cold start. If it fails, check that the Lambda security group can reach the RDS security group on port 5432.
-
-**Bedrock throttling**: Request quota increase or add retry logic
-
-**CORS errors**: Verify API Gateway CORS includes CloudFront domain
-
-See [DEPLOYMENT.md](./DEPLOYMENT.md) for detailed troubleshooting.
 
 ## Security
 
@@ -263,5 +157,7 @@ Built with:
 - [AWS Bedrock](https://aws.amazon.com/bedrock/)
 - [RDS PostgreSQL + pgvector](https://github.com/pgvector/pgvector)
 - [React](https://react.dev/)
-- [Terraform](https://www.terraform.io/)
+- [Vite](https://vitejs.dev/)
 - [Material-UI](https://mui.com/)
+- [Terraform](https://www.terraform.io/)
+- [Infracodebase](https://infracodebase.com/)
