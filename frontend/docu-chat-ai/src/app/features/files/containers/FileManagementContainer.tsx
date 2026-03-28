@@ -33,7 +33,7 @@ const formatBytes = (bytes: number): string => {
 };
 
 interface FileManagementContainerProps {
-  onSelectionChange?: (selectedIds: string[]) => void;
+  onSelectionChange?: (selectedIds: string[], pendingIds: string[]) => void;
 }
 
 const FileManagementContainer = ({ onSelectionChange }: FileManagementContainerProps) => {
@@ -44,9 +44,21 @@ const FileManagementContainer = ({ onSelectionChange }: FileManagementContainerP
   const files: IFile[] = useSelector((state: RootState) => state.files.files);
   const auth = useAuth();
 
-  useEffect(() => {
+  const loadFiles = useCallback(() => {
     dispatch(fetchFiles({ accessToken: auth.user?.access_token ?? "", user_sub: auth.user?.profile.sub ?? "", resource: "users" }));
+  }, [auth.user?.access_token, auth.user?.profile.sub]);
+
+  useEffect(() => {
+    loadFiles();
   }, []);
+
+  // Polling until all files are indexed
+  useEffect(() => {
+    const hasPending = files.some((f) => f.status === "pending");
+    if (!hasPending) return;
+    const interval = setInterval(loadFiles, 5000);
+    return () => clearInterval(interval);
+  }, [files, loadFiles]);
 
   const uploadFile = async (file: File, id: string) => {
     if (!auth.isAuthenticated) return;

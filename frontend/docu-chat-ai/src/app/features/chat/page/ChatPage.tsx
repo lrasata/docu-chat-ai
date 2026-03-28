@@ -8,9 +8,10 @@ import type { Message } from "../../../shared/types/types.ts";
 
 interface ChatPageProps {
   selectedDocumentId?: string;
+  isSelectedDocumentPending?: boolean;
 }
 
-const ChatPage: React.FC<ChatPageProps> = ({ selectedDocumentId }) => {
+const ChatPage: React.FC<ChatPageProps> = ({ selectedDocumentId, isSelectedDocumentPending }) => {
   const auth = useAuth();
   const [messages, setMessages] = useState<Message[]>([
     {
@@ -79,6 +80,12 @@ const ChatPage: React.FC<ChatPageProps> = ({ selectedDocumentId }) => {
 
       <ChatWindow messages={messages} />
 
+      {isSelectedDocumentPending && (
+        <Alert severity="warning" sx={{ mb: 1 }}>
+          A document is still being indexed. Please wait before asking questions about it.
+        </Alert>
+      )}
+
       {isLoading && (
         <Box sx={{ display: "flex", justifyContent: "center", mb: 2 }}>
           <CircularProgress size={24} />
@@ -88,7 +95,7 @@ const ChatPage: React.FC<ChatPageProps> = ({ selectedDocumentId }) => {
         </Box>
       )}
 
-      <MessageInput onSend={handleSend} disabled={isLoading} />
+      <MessageInput onSend={handleSend} disabled={isLoading || !!isSelectedDocumentPending} />
     </Box>
   );
 };

@@ -1,4 +1,4 @@
-import { Box, Typography, Checkbox, Chip, Tooltip } from "@mui/material";
+import { Box, Typography, Checkbox, Chip, Tooltip, CircularProgress } from "@mui/material";
 import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import RadioButtonUncheckedIcon from "@mui/icons-material/RadioButtonUnchecked";
@@ -7,7 +7,7 @@ import type { IFile } from "../../../shared/types/types.ts";
 
 interface FileCardContainerProps {
   files: IFile[];
-  onSelectionChange?: (selectedIds: string[]) => void;
+  onSelectionChange?: (selectedIds: string[], pendingIds: string[]) => void;
 }
 
 const formatBytes = (bytes: number): string => {
@@ -38,23 +38,27 @@ const FileCardContainer = ({
 }: FileCardContainerProps) => {
   const [selected, setSelected] = useState<Set<string>>(new Set());
 
-  const toggle = (id: string) => {
+  const pendingIds = files.filter((f) => f.status === "pending").map((f) => f.file_key);
+
+  const toggle = (id: string, isPending: boolean) => {
+    if (isPending) return;
     setSelected((prev) => {
       const next = new Set(prev);
       next.has(id) ? next.delete(id) : next.add(id);
-      onSelectionChange?.([...next]);
+      onSelectionChange?.([...next], pendingIds);
       return next;
     });
   };
 
   const toggleAll = () => {
-    if (selected.size === files.length) {
+    const indexedFiles = files.filter((f) => f.status === "indexed");
+    if (selected.size === indexedFiles.length) {
       setSelected(new Set());
-      onSelectionChange?.([]);
+      onSelectionChange?.([], pendingIds);
     } else {
-      const all = new Set(files.map((f) => f.file_key));
+      const all = new Set(indexedFiles.map((f) => f.file_key));
       setSelected(all);
-      onSelectionChange?.([...all]);
+      onSelectionChange?.([...all], pendingIds);
     }
   };
 
@@ -134,26 +138,26 @@ const FileCardContainer = ({
           gap: 1.5,
         }}
       >
-        {files.map((file) => {
+        {files.map((file: IFile) => {
           const isSelected = selected.has(file.file_key);
+          const isPending = file.status === "pending";
           return (
             <Box
               key={file.file_key}
-              onClick={() => toggle(file.file_key)}
+              onClick={() => toggle(file.file_key, isPending)}
               sx={{
                 position: "relative",
                 border: "1.5px solid",
                 borderColor: isSelected ? "primary.main" : "divider",
                 borderRadius: 2,
                 p: 2.5,
-                cursor: "pointer",
-                bgcolor: isSelected ? "primary.50" : "background.paper",
+                cursor: isPending ? "default" : "pointer",
+                opacity: isPending ? 0.6 : 1,
                 transition: "all 0.15s ease",
-                "&:hover": {
+                "&:hover": !isPending ? {
                   borderColor: "primary.main",
                   bgcolor: isSelected ? "primary.50" : "action.hover",
-                },
-                // Subtle selected background that works light/dark
+                } : {},
                 ...(isSelected && {
                   bgcolor: (theme) =>
                     theme.palette.mode === "dark"
@@ -162,23 +166,30 @@ const FileCardContainer = ({
                 }),
               }}
             >
-              {/* Checkbox */}
-              <Checkbox
-                checked={isSelected}
-                size="small"
-                icon={<RadioButtonUncheckedIcon sx={{ fontSize: 18 }} />}
-                checkedIcon={<CheckCircleIcon sx={{ fontSize: 18 }} />}
-                sx={{
-                  position: "absolute",
-                  top: 6,
-                  right: 6,
-                  p: 0,
-                  color: "text.disabled",
-                  "&.Mui-checked": { color: "primary.main" },
-                }}
-                onClick={(e) => e.stopPropagation()}
-                onChange={() => toggle(file.file_key)}
-              />
+              {/* Indexing indicator or Checkbox */}
+              {isPending ? (
+                <CircularProgress
+                  size={16}
+                  sx={{ position: "absolute", top: 10, right: 10 }}
+                />
+              ) : (
+                <Checkbox
+                  checked={isSelected}
+                  size="small"
+                  icon={<RadioButtonUncheckedIcon sx={{ fontSize: 18 }} />}
+                  checkedIcon={<CheckCircleIcon sx={{ fontSize: 18 }} />}
+                  sx={{
+                    position: "absolute",
+                    top: 6,
+                    right: 6,
+                    p: 0,
+                    color: "text.disabled",
+                    "&.Mui-checked": { color: "primary.main" },
+                  }}
+                  onClick={(e) => e.stopPropagation()}
+                  onChange={() => toggle(file.file_key, false)}
+                />
+              )}
 
               {/* PDF icon */}
               <Box
@@ -219,6 +230,17 @@ const FileCardContainer = ({
                   {truncateName(file.filename)}
                 </Typography>
               </Tooltip>
+
+              {/* Indexing status */}
+              {isPending && (
+                <Chip
+                  label="Processing (Content is being extracted and indexed)..."
+                  size="small"
+                  color="warning"
+                  variant="outlined"
+                  sx={{ fontSize: "0.65rem", height: 18, mb: 1 }}
+                />
+              )}
 
               {/* Meta row */}
               <Box

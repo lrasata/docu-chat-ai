@@ -21,4 +21,5 @@ export interface IFile {
   url: string;
   size: number;
   uploaded_timestamp: string;
+  status: "pending" | "indexed";
 }

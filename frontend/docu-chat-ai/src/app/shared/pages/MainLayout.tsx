@@ -13,9 +13,12 @@ import Spinner from "../components/Spinner.tsx";
 const MainLayout = () => {
   const auth = useAuth();
   const [selectedDocumentId, setSelectedDocumentId] = useState<string | undefined>(undefined);
+  const [isSelectedDocumentPending, setIsSelectedDocumentPending] = useState(false);
 
-  const handleSelectionChange = (selectedIds: string[]) => {
-    setSelectedDocumentId(selectedIds.length > 0 ? selectedIds[0] : undefined);
+  const handleSelectionChange = (selectedIds: string[], pendingIds: string[]) => {
+    const id = selectedIds.length > 0 ? selectedIds[0] : undefined;
+    setSelectedDocumentId(id);
+    setIsSelectedDocumentPending(id ? pendingIds.includes(id) : false);
   };
 
   if (auth.isLoading) {
@@ -36,7 +39,7 @@ const MainLayout = () => {
           {auth.isAuthenticated && (
             <WorkspaceLayout
               sidebar={<FileManagementContainer onSelectionChange={handleSelectionChange} />}
-              main={<ChatPage selectedDocumentId={selectedDocumentId} />}
+              main={<ChatPage selectedDocumentId={selectedDocumentId} isSelectedDocumentPending={isSelectedDocumentPending} />}
             />
           )}
           <Outlet />

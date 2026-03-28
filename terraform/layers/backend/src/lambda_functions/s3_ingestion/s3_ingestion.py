@@ -11,9 +11,11 @@ from pgvector.psycopg2 import register_vector
 s3 = boto3.client("s3")
 bedrock = boto3.client("bedrock-runtime")
 secretsmanager = boto3.client("secretsmanager")
+dynamodb = boto3.client("dynamodb")
 
 REGION = os.environ["REGION"]
 RDS_SECRET_ARN = os.environ["RDS_SECRET_ARN"]
+DOCUMENTS_TABLE = os.environ["DOCUMENTS_TABLE"]
 
 # ---------- Connection cache (survives warm invocations) ----------
 _db_conn = None
@@ -165,6 +167,17 @@ def handler(event, context):
 
     conn.commit()
     print("Document ingestion completed successfully")
+
+    dynamodb.update_item(
+        TableName=DOCUMENTS_TABLE,
+        Key={
+            "id": {"S": message["partitionKey"]},
+            "file_key": {"S": key}
+        },
+        UpdateExpression="SET #s = :status",
+        ExpressionAttributeNames={"#s": "status"},
+        ExpressionAttributeValues={":status": {"S": "indexed"}}
+    )
 
     return {
         "statusCode": 200,
