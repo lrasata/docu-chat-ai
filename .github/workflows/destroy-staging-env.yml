@@ -73,20 +73,57 @@ jobs:
             -backend-config="encrypt=true"
           terraform destroy -auto-approve
 
-      - name: Clean up VPC ENIs (unblock subnet/SG deletion)
+      - name: Pre-delete VPC endpoints, wait for deletion, then clean ENIs
         run: |
           VPC_ID=$(aws ec2 describe-vpcs \
             --filters "Name=tag:Name,Values=${{ github.event.inputs.environment }}-docu-chat-ai-vpc" \
             --query "Vpcs[0].VpcId" --output text)
-          if [ -n "$VPC_ID" ] && [ "$VPC_ID" != "None" ]; then
-            ENI_IDS=$(aws ec2 describe-network-interfaces \
-              --filters "Name=vpc-id,Values=$VPC_ID" "Name=status,Values=available" \
-              --query "NetworkInterfaces[*].NetworkInterfaceId" --output text)
-            for ENI_ID in $ENI_IDS; do
-              echo "Deleting ENI $ENI_ID"
-              aws ec2 delete-network-interface --network-interface-id "$ENI_ID"
-            done
+          if [ -z "$VPC_ID" ] || [ "$VPC_ID" = "None" ]; then
+            echo "No VPC found, skipping"
+            exit 0
           fi
+          echo "Found VPC $VPC_ID"
+
+          # Step 1: initiate deletion of all Interface Endpoints
+          ENDPOINT_IDS=$(aws ec2 describe-vpc-endpoints \
+            --filters "Name=vpc-id,Values=$VPC_ID" "Name=vpc-endpoint-state,Values=available,pending" \
+            --query "VpcEndpoints[?VpcEndpointType=='Interface'].VpcEndpointId" --output text)
+          if [ -n "$ENDPOINT_IDS" ] && [ "$ENDPOINT_IDS" != "None" ]; then
+            echo "Deleting VPC endpoints: $ENDPOINT_IDS"
+            aws ec2 delete-vpc-endpoints --vpc-endpoint-ids $ENDPOINT_IDS
+          fi
+
+          # Step 2: wait until all Interface Endpoints are fully deleted
+          # (ENIs are only released once endpoints finish deleting)
+          echo "Waiting for all Interface Endpoints to be fully deleted..."
+          for i in $(seq 1 30); do
+            REMAINING=$(aws ec2 describe-vpc-endpoints \
+              --filters "Name=vpc-id,Values=$VPC_ID" "Name=vpc-endpoint-state,Values=available,pending,deleting" \
+              --query "VpcEndpoints[?VpcEndpointType=='Interface'].VpcEndpointId" --output text)
+            if [ -z "$REMAINING" ] || [ "$REMAINING" = "None" ]; then
+              echo "All Interface Endpoints deleted"
+              break
+            fi
+            echo "Attempt $i/30 — still waiting for: $REMAINING"
+            sleep 15
+          done
+
+          # Step 3: force-detach in-use ENIs, then delete all ENIs
+          aws ec2 describe-network-interfaces \
+            --filters "Name=vpc-id,Values=$VPC_ID" "Name=status,Values=in-use" \
+            --query "NetworkInterfaces[*].Attachment.AttachmentId" --output text \
+          | tr '\t' '\n' | grep -v '^$' | while read ATTACHMENT_ID; do
+            echo "Detaching $ATTACHMENT_ID"
+            aws ec2 detach-network-interface --attachment-id "$ATTACHMENT_ID" --force || true
+          done
+          sleep 5
+          aws ec2 describe-network-interfaces \
+            --filters "Name=vpc-id,Values=$VPC_ID" "Name=status,Values=available" \
+            --query "NetworkInterfaces[*].NetworkInterfaceId" --output text \
+          | tr '\t' '\n' | grep -v '^$' | while read ENI_ID; do
+            echo "Deleting ENI $ENI_ID"
+            aws ec2 delete-network-interface --network-interface-id "$ENI_ID" || true
+          done
 
       - name: Destroy Backend Layer
         working-directory: terraform/layers/backend
@@ -98,31 +135,6 @@ jobs:
             -backend-config="region=${{ secrets.AWS_REGION }}" \
             -backend-config="dynamodb_table=${{ github.event.inputs.environment }}-docu-chat-ai-terraform-locks" \
             -backend-config="encrypt=true"
-          terraform destroy -auto-approve || true
-
-      - name: Clean up remaining VPC ENIs and retry destroy
-        working-directory: terraform/layers/backend
-        run: |
-          VPC_ID=$(aws ec2 describe-vpcs \
-            --filters "Name=tag:Name,Values=${{ github.event.inputs.environment }}-docu-chat-ai-vpc" \
-            --query "Vpcs[0].VpcId" --output text)
-          if [ -n "$VPC_ID" ] && [ "$VPC_ID" != "None" ]; then
-            echo "Cleaning up ENIs in VPC $VPC_ID..."
-            for i in 1 2 3; do
-              ENI_IDS=$(aws ec2 describe-network-interfaces \
-                --filters "Name=vpc-id,Values=$VPC_ID" "Name=status,Values=available" \
-                --query "NetworkInterfaces[*].NetworkInterfaceId" --output text)
-              if [ -z "$ENI_IDS" ] || [ "$ENI_IDS" = "None" ]; then
-                echo "No available ENIs found"
-                break
-              fi
-              for ENI_ID in $ENI_IDS; do
-                echo "Deleting ENI $ENI_ID"
-                aws ec2 delete-network-interface --network-interface-id "$ENI_ID" || true
-              done
-              sleep 10
-            done
-          fi
           terraform destroy -auto-approve
 
       - name: Destroy Cognito Clients
