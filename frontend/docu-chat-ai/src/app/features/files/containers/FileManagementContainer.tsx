@@ -24,6 +24,7 @@ interface UploadingFile {
   progress: number;
   status: "uploading" | "done" | "error";
   errorMessage?: string;
+  file_key?: string;
 }
 
 const formatBytes = (bytes: number): string => {
@@ -39,6 +40,7 @@ interface FileManagementContainerProps {
 const FileManagementContainer = ({ onSelectionChange }: FileManagementContainerProps) => {
   const [dragging, setDragging] = useState(false);
   const [uploadingFiles, setUploadingFiles] = useState<UploadingFile[]>([]);
+  const [awaitingFileKeys, setAwaitingFileKeys] = useState<Set<string>>(new Set());
   const inputRef = useRef<HTMLInputElement>(null);
   const dispatch = useDispatch<AppDispatch>();
   const files: IFile[] = useSelector((state: RootState) => state.files.files);
@@ -52,13 +54,29 @@ const FileManagementContainer = ({ onSelectionChange }: FileManagementContainerP
     loadFiles();
   }, []);
 
-  // Polling until all files are indexed
+  // Clear awaitingFileKeys once they appear in the store (process_uploaded_file has run)
   useEffect(() => {
-    const hasPending = files.some((f) => f.status === "pending");
-    if (!hasPending) return;
-    const interval = setInterval(loadFiles, 5000);
+    if (awaitingFileKeys.size === 0) return;
+    const appearedKeys = [...awaitingFileKeys].filter((k) =>
+      files.some((f) => f.file_key === k),
+    );
+    if (appearedKeys.length > 0) {
+      setAwaitingFileKeys((prev) => {
+        const next = new Set(prev);
+        appearedKeys.forEach((k) => next.delete(k));
+        return next;
+      });
+    }
+  }, [files, awaitingFileKeys]);
+
+  // Single poll: runs while a file is awaiting DynamoDB appearance OR still being ingested
+  useEffect(() => {
+    const shouldPoll =
+      awaitingFileKeys.size > 0 || files.some((f) => f.status === "pending");
+    if (!shouldPoll) return;
+    const interval = setInterval(loadFiles, 3000);
     return () => clearInterval(interval);
-  }, [files, loadFiles]);
+  }, [awaitingFileKeys, files, loadFiles]);
 
   const uploadFile = async (file: File, id: string) => {
     if (!auth.isAuthenticated) return;
@@ -71,7 +89,11 @@ const FileManagementContainer = ({ onSelectionChange }: FileManagementContainerP
 
       if (!presignedUrlData?.upload_url || !presignedUrlData?.file_key) return;
 
-      const { upload_url } = presignedUrlData;
+      const { upload_url, file_key } = presignedUrlData;
+
+      setUploadingFiles((prev) =>
+        prev.map((f) => (f.id === id ? { ...f, file_key } : f)),
+      );
 
       // Simulate progress while uploading (XHR gives real progress; fetch does not)
       let simulatedProgress = 0;
@@ -105,7 +127,9 @@ const FileManagementContainer = ({ onSelectionChange }: FileManagementContainerP
         ),
       );
 
-      dispatch(fetchFiles({ accessToken: auth.user?.access_token ?? "", user_sub: auth.user?.profile.sub ?? "", resource: "users" }));
+      if (file_key) {
+        setAwaitingFileKeys((prev) => new Set([...prev, file_key]));
+      }
     } catch (error) {
       setUploadingFiles((prev) =>
         prev.map((f) =>

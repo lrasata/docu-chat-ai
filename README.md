@@ -55,8 +55,7 @@ A cloud-native application that allows users to chat with their PDF documents us
 - Material-UI components
 - Hosted on S3 + CloudFront
 
-<img src="docs/frontend-UI-1.png" alt="frontend-ui-1" height="120px">
-<img src="docs/frontend-UI-2.png" alt="frontend-ui-2" height="120px">
+<img src="docs/frontend-UI-1.png" alt="frontend-ui-1" height="120px"> <img src="docs/frontend-UI-2.png" alt="frontend-ui-2" height="120px">
 
 **Backend:**
 - **API Gateway**: RESTful endpoints with JWT authentication
@@ -138,18 +137,59 @@ All endpoints require JWT authentication via Cognito.
 - Presigned URLs with expiration
 - No hardcoded credentials
 
-## Roadmap
+## Why these choices?
 
-- [ ] Streaming chat responses with WebSockets
-- [ ] Conversation history persistence
-- [ ] Document versioning
-- [ ] Export chat conversations
-- [ ] Advanced citation tracking
-- [ ] Admin dashboard for analytics
+### Why RAG instead of fine-tuning?
+
+Fine-tuning a model on your documents is expensive, slow, and requires retraining every time the knowledge base changes. 
+
+RAG lets you update the document store at any time without touching the model. It also gives you traceable citations. 
+You always know which passage the answer came from. For a document chat use case where content changes over-time and accuracy matters, RAG is the right fit.
+
+### Why RDS PostgreSQL + pgvector instead of OpenSearch Serverless?
+
+OpenSearch Serverless was the original choice for vector search. However, it has a minimum cost of ~$700/month regardless of 
+usage — two always-on Indexing Compute Units and two Search Compute Units are required even for a single index with 
+zero traffic. That made it unaffordable and overkill for POC.
+
+RDS PostgreSQL with the `pgvector` extension provides the same cosine similarity search capability at a fraction of the 
+cost (~$13/month for a `db.t4g.micro` instance). The trade-off is that it's not serverless — the instance runs 24/7 — but 
+for this use case the cost difference is so significant (~50x cheaper) that it is clearly the right choice. 
+For production with high query volume, you could scale up the RDS instance or migrate to Aurora PostgreSQL which also 
+supports pgvector.
+
+## Production Readiness TODOs
+
+The current setup works for staging and demos. Before going to production:
+
+**Reliability & Error Handling**
+- [ ] Add a Dead Letter Queue (DLQ) to the SNS → S3 Ingestion Lambda subscription to catch failed ingestion events
+- [ ] Add retry logic with exponential backoff on Bedrock API calls (throttling)
+- [ ] Handle partial ingestion failures — currently a crash mid-document leaves orphaned chunks
+
+**Scalability**
+- [ ] Upgrade RDS to a multi-AZ deployment for high availability (`multi_az = true` already conditioned on `prod` environment)
+
+**Security**
+- [ ] Enable AWS WAF on CloudFront and API Gateway
+- [ ] Enforce MFA for Cognito users
+- [ ] Enable CloudTrail for full API audit logging
+- [ ] Rotate RDS credentials automatically via Secrets Manager rotation
+
+**RAG Quality**
+- [ ] Build a golden Q&A dataset: for each test document, write questions and expected answers manually (based on your own reading of the document), run them through the system, and human-review the outputs — this validates retrieval quality, chunk relevance scores, and answer accuracy without relying on an LLM judge
+
+**Observability**
+- [ ] Set up CloudWatch Alarms for Lambda error rates, RDS connection count, and API Gateway 5xx
+- [ ] Create a CloudWatch Dashboard for the key metrics
+
+**Cost**
+- [ ] Use reserved instances for RDS in production (up to 40% savings)
+- [ ] Set S3 lifecycle rules to archive or delete old document uploads
 
 ## License
 
-MIT License - see LICENSE file for details
+MIT License – see LICENSE file for details
 
 ## Acknowledgments
 
