@@ -5,23 +5,12 @@
 
 A cloud-native application that allows users to chat with their PDF documents using AI. Built with AWS Bedrock, RDS PostgreSQL + pgvector, and React. Uses **Retrieval-Augmented Generation (RAG)** to answer questions grounded in the user's own documents.
 
-## Features
-
-- **Document Upload**: Tested with PDFs
-- **AI-Powered Chat**: Ask questions about your documents using natural language
-- **Semantic Search**: Vector similarity search with Amazon Titan embeddings and pgvector
-- **LLM Integration**: Powered by Anthropic Claude 4 on AWS Bedrock
-- **Secure Authentication**: AWS Cognito with Google OAuth
-- **Real-time Interface**: Modern React UI with Material-UI
-- **Serverless Architecture**: Auto-scaling, pay-per-use infrastructure
-- **Infrastructure as Code**: Complete Terraform deployment
-
 ## What is RAG?
 
 **Retrieval-Augmented Generation (RAG)** is a technique that combines a vector search engine with a large language model (LLM). Instead of relying solely on the LLM's pre-trained knowledge, RAG first retrieves relevant passages from a document store and feeds them as context to the LLM before generating an answer.
 
 **Pros:**
-- Answers are grounded in your actual documents — less hallucination
+- Answers are grounded in your actual documents, reducing hallucination
 - Works with private or domain-specific content the LLM was never trained on
 - Easy to update the knowledge base without retraining the model
 - Source citations are traceable
@@ -34,11 +23,28 @@ A cloud-native application that allows users to chat with their PDF documents us
 
 ### How RAG works in this project
 
-1. **Ingestion** — When a document is uploaded to S3, the `s3-ingestion` Lambda extracts the text, splits it into overlapping chunks (~500 words), and calls Amazon Titan Embeddings to convert each chunk into a 1536-dimensional vector. The vectors are stored alongside the text in RDS PostgreSQL using the `pgvector` extension.
+1. **Ingestion** 
 
-2. **Query** — When a user asks a question, the `query-document` Lambda embeds the question with the same Titan model, then runs a cosine similarity search (`<=>` operator) against the `document_chunks` table in PostgreSQL to find the most relevant chunks. Results can be scoped to a specific document or to all documents belonging to the user.
+   When a document is uploaded to S3, the `s3-ingestion` Lambda extracts the text, splits it into overlapping chunks (~500 words), and calls Amazon Titan Embeddings to convert each chunk into a 1536-dimensional vector. The vectors are stored alongside the text in RDS PostgreSQL using the `pgvector` extension.
 
-3. **Generation** — The top matching chunks are assembled into a context prompt and sent to Anthropic Claude 4 on AWS Bedrock. Claude answers the question using only the retrieved context, then the response is returned to the frontend with source citations.
+2. **Query**
+
+   When a user asks a question, the `query-document` Lambda embeds the question with the same Titan model, then runs a cosine similarity search (`<=>` operator) against the `document_chunks` table in PostgreSQL to find the most relevant chunks. Results can be scoped to a specific document or to all documents belonging to the user.
+
+3. **Generation**
+
+   The top matching chunks are assembled into a context prompt and sent to Anthropic Claude 4 on AWS Bedrock. Claude answers the question using only the retrieved context, then the response is returned to the frontend with source citations.
+
+## Features
+
+- **Document Upload**: Tested with PDFs containing text. ⚠️ Not multimodal yet (images, tables, etc.)
+- **AI-Powered Chat**: Ask questions about your documents using natural language
+- **Semantic Search**: Vector similarity search with Amazon Titan embeddings (for text) and pgvector
+- **LLM Integration**: Powered by Anthropic Claude 4 on AWS Bedrock
+- **Secure Authentication**: AWS Cognito with Google OAuth
+- **Real-time Interface**: Modern React UI with Material-UI
+- **Serverless Architecture**: Auto-scaling, pay-per-use infrastructure
+- **Infrastructure as Code**: Complete Terraform deployment
 
 ## Architecture
 
@@ -49,8 +55,8 @@ A cloud-native application that allows users to chat with their PDF documents us
 - Material-UI components
 - Hosted on S3 + CloudFront
 
-<img src="docs/frontend-UI-1.png" alt="frontend-ui-1" width="300px">
-<img src="docs/frontend-UI-2.png" alt="frontend-ui-2" width="360px">
+<img src="docs/frontend-UI-1.png" alt="frontend-ui-1" height="120px">
+<img src="docs/frontend-UI-2.png" alt="frontend-ui-2" height="120px">
 
 **Backend:**
 - **API Gateway**: RESTful endpoints with JWT authentication
@@ -78,7 +84,7 @@ A cloud-native application that allows users to chat with their PDF documents us
 
 1. **User uploads a document** → Stored in S3
 2. **S3 event triggers ingestion Lambda** → Extracts text, chunks it
-3. **Text chunks embedded** → Using Amazon Titan Embeddings (1536 dimensions)
+3. **Text chunks embedded** → Using Amazon Titan Embeddings
 4. **Chunks indexed** → Stored in RDS PostgreSQL (`document_chunks` table) with pgvector
 5. **User asks a question** → Question embedded with Titan
 6. **Vector search** → pgvector cosine similarity finds the most relevant chunks
@@ -91,15 +97,6 @@ A cloud-native application that allows users to chat with their PDF documents us
 .
 ├── frontend/
 │   └── docu-chat-ai/          # React TypeScript app
-│       ├── src/
-│       │   ├── app/
-│       │   │   ├── features/
-│       │   │   │   ├── chat/  # Chat UI components
-│       │   │   │   └── files/ # File upload
-│       │   │   └── shared/
-│       │   │       └── api/   # API client (chatApi.ts)
-│       │   └── main.tsx
-│       └── package.json
 ├── terraform/
 │   ├── environments/          # Variable files
 │   │   ├── staging.tfvars.example
@@ -109,6 +106,9 @@ A cloud-native application that allows users to chat with their PDF documents us
 │       │   ├── main.tf
 │       │   ├── locals.tf      # Lambda configurations
 │       │   ├── modules/
+│       │   │   ├── api_gateway/       
+│       │   │   ├── lambda_function/   
+│       │   │   ├── route53/
 │       │   │   └── rds/       # VPC, RDS PostgreSQL, VPC endpoints
 │       │   └── src/
 │       │       └── lambda_functions/

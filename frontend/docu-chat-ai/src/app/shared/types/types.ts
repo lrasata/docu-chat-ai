@@ -19,7 +19,8 @@ export interface IFile {
   filename: string;
   file_key: string;
   url: string;
-  size: number;
+  file_size: number;
   uploaded_timestamp: string;
+  resource: string;
   status: "pending" | "indexed";
 }

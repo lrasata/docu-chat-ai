@@ -255,7 +255,7 @@ const FileCardContainer = ({
                   color="text.secondary"
                   sx={{ fontSize: "0.7rem" }}
                 >
-                  {formatBytes(file.size)}
+                  {formatBytes(file.file_size)}
                 </Typography>
                 <Typography
                   variant="caption"
