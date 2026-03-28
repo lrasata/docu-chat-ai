@@ -179,6 +179,9 @@ The current setup works for staging and demos. Before going to production:
 **RAG Quality**
 - [ ] Build a golden Q&A dataset: for each test document, write questions and expected answers manually (based on your own reading of the document), run them through the system, and human-review the outputs — this validates retrieval quality, chunk relevance scores, and answer accuracy without relying on an LLM judge
 
+**Content Filtering**
+- [ ] with Bedrock Guardrails for PII removal, text filtering, word filtering, profanities etc...
+
 **Observability**
 - [ ] Set up CloudWatch Alarms for Lambda error rates, RDS connection count, and API Gateway 5xx
 - [ ] Create a CloudWatch Dashboard for the key metrics
