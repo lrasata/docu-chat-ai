@@ -1,0 +1,248 @@
+[
+  {
+    "question": "What is the foundational basis of freedom, justice and peace in the world according to the declaration?",
+    "expected_answer": "recognition of the inherent dignity and equal and inalienable rights of all members of the human family",
+    "source_hint": "preamble",
+    "type": "factual"
+  },
+  {
+    "question": "Are all human beings born free and equal?",
+    "expected_answer": "yes, all human beings are born free and equal in dignity and rights",
+    "source_hint": "article 1",
+    "type": "factual"
+  },
+  {
+    "question": "What rights does Article 3 guarantee?",
+    "expected_answer": "the right to life, liberty and the security of person",
+    "source_hint": "article 3",
+    "type": "factual"
+  },
+  {
+    "question": "Is slavery permitted under any circumstances according to the declaration?",
+    "expected_answer": "no, slavery and the slave trade are prohibited in all their forms",
+    "source_hint": "article 4",
+    "type": "factual"
+  },
+  {
+    "question": "What does Article 5 prohibit?",
+    "expected_answer": "torture and cruel, inhuman or degrading treatment or punishment",
+    "source_hint": "article 5",
+    "type": "factual"
+  },
+  {
+    "question": "Can a person be arrested without cause?",
+    "expected_answer": "no, article 9 prohibits arbitrary arrest, detention or exile",
+    "source_hint": "article 9",
+    "type": "conceptual"
+  },
+  {
+    "question": "What does the declaration say about the presumption of innocence?",
+    "expected_answer": "everyone charged with a penal offence has the right to be presumed innocent until proved guilty according to law in a public trial",
+    "source_hint": "article 11",
+    "type": "conceptual"
+  },
+  {
+    "question": "Does everyone have the right to leave their own country?",
+    "expected_answer": "yes, everyone has the right to leave any country including their own and to return to their country",
+    "source_hint": "article 13",
+    "type": "factual"
+  },
+  {
+    "question": "Under what conditions can someone seek asylum in another country?",
+    "expected_answer": "everyone has the right to seek and enjoy asylum from persecution, except in cases of non-political crimes or acts contrary to UN principles",
+    "source_hint": "article 14",
+    "type": "conceptual"
+  },
+  {
+    "question": "Can a government arbitrarily strip someone of their nationality?",
+    "expected_answer": "no, no one shall be arbitrarily deprived of their nationality nor denied the right to change it",
+    "source_hint": "article 15",
+    "type": "factual"
+  },
+  {
+    "question": "What does the declaration say about marriage consent?",
+    "expected_answer": "marriage shall be entered into only with the free and full consent of the intending spouses",
+    "source_hint": "article 16",
+    "type": "factual"
+  },
+  {
+    "question": "Does everyone have the right to own property?",
+    "expected_answer": "yes, everyone has the right to own property alone or in association with others, and no one shall be arbitrarily deprived of their property",
+    "source_hint": "article 17",
+    "type": "factual"
+  },
+  {
+    "question": "What freedoms are covered under Article 18?",
+    "expected_answer": "freedom of thought, conscience and religion, including the freedom to change religion and to manifest it in teaching, practice, worship and observance",
+    "source_hint": "article 18",
+    "type": "factual"
+  },
+  {
+    "question": "What right does Article 19 establish regarding opinions?",
+    "expected_answer": "the right to freedom of opinion and expression, including holding opinions without interference and seeking, receiving and imparting information through any media",
+    "source_hint": "article 19",
+    "type": "factual"
+  },
+  {
+    "question": "Can someone be forced to belong to an association?",
+    "expected_answer": "no, no one may be compelled to belong to an association",
+    "source_hint": "article 20",
+    "type": "factual"
+  },
+  {
+    "question": "What does the declaration say about elections?",
+    "expected_answer": "elections shall be genuine, periodic, by universal and equal suffrage, and held by secret vote or equivalent free voting procedures",
+    "source_hint": "article 21",
+    "type": "factual"
+  },
+  {
+    "question": "What employment rights are recognized in the declaration?",
+    "expected_answer": "the right to work, free choice of employment, just and favourable conditions, protection against unemployment, equal pay for equal work, and the right to join trade unions",
+    "source_hint": "article 23",
+    "type": "conceptual"
+  },
+  {
+    "question": "Does the declaration recognize a right to rest and vacation?",
+    "expected_answer": "yes, everyone has the right to rest and leisure, including reasonable limitation of working hours and periodic holidays with pay",
+    "source_hint": "article 24",
+    "type": "factual"
+  },
+  {
+    "question": "What does Article 25 say about children born out of wedlock?",
+    "expected_answer": "all children, whether born in or out of wedlock, shall enjoy the same social protection",
+    "source_hint": "article 25",
+    "type": "factual"
+  },
+  {
+    "question": "Is elementary education compulsory under the declaration?",
+    "expected_answer": "yes, elementary education shall be compulsory and free",
+    "source_hint": "article 26",
+    "type": "factual"
+  },
+  {
+    "question": "What is the purpose of education according to the declaration?",
+    "expected_answer": "the full development of the human personality and strengthening of respect for human rights, promoting understanding, tolerance and friendship among nations and groups",
+    "source_hint": "article 26",
+    "type": "conceptual"
+  },
+  {
+    "question": "Do authors have rights over their scientific or artistic works?",
+    "expected_answer": "yes, everyone has the right to protection of the moral and material interests resulting from any scientific, literary or artistic production of which they are the author",
+    "source_hint": "article 27",
+    "type": "factual"
+  },
+  {
+    "question": "What limitations can be placed on the rights in the declaration?",
+    "expected_answer": "only limitations determined by law for the purpose of securing rights and freedoms of others and meeting just requirements of morality, public order and general welfare in a democratic society",
+    "source_hint": "article 29",
+    "type": "conceptual"
+  },
+  {
+    "question": "Can any state use the declaration to justify destroying the rights it contains?",
+    "expected_answer": "no, nothing in the declaration may be interpreted as implying any right to engage in activity aimed at the destruction of the rights and freedoms set forth in it",
+    "source_hint": "article 30",
+    "type": "conceptual"
+  },
+  {
+    "question": "Does the declaration apply differently based on someone's country of origin?",
+    "expected_answer": "no, no distinction shall be made based on the political or jurisdictional status of the country or territory a person belongs to",
+    "source_hint": "article 2",
+    "type": "conceptual"
+  },
+  {
+    "question": "What body proclaimed the Universal Declaration of Human Rights?",
+    "expected_answer": "the United Nations General Assembly",
+    "source_hint": "preamble",
+    "type": "factual"
+  },
+  {
+    "question": "What does the declaration say about legal equality?",
+    "expected_answer": "all are equal before the law and entitled without discrimination to equal protection of the law",
+    "source_hint": "article 7",
+    "type": "factual"
+  },
+  {
+    "question": "What right does Article 8 provide when fundamental rights are violated?",
+    "expected_answer": "the right to an effective remedy by competent national tribunals",
+    "source_hint": "article 8",
+    "type": "factual"
+  },
+  {
+    "question": "What is the maximum prison sentence for jaywalking under the declaration?",
+    "expected_answer": null,
+    "source_hint": null,
+    "type": "out_of_scope"
+  },
+  {
+    "question": "Which countries have ratified the Universal Declaration of Human Rights?",
+    "expected_answer": null,
+    "source_hint": null,
+    "type": "out_of_scope"
+  },
+  {
+    "question": "What year was the UDHR adopted?",
+    "expected_answer": null,
+    "source_hint": null,
+    "type": "out_of_scope"
+  },
+  {
+    "question": "Who wrote the first draft of the Universal Declaration of Human Rights?",
+    "expected_answer": null,
+    "source_hint": null,
+    "type": "out_of_scope"
+  },
+  {
+    "question": "What enforcement mechanisms does the declaration establish?",
+    "expected_answer": null,
+    "source_hint": null,
+    "type": "out_of_scope"
+  },
+  {
+    "question": "How does the declaration define 'dignity'?",
+    "expected_answer": null,
+    "source_hint": null,
+    "type": "out_of_scope"
+  },
+  {
+    "question": "What does the declaration say about the right to a fair trial?",
+    "expected_answer": "everyone is entitled to a fair and public hearing by an independent and impartial tribunal for the determination of rights, obligations and any criminal charge",
+    "source_hint": "article 10",
+    "type": "conceptual"
+  },
+  {
+    "question": "Does the declaration recognize the right to social security?",
+    "expected_answer": "yes, everyone as a member of society has the right to social security and economic, social and cultural rights indispensable for dignity",
+    "source_hint": "article 22",
+    "type": "factual"
+  },
+  {
+    "question": "Can a person be punished for an act that was not a crime when it was committed?",
+    "expected_answer": "no, no one shall be held guilty of a penal offence for an act that did not constitute an offence under national or international law at the time it was committed",
+    "source_hint": "article 11",
+    "type": "conceptual"
+  },
+  {
+    "question": "Does the declaration protect the right to participate in cultural life?",
+    "expected_answer": "yes, everyone has the right to freely participate in the cultural life of the community and to enjoy the arts and share in scientific advancement",
+    "source_hint": "article 27",
+    "type": "factual"
+  },
+  {
+    "question": "What does the declaration say about privacy?",
+    "expected_answer": "no one shall be subjected to arbitrary interference with their privacy, family, home or correspondence, nor to attacks on their honour and reputation",
+    "source_hint": "article 12",
+    "type": "factual"
+  },
+  {
+    "question": "Do parents have any rights regarding their children's education?",
+    "expected_answer": "yes, parents have a prior right to choose the kind of education that shall be given to their children",
+    "source_hint": "article 26",
+    "type": "factual"
+  },
+  {
+    "question": "What standard of living does the declaration guarantee?",
+    "expected_answer": "a standard of living adequate for health and well-being including food, clothing, housing, medical care, and social services, plus security in events like unemployment, sickness or old age",
+    "source_hint": "article 25",
+    "type": "conceptual"
+  }
+]

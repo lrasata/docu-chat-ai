@@ -180,6 +180,17 @@ resource "aws_vpc_endpoint" "secretsmanager" {
   tags                = { Name = "${local.name_prefix}-secretsmanager-endpoint" }
 }
 
+# Lambda Interface endpoint (allows VPC-based Lambdas to invoke other Lambdas)
+resource "aws_vpc_endpoint" "lambda" {
+  vpc_id              = aws_vpc.main.id
+  service_name        = "com.amazonaws.${var.region}.lambda"
+  vpc_endpoint_type   = "Interface"
+  subnet_ids          = aws_subnet.private[*].id
+  security_group_ids  = [aws_security_group.vpc_endpoints.id]
+  private_dns_enabled = true
+  tags                = { Name = "${local.name_prefix}-lambda-endpoint" }
+}
+
 # SNS Interface endpoint
 resource "aws_vpc_endpoint" "sns" {
   vpc_id              = aws_vpc.main.id

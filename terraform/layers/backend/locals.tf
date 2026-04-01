@@ -51,6 +51,65 @@ locals {
       ]
     }
 
+    # RAG evaluation lambda — runs the golden-dataset evaluation pipeline
+    rag_evaluation = {
+      base_name    = "rag-evaluation"
+      source_dir   = "${path.module}/src/lambda_functions/rag_evaluation"
+      handler_file = "rag_evaluation.handler"
+      runtime      = "python3.11"
+      timeout      = 900 # 15 min: ingestion poll (up to 10 min) + evaluation loop
+      memory_size  = 256
+      s3_bucket    = null
+      s3_key       = null
+      environment_vars = {
+        REGION                              = var.region
+        UPLOADS_BUCKET                      = module.file_uploader.uploads_bucket_id
+        DOCUMENTS_TABLE                     = module.file_uploader.dynamo_db_table_name
+        # Constructed inline to avoid circular dependency with the lambda_functions for_each
+        QUERY_DOCUMENT_LAMBDA_NAME          = "${var.environment}-${var.app_id}-query-document-lambda"
+        BEDROCK_MODEL_INFERENCE_PROFILE_ARN = var.bedrock_model_inference_profile_arn
+        RESULTS_BUCKET                      = module.file_uploader.uploads_bucket_id
+      }
+      iam_policy_statements = [
+        {
+          Effect = "Allow"
+          Action = [
+            "s3:HeadObject",
+            "s3:GetObject",
+            "s3:PutObject",
+            "s3:ListBucket"
+          ]
+          Resource = [
+            "arn:aws:s3:::${module.file_uploader.uploads_bucket_id}",
+            "arn:aws:s3:::${module.file_uploader.uploads_bucket_id}/*"
+          ]
+        },
+        {
+          Effect   = "Allow"
+          Action   = ["dynamodb:Scan"]
+          Resource = [module.file_uploader.dynamo_db_table_arn]
+        },
+        {
+          Effect   = "Allow"
+          Action   = ["lambda:InvokeFunction"]
+          Resource = ["arn:aws:lambda:${var.region}:${data.aws_caller_identity.current.account_id}:function:${var.environment}-${var.app_id}-query-document-lambda"]
+        },
+        {
+          Effect = "Allow"
+          Action = ["bedrock:InvokeModel"]
+          Resource = [
+            var.bedrock_model_inference_profile_arn,
+            "arn:aws:bedrock:eu-central-1::foundation-model/anthropic.claude-sonnet-4-20250514-v1:0",
+            "arn:aws:bedrock:eu-north-1::foundation-model/anthropic.claude-sonnet-4-20250514-v1:0",
+            "arn:aws:bedrock:eu-south-1::foundation-model/anthropic.claude-sonnet-4-20250514-v1:0",
+            "arn:aws:bedrock:eu-south-2::foundation-model/anthropic.claude-sonnet-4-20250514-v1:0",
+            "arn:aws:bedrock:eu-west-1::foundation-model/anthropic.claude-sonnet-4-20250514-v1:0",
+            "arn:aws:bedrock:eu-west-3::foundation-model/anthropic.claude-sonnet-4-20250514-v1:0"
+          ]
+        }
+      ]
+    }
+
     # Query document lambda for chat functionality
     query_document = {
       base_name    = "query-document"
