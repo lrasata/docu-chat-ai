@@ -167,9 +167,6 @@ The current setup works for staging and demos. Before going to production:
 - [ ] Add retry logic with exponential backoff on Bedrock API calls (throttling)
 - [ ] Handle partial ingestion failures — currently a crash mid-document leaves orphaned chunks
 
-**Scalability**
-- [ ] Upgrade RDS to a multi-AZ deployment for high availability (`multi_az = true` already conditioned on `prod` environment)
-
 **Security**
 - [ ] Enable AWS WAF on CloudFront and API Gateway
 - [ ] Enforce MFA for Cognito users
@@ -178,6 +175,7 @@ The current setup works for staging and demos. Before going to production:
 
 **RAG Quality**
 - [ ] Build a golden Q&A dataset: for each test document, write questions and expected answers manually (based on your own reading of the document), run them through the system, and human-review the outputs — this validates retrieval quality, chunk relevance scores, and answer accuracy without relying on an LLM judge
+- [ ] Measure baseline retrieval Hit Rate — if it's below 70%, fix chunking before anything else
 
 **Content Filtering**
 - [ ] with Bedrock Guardrails for PII removal, text filtering, word filtering, profanities etc...
