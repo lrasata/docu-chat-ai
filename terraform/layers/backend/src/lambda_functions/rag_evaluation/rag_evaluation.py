@@ -18,7 +18,7 @@ BEDROCK_MODEL_ARN = os.environ["BEDROCK_MODEL_INFERENCE_PROFILE_ARN"]
 RESULTS_BUCKET = os.environ.get("RESULTS_BUCKET", UPLOADS_BUCKET)
 
 # ---------- Constants ----------
-EVAL_DOC_S3_KEY = "resources/RAGevaluation/udhr.pdf"
+EVAL_DOC_S3_KEY = "uploads/resources/RAGevaluation/udhr.pdf"
 LOCAL_PDF_PATH = os.path.join(os.path.dirname(__file__), "udhr.pdf")
 LOCAL_DATASET_PATH = os.path.join(os.path.dirname(__file__), "golden_dataset.json")
 RESULTS_S3_KEY = "evaluations/eval_results.json"
