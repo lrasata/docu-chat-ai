@@ -162,6 +162,21 @@ supports pgvector.
 
 The current setup works for staging and demos. Before going to production:
 
+**RAG Quality**
+✅ Done
+- Built a golden Q&A dataset (41 questions across factual, conceptual, and out-of-scope types) for the UDHR document
+- Implemented an automated LLM-as-judge evaluator deployed as a Lambda, storing results in S3
+- Ran a full evaluation pass and got results back (4.98/5 faithfulness, 4.98/5 correctness)
+
+🚧 In Progress / Issues Found
+- Dataset used (UDHR) is too clean and simple — scores of 4.98/5 indicate the benchmark isn't challenging enough to surface real weaknesses
+- Out-of-scope questions are too obvious and need harder edge cases that look like they should be in the document but aren't
+
+❌ Not Done
+- Redo golden dataset with a harder document (dense technical doc, research paper, long contract)
+- Human review of outputs — current evaluation is fully automated via LLM judge, which the checklist specifically calls out as insufficient on its own
+- Measure baseline retrieval Hit Rate in isolation — current scoring evaluates end-to-end quality but doesn't independently verify whether the right chunks are being retrieved before generation kicks in
+
 **Reliability & Error Handling**
 - [ ] Add a Dead Letter Queue (DLQ) to the SNS → S3 Ingestion Lambda subscription to catch failed ingestion events
 - [ ] Add retry logic with exponential backoff on Bedrock API calls (throttling)
@@ -172,10 +187,6 @@ The current setup works for staging and demos. Before going to production:
 - [ ] Enforce MFA for Cognito users
 - [ ] Enable CloudTrail for full API audit logging
 - [ ] Rotate RDS credentials automatically via Secrets Manager rotation
-
-**RAG Quality**
-- [ ] Build a golden Q&A dataset: for each test document, write questions and expected answers manually (based on your own reading of the document), run them through the system, and human-review the outputs — this validates retrieval quality, chunk relevance scores, and answer accuracy without relying on an LLM judge
-- [ ] Measure baseline retrieval Hit Rate — if it's below 70%, fix chunking before anything else
 
 **Content Filtering**
 - [ ] with Bedrock Guardrails for PII removal, text filtering, word filtering, profanities etc...
