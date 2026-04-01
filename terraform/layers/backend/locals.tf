@@ -76,9 +76,11 @@ locals {
           Action = [
             "s3:HeadObject",
             "s3:GetObject",
-            "s3:PutObject"
+            "s3:PutObject",
+            "s3:ListBucket"
           ]
           Resource = [
+            "arn:aws:s3:::${module.file_uploader.uploads_bucket_id}",
             "arn:aws:s3:::${module.file_uploader.uploads_bucket_id}/*"
           ]
         },

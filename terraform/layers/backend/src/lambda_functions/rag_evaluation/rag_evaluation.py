@@ -52,7 +52,11 @@ def file_exists_in_s3():
         s3.head_object(Bucket=UPLOADS_BUCKET, Key=EVAL_DOC_S3_KEY)
         return True
     except ClientError as e:
-        if e.response["Error"]["Code"] in ("404", "NoSuchKey"):
+        code = e.response["Error"]["Code"]
+        # S3 returns 403 instead of 404 when the object is missing and the caller
+        # lacks s3:ListBucket. Treat it as "not found" — if there is a genuine
+        # permission problem the subsequent put_object will fail with a clear error.
+        if code in ("404", "403", "NoSuchKey"):
             return False
         raise
 
