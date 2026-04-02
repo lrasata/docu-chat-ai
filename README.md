@@ -91,18 +91,21 @@ A cloud-native application that allows users to chat with their PDF documents us
   - VPC Interface Endpoints for Bedrock, Secrets Manager, SNS (no NAT Gateway)
   - VPC Gateway Endpoints for S3 and DynamoDB (free)
 - **AI/ML**:
-  - Amazon Titan Embeddings for vectorisation
+  - Amazon Titan Embeddings for vectorization
   - Anthropic Claude 4 for chat responses
   - Amazon Bedrock Guardrails for content moderation (applied to every `query-document` invocation):
 
-    | Feature                  | Configuration                                |
-    |--------------------------|----------------------------------------------|
-    | Violence                 | Blocked at HIGH threshold (input + output)   |
-    | Sexual content           | Blocked at HIGH threshold (input + output)   |
-    | Hate speech              | Blocked at HIGH threshold (input + output)   |
-    | Insults                  | Blocked at MEDIUM threshold (input + output) |
-    | Profanity                | AWS managed word list — blocked              |
-    | PII (name, email, phone) | Anonymised via `ANONYMIZE` action            |
+    | Feature                  | Configuration                                       |
+    |--------------------------|-----------------------------------------------------|
+    | Violence                 | Blocked at HIGH threshold (input + output)          |
+    | Sexual content           | Blocked at HIGH threshold (input + output)          |
+    | Hate speech              | Blocked at HIGH threshold (input + output)          |
+    | Insults                  | Blocked at MEDIUM threshold (input + output)        |
+    | Prompt attack            | Blocked at HIGH threshold (input only)              |
+    | Profanity                | AWS managed word list — blocked                     |
+    | PII (name, email, phone) | Anonymised on input + output via `ANONYMIZE` action |
+
+    Example for PII: User types → Frontend displays it as-is → API Gateway → Lambda → Bedrock (guardrail anonymizes here) → Claude sees `[NAME]`, `[EMAIL]` → Response has no PII
 
 **Authentication:**
 - AWS Cognito User Pool with Google IdP

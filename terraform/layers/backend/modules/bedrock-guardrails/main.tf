@@ -25,20 +25,31 @@ resource "aws_bedrock_guardrail" "main" {
       input_strength  = "MEDIUM"
       output_strength = "MEDIUM"
     }
+    filters_config {
+      type            = "PROMPT_ATTACK"
+      input_strength  = "HIGH"
+      output_strength = "NONE"
+    }
   }
 
   sensitive_information_policy_config {
     pii_entities_config {
-      type   = "NAME"
-      action = "ANONYMIZE"
+      type          = "NAME"
+      action        = "ANONYMIZE"
+      input_action  = "ANONYMIZE"
+      output_action = "ANONYMIZE"
     }
     pii_entities_config {
-      type   = "EMAIL"
-      action = "ANONYMIZE"
+      type          = "EMAIL"
+      action        = "ANONYMIZE"
+      input_action  = "ANONYMIZE"
+      output_action = "ANONYMIZE"
     }
     pii_entities_config {
-      type   = "PHONE"
-      action = "ANONYMIZE"
+      type          = "PHONE"
+      action        = "ANONYMIZE"
+      input_action  = "ANONYMIZE"
+      output_action = "ANONYMIZE"
     }
   }
 
