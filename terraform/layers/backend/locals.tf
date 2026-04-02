@@ -62,9 +62,9 @@ locals {
       s3_bucket    = null
       s3_key       = null
       environment_vars = {
-        REGION                              = var.region
-        UPLOADS_BUCKET                      = module.file_uploader.uploads_bucket_id
-        DOCUMENTS_TABLE                     = module.file_uploader.dynamo_db_table_name
+        REGION          = var.region
+        UPLOADS_BUCKET  = module.file_uploader.uploads_bucket_id
+        DOCUMENTS_TABLE = module.file_uploader.dynamo_db_table_name
         # Constructed inline to avoid circular dependency with the lambda_functions for_each
         QUERY_DOCUMENT_LAMBDA_NAME          = "${var.environment}-${var.app_id}-query-document-lambda"
         BEDROCK_MODEL_INFERENCE_PROFILE_ARN = var.bedrock_model_inference_profile_arn
@@ -127,6 +127,8 @@ locals {
         DOCUMENTS_TABLE                     = module.file_uploader.dynamo_db_table_name
         BEDROCK_MODEL_INFERENCE_PROFILE_ARN = var.bedrock_model_inference_profile_arn
         MAX_SEARCH_RESULTS                  = var.max_search_results
+        BEDROCK_GUARDRAIL_ID                = module.bedrock_guardrails.guardrail_id
+        BEDROCK_GUARDRAIL_VERSION           = module.bedrock_guardrails.guardrail_version
       }
       # Policy unique to this Lambda
       iam_policy_statements = [
@@ -152,6 +154,11 @@ locals {
           ]
         },
         {
+          Effect   = "Allow"
+          Action   = ["bedrock:ApplyGuardrail"]
+          Resource = [module.bedrock_guardrails.guardrail_arn]
+        },
+        {
           Effect = "Allow"
           Action = [
             "aws-marketplace:ViewSubscriptions",
@@ -165,7 +172,7 @@ locals {
           Action = [
             "dynamodb:GetItem"
           ]
-          Resource = [module.file_uploader.dynamo_db_table_arn]
+          Resource = [module.file_uploader.dynamo_db_table_arn, module.bedrock_guardrails.guardrail_arn]
         }
       ]
     }
