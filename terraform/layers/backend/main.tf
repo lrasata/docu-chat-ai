@@ -8,6 +8,13 @@ module "rds" {
   db_instance_class  = var.db_instance_class
 }
 
+module "bedrock_guardrails" {
+  source = "./modules/bedrock-guardrails"
+
+  environment = var.environment
+  app_id      = var.app_id
+}
+
 module "lambda_functions" {
   source = "./modules/lambda_function"
 

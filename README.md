@@ -64,6 +64,24 @@ A cloud-native application that allows users to chat with their PDF documents us
   - `get-files` - Query DynamoDB for user documents
   - `query-document` - RAG chat handler with Bedrock integration
   - `s3-ingestion` - Extract text, create embeddings, index to pgvector
+    
+    Splits the document into ~500-word overlapping chunks, converts each chunk into a 1536-dimension vector using Amazon Titan Embeddings, then stores both the raw text and its vector in PostgreSQL (pgvector).
+
+    Each row in `document_chunks` is:
+
+    | column        | what it stores                                |
+    |---------------|-----------------------------------------------|
+    | `document_id` | the S3 key of the source file                 |
+    | `chunk_id`    | `{document_id}-{chunk_index}`                 |
+    | `content`     | the raw text of the chunk (~500 words)        |
+    | `embedding`   | the 1536 floats vector representing that text |
+
+    ```sql
+    INSERT INTO document_chunks (document_id, chunk_id, content, embedding)
+    VALUES (%s, %s, %s, %s)
+    ```
+
+    So one PDF with 10 chunks = 10 rows, each with its own text + its own vector. The `content` is what gets sent to Claude as context, the `embedding` is only used for the similarity search to decide which chunks to retrieve.
 - **Storage**:
   - S3 for document storage
   - DynamoDB for file metadata
@@ -75,6 +93,16 @@ A cloud-native application that allows users to chat with their PDF documents us
 - **AI/ML**:
   - Amazon Titan Embeddings for vectorisation
   - Anthropic Claude 4 for chat responses
+  - Amazon Bedrock Guardrails for content moderation (applied to every `query-document` invocation):
+
+    | Feature                  | Configuration                                |
+    |--------------------------|----------------------------------------------|
+    | Violence                 | Blocked at HIGH threshold (input + output)   |
+    | Sexual content           | Blocked at HIGH threshold (input + output)   |
+    | Hate speech              | Blocked at HIGH threshold (input + output)   |
+    | Insults                  | Blocked at MEDIUM threshold (input + output) |
+    | Profanity                | AWS managed word list — blocked              |
+    | PII (name, email, phone) | Anonymised via `ANONYMIZE` action            |
 
 **Authentication:**
 - AWS Cognito User Pool with Google IdP
@@ -189,7 +217,7 @@ The current setup works for staging and demos. Before going to production:
 - [ ] Rotate RDS credentials automatically via Secrets Manager rotation
 
 **Content Filtering**
-- [ ] with Bedrock Guardrails for PII removal, text filtering, word filtering, profanities etc...
+- ✅ with Bedrock Guardrails for PII removal, text filtering, word filtering, profanities etc...
 
 **Observability**
 - [ ] Set up CloudWatch Alarms for Lambda error rates, RDS connection count, and API Gateway 5xx

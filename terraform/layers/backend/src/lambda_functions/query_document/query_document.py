@@ -12,6 +12,8 @@ BEDROCK_MODEL_INFERENCE_PROFILE_ARN = os.environ.get(
     "BEDROCK_MODEL_INFERENCE_PROFILE_ARN", "anthropic.claude-sonnet-4-20250514-v1:0"
 )
 MAX_RESULTS = int(os.environ.get("MAX_SEARCH_RESULTS", "5"))
+BEDROCK_GUARDRAIL_ID = os.environ.get("BEDROCK_GUARDRAIL_ID")
+BEDROCK_GUARDRAIL_VERSION = os.environ.get("BEDROCK_GUARDRAIL_VERSION", "1")
 
 # ---------- AWS clients ----------
 bedrock_runtime = boto3.client("bedrock-runtime", region_name=REGION)
@@ -119,12 +121,17 @@ Answer:"""
             "temperature": 0.7,
             "messages": [{"role": "user", "content": prompt}]
         }
-        response = bedrock_runtime.invoke_model(
-            modelId=model_id,
-            contentType="application/json",
-            accept="application/json",
-            body=json.dumps(request_body)
-        )
+        invoke_kwargs = {
+            "modelId": model_id,
+            "contentType": "application/json",
+            "accept": "application/json",
+            "body": json.dumps(request_body),
+        }
+        if BEDROCK_GUARDRAIL_ID:
+            invoke_kwargs["guardrailIdentifier"] = BEDROCK_GUARDRAIL_ID
+            invoke_kwargs["guardrailVersion"] = BEDROCK_GUARDRAIL_VERSION
+
+        response = bedrock_runtime.invoke_model(**invoke_kwargs)
         response_body = json.loads(response["body"].read())
         return response_body["content"][0]["text"]
     except Exception as e:
