@@ -2,6 +2,7 @@ import json
 import os
 import io
 import boto3
+from botocore.exceptions import ClientError
 import psycopg2
 import pdfplumber
 from docx import Document
@@ -138,6 +139,19 @@ def index_chunk(conn, document_id, chunk_id, chunk_text_content, embedding):
 ensure_table()
 
 # ---------- Lambda handler ----------
+def _mark_document_failed(message, key):
+    dynamodb.update_item(
+        TableName=DOCUMENTS_TABLE,
+        Key={
+            "id": {"S": message["partitionKey"]},
+            "file_key": {"S": key}
+        },
+        UpdateExpression="SET #s = :status",
+        ExpressionAttributeNames={"#s": "status"},
+        ExpressionAttributeValues={":status": {"S": "failed"}}
+    )
+
+
 def handler(event, context):
     sns_record = event["Records"][0]["Sns"]
     message = json.loads(sns_record["Message"])
@@ -147,12 +161,33 @@ def handler(event, context):
     key = message["fileKey"]
     print(f"Processing file: s3://{bucket}/{key}")
 
+    try:
+        _process(message, bucket, key)
+    except ValueError as e:
+        # Permanent failures: unsupported file type, text too short, corrupted file
+        print(f"Permanent error processing {key}: {e}")
+        _mark_document_failed(message, key)
+        return {"statusCode": 400, "body": str(e)}
+    except ClientError as e:
+        if e.response["Error"]["Code"] == "NoSuchKey":
+            print(f"File not found in S3: {key}")
+            _mark_document_failed(message, key)
+            return {"statusCode": 404, "body": f"File not found: {key}"}
+        raise
+
+    return {
+        "statusCode": 200,
+        "body": json.dumps({"document_id": key})
+    }
+
+
+def _process(message, bucket, key):
     response = s3.get_object(Bucket=bucket, Key=key)
     file_bytes = response["Body"].read()
 
     text = extract_text(file_bytes, key)
     if not text or len(text.strip()) < 100:
-        raise Exception("Extracted text is empty or too short")
+        raise ValueError("Extracted text is empty or too short")
 
     chunks = chunk_text(text)
     print(f"Created {len(chunks)} chunks")
@@ -187,8 +222,3 @@ def handler(event, context):
         ExpressionAttributeNames={"#s": "status"},
         ExpressionAttributeValues={":status": {"S": "indexed"}}
     )
-
-    return {
-        "statusCode": 200,
-        "body": json.dumps({"document_id": document_id, "chunks_indexed": len(chunks)})
-    }

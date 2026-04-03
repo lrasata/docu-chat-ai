@@ -72,7 +72,7 @@ const FileManagementContainer = ({ onSelectionChange }: FileManagementContainerP
   // Single poll: runs while a file is awaiting DynamoDB appearance OR still being ingested
   useEffect(() => {
     const shouldPoll =
-      awaitingFileKeys.size > 0 || files.some((f) => f.status === "pending");
+      awaitingFileKeys.size > 0 || files.some((f) => f.status === "processed");
     if (!shouldPoll) return;
     const interval = setInterval(loadFiles, 3000);
     return () => clearInterval(interval);
