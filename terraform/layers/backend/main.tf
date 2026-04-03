@@ -134,6 +134,7 @@ resource "aws_sns_topic_subscription" "s3_ingestion_lambda" {
 
   # Catches SNS → Lambda delivery failures (throttle / unavailable)
   redrive_policy = jsonencode({
-    deadLetterTargetArn = module.dlq_is_not_empty_sns.sns_topic_arn
+    deadLetterTargetArn = module.s3_ingestion_dlq.dlq_arn
   })
+  depends_on = [module.s3_ingestion_dlq]
 }
