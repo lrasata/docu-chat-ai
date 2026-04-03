@@ -160,12 +160,21 @@ def handler(event, context):
     document_id = key
     conn = get_db_connection()
 
-    for idx, chunk in enumerate(chunks):
-        embedding = create_embedding(chunk)
-        chunk_id = f"{document_id}-{idx}"
-        index_chunk(conn, document_id, chunk_id, chunk, embedding)
+    try:
+        for idx, chunk in enumerate(chunks):
+            embedding = create_embedding(chunk)
+            chunk_id = f"{document_id}-{idx}"
+            index_chunk(conn, document_id, chunk_id, chunk, embedding)
 
-    conn.commit()
+        conn.commit()
+    except Exception:
+        global _db_conn
+        try:
+            conn.rollback()
+        except Exception:
+            pass
+        _db_conn = None
+        raise
     print("Document ingestion completed successfully")
 
     dynamodb.update_item(
