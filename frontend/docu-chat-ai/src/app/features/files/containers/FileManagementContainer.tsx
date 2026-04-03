@@ -41,6 +41,8 @@ const FileManagementContainer = ({ onSelectionChange }: FileManagementContainerP
   const [dragging, setDragging] = useState(false);
   const [uploadingFiles, setUploadingFiles] = useState<UploadingFile[]>([]);
   const [awaitingFileKeys, setAwaitingFileKeys] = useState<Set<string>>(new Set());
+  const [timedOutFileKeys, setTimedOutFileKeys] = useState<Set<string>>(new Set());
+  const pollStartedAtRef = useRef<number | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const dispatch = useDispatch<AppDispatch>();
   const files: IFile[] = useSelector((state: RootState) => state.files.files);
@@ -69,14 +71,36 @@ const FileManagementContainer = ({ onSelectionChange }: FileManagementContainerP
     }
   }, [files, awaitingFileKeys]);
 
-  // Single poll: runs while a file is awaiting DynamoDB appearance OR still being ingested
+  // Single poll: runs while a file is awaiting DynamoDB appearance OR still being ingested.
+  // Stops after 15 min and marks stuck files as failed.
   useEffect(() => {
-    const shouldPoll =
-      awaitingFileKeys.size > 0 || files.some((f) => f.status === "processed");
-    if (!shouldPoll) return;
-    const interval = setInterval(loadFiles, 3000);
+    const processingFiles = files.filter(
+      (f) => f.status === "processed" && !timedOutFileKeys.has(f.file_key),
+    );
+    const shouldPoll = awaitingFileKeys.size > 0 || processingFiles.length > 0;
+
+    if (!shouldPoll) {
+      pollStartedAtRef.current = null;
+      return;
+    }
+
+    if (pollStartedAtRef.current === null) {
+      pollStartedAtRef.current = Date.now();
+    }
+
+    const interval = setInterval(() => {
+      if (Date.now() - pollStartedAtRef.current! >= 15 * 60 * 1000) {
+        setTimedOutFileKeys((prev) =>
+          new Set([...prev, ...processingFiles.map((f) => f.file_key)]),
+        );
+        pollStartedAtRef.current = null;
+        return;
+      }
+      loadFiles();
+    }, 3000);
+
     return () => clearInterval(interval);
-  }, [awaitingFileKeys, files, loadFiles]);
+  }, [awaitingFileKeys, files, timedOutFileKeys, loadFiles]);
 
   const uploadFile = async (file: File, id: string) => {
     if (!auth.isAuthenticated) return;
@@ -314,7 +338,12 @@ const FileManagementContainer = ({ onSelectionChange }: FileManagementContainerP
           <Typography variant="h3" mb={2}>
             Your documents
           </Typography>
-          <FileCardContainer files={files} onSelectionChange={onSelectionChange} />
+          <FileCardContainer
+            files={files.map((f) =>
+              timedOutFileKeys.has(f.file_key) ? { ...f, status: "failed" as const } : f
+            )}
+            onSelectionChange={onSelectionChange}
+          />
         </Box>
       )}
 

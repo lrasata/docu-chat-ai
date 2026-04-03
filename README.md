@@ -210,6 +210,8 @@ The current setup works for staging and demos. Before going to production:
 
 **Reliability & Error Handling**
 - ✅ Add a Dead Letter Queue (DLQ) to the SNS → S3 Ingestion Lambda subscription to catch failed ingestion events
+  ├─ failure point 1: SNS can't invoke Lambda (throttle, unavailable) → SNS has no visibility into execution — needs redrive_policy on the subscription
+  └─ failure point 2: Lambda invoked but execution fails → Lambda on_failure destination handles the event
 - [ ] Add retry logic with exponential backoff on Bedrock API calls (throttling)
 - ✅ Handle partial ingestion failures — all chunks are written in a single transaction; a failed commit triggers rollback and connection invalidation, leaving no orphaned chunks
 
