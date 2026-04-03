@@ -1,6 +1,8 @@
 import json
 import os
 import io
+import time
+import random
 import boto3
 from botocore.exceptions import ClientError
 import psycopg2
@@ -112,15 +114,25 @@ def chunk_text(text, chunk_size=500, overlap=50):
         start = end - overlap
     return chunks
 
-def create_embedding(text):
-    response = bedrock.invoke_model(
-        modelId="amazon.titan-embed-text-v1",
-        contentType="application/json",
-        accept="application/json",
-        body=json.dumps({"inputText": text})
-    )
-    body = json.loads(response["body"].read())
-    return body["embedding"]
+_BEDROCK_RETRYABLE = {"ThrottlingException", "ServiceUnavailableException", "ModelTimeoutException"}
+
+def create_embedding(text, max_retries=3):
+    for attempt in range(max_retries + 1):
+        try:
+            response = bedrock.invoke_model(
+                modelId="amazon.titan-embed-text-v1",
+                contentType="application/json",
+                accept="application/json",
+                body=json.dumps({"inputText": text})
+            )
+            return json.loads(response["body"].read())["embedding"]
+        except ClientError as e:
+            if e.response["Error"]["Code"] in _BEDROCK_RETRYABLE and attempt < max_retries:
+                delay = min(2 ** attempt + random.uniform(0, 1), 30)
+                print(f"Bedrock throttled, retrying in {delay:.1f}s (attempt {attempt + 1}/{max_retries})")
+                time.sleep(delay)
+            else:
+                raise
 
 def index_chunk(conn, document_id, chunk_id, chunk_text_content, embedding):
     with conn.cursor() as cur:
