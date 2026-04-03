@@ -209,9 +209,9 @@ The current setup works for staging and demos. Before going to production:
 - Measure baseline retrieval Hit Rate in isolation — current scoring evaluates end-to-end quality but doesn't independently verify whether the right chunks are being retrieved before generation kicks in
 
 **Reliability & Error Handling**
-- [ ] Add a Dead Letter Queue (DLQ) to the SNS → S3 Ingestion Lambda subscription to catch failed ingestion events
+- ✅ Add a Dead Letter Queue (DLQ) to the SNS → S3 Ingestion Lambda subscription to catch failed ingestion events
 - [ ] Add retry logic with exponential backoff on Bedrock API calls (throttling)
-- [ ] Handle partial ingestion failures — currently a crash mid-document leaves orphaned chunks
+- ✅ Handle partial ingestion failures — all chunks are written in a single transaction; a failed commit triggers rollback and connection invalidation, leaving no orphaned chunks
 
 **Security**
 - [ ] Enable AWS WAF on CloudFront and API Gateway
