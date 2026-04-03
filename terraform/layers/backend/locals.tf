@@ -47,6 +47,11 @@ locals {
           Effect   = "Allow",
           Action   = ["dynamodb:UpdateItem"],
           Resource = [module.file_uploader.dynamo_db_table_arn]
+        },
+        {
+          Effect   = "Allow"
+          Action   = ["sqs:SendMessage"]
+          Resource = [module.s3_ingestion_dlq.dlq_arn]
         }
       ]
     }

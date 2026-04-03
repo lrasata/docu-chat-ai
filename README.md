@@ -209,9 +209,22 @@ The current setup works for staging and demos. Before going to production:
 - Measure baseline retrieval Hit Rate in isolation — current scoring evaluates end-to-end quality but doesn't independently verify whether the right chunks are being retrieved before generation kicks in
 
 **Reliability & Error Handling**
-- [ ] Add a Dead Letter Queue (DLQ) to the SNS → S3 Ingestion Lambda subscription to catch failed ingestion events
-- [ ] Add retry logic with exponential backoff on Bedrock API calls (throttling)
-- [ ] Handle partial ingestion failures — currently a crash mid-document leaves orphaned chunks
+- ✅ Add a Dead Letter Queue (DLQ) to the SNS → S3 Ingestion Lambda subscription to catch failed ingestion events
+  ├─ failure point 1: SNS can't invoke Lambda (throttle, unavailable) → SNS has no visibility into execution — needs redrive_policy on the subscription
+  └─ failure point 2: Lambda invoked but execution fails → Lambda on_failure destination handles the event
+- ✅ Add retry logic with exponential backoff on Bedrock API calls (throttling)
+
+  > ⚠️ **Warning — Bedrock throttling risk on large documents**
+  >
+  > Bedrock enforces two limits on the Titan Embed model:
+  > - **Tokens per minute (TPM)** — `s3_ingestion` calls `create_embedding` for every chunk in a tight loop. A large document (e.g. 100-page PDF) produces hundreds of chunks fired back-to-back, which can exhaust the TPM quota quickly.
+  > - **Requests per minute (RPM)** — a hard cap on invocation rate regardless of token size.
+  >
+  > Both are **soft limits** (raiseable via AWS Support) but default quotas are low, especially outside `us-*` regions.
+  >
+  > **How it is handled:** `create_embedding` retries up to 3 times on `ThrottlingException`, `ServiceUnavailableException`, and `ModelTimeoutException` using exponential backoff with jitter (`2^attempt + random(0–1s)`, capped at 30s). After all retries are exhausted the exception propagates, Lambda retries the full invocation, and the event is routed to the DLQ if it still fails.
+
+- ✅ Handle partial ingestion failures — all chunks are written in a single transaction; a failed commit triggers rollback and connection invalidation, leaving no orphaned chunks
 
 **Security**
 - [ ] Enable AWS WAF on CloudFront and API Gateway

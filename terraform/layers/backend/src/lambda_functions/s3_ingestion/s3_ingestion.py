@@ -1,7 +1,10 @@
 import json
 import os
 import io
+import time
+import random
 import boto3
+from botocore.exceptions import ClientError
 import psycopg2
 import pdfplumber
 from docx import Document
@@ -111,15 +114,25 @@ def chunk_text(text, chunk_size=500, overlap=50):
         start = end - overlap
     return chunks
 
-def create_embedding(text):
-    response = bedrock.invoke_model(
-        modelId="amazon.titan-embed-text-v1",
-        contentType="application/json",
-        accept="application/json",
-        body=json.dumps({"inputText": text})
-    )
-    body = json.loads(response["body"].read())
-    return body["embedding"]
+_BEDROCK_RETRYABLE = {"ThrottlingException", "ServiceUnavailableException", "ModelTimeoutException"}
+
+def create_embedding(text, max_retries=3):
+    for attempt in range(max_retries + 1):
+        try:
+            response = bedrock.invoke_model(
+                modelId="amazon.titan-embed-text-v1",
+                contentType="application/json",
+                accept="application/json",
+                body=json.dumps({"inputText": text})
+            )
+            return json.loads(response["body"].read())["embedding"]
+        except ClientError as e:
+            if e.response["Error"]["Code"] in _BEDROCK_RETRYABLE and attempt < max_retries:
+                delay = min(2 ** attempt + random.uniform(0, 1), 30)
+                print(f"Bedrock throttled, retrying in {delay:.1f}s (attempt {attempt + 1}/{max_retries})")
+                time.sleep(delay)
+            else:
+                raise
 
 def index_chunk(conn, document_id, chunk_id, chunk_text_content, embedding):
     with conn.cursor() as cur:
@@ -138,6 +151,19 @@ def index_chunk(conn, document_id, chunk_id, chunk_text_content, embedding):
 ensure_table()
 
 # ---------- Lambda handler ----------
+def _mark_document_failed(message, key):
+    dynamodb.update_item(
+        TableName=DOCUMENTS_TABLE,
+        Key={
+            "id": {"S": message["partitionKey"]},
+            "file_key": {"S": key}
+        },
+        UpdateExpression="SET #s = :status",
+        ExpressionAttributeNames={"#s": "status"},
+        ExpressionAttributeValues={":status": {"S": "failed"}}
+    )
+
+
 def handler(event, context):
     sns_record = event["Records"][0]["Sns"]
     message = json.loads(sns_record["Message"])
@@ -147,12 +173,33 @@ def handler(event, context):
     key = message["fileKey"]
     print(f"Processing file: s3://{bucket}/{key}")
 
+    try:
+        _process(message, bucket, key)
+    except ValueError as e:
+        # Permanent failures: unsupported file type, text too short, corrupted file
+        print(f"Permanent error processing {key}: {e}")
+        _mark_document_failed(message, key)
+        return {"statusCode": 400, "body": str(e)}
+    except ClientError as e:
+        if e.response["Error"]["Code"] == "NoSuchKey":
+            print(f"File not found in S3: {key}")
+            _mark_document_failed(message, key)
+            return {"statusCode": 404, "body": f"File not found: {key}"}
+        raise
+
+    return {
+        "statusCode": 200,
+        "body": json.dumps({"document_id": key})
+    }
+
+
+def _process(message, bucket, key):
     response = s3.get_object(Bucket=bucket, Key=key)
     file_bytes = response["Body"].read()
 
     text = extract_text(file_bytes, key)
     if not text or len(text.strip()) < 100:
-        raise Exception("Extracted text is empty or too short")
+        raise ValueError("Extracted text is empty or too short")
 
     chunks = chunk_text(text)
     print(f"Created {len(chunks)} chunks")
@@ -160,12 +207,21 @@ def handler(event, context):
     document_id = key
     conn = get_db_connection()
 
-    for idx, chunk in enumerate(chunks):
-        embedding = create_embedding(chunk)
-        chunk_id = f"{document_id}-{idx}"
-        index_chunk(conn, document_id, chunk_id, chunk, embedding)
+    try:
+        for idx, chunk in enumerate(chunks):
+            embedding = create_embedding(chunk)
+            chunk_id = f"{document_id}-{idx}"
+            index_chunk(conn, document_id, chunk_id, chunk, embedding)
 
-    conn.commit()
+        conn.commit()
+    except Exception:
+        global _db_conn
+        try:
+            conn.rollback()
+        except Exception:
+            pass
+        _db_conn = None
+        raise
     print("Document ingestion completed successfully")
 
     dynamodb.update_item(
@@ -178,8 +234,3 @@ def handler(event, context):
         ExpressionAttributeNames={"#s": "status"},
         ExpressionAttributeValues={":status": {"S": "indexed"}}
     )
-
-    return {
-        "statusCode": 200,
-        "body": json.dumps({"document_id": document_id, "chunks_indexed": len(chunks)})
-    }

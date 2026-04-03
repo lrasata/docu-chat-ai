@@ -38,14 +38,15 @@ const FileCardContainer = ({
 }: FileCardContainerProps) => {
   const [selected, setSelected] = useState<Set<string>>(new Set());
 
-  const pendingIds = files.filter((f) => f.status === "pending").map((f) => f.file_key);
+  // files in processed status have to be indexed to be ready for querying
+  const idsToIndex = files.filter((f) => f.status === "processed").map((f) => f.file_key);
 
   const toggle = (id: string, isPending: boolean) => {
     if (isPending) return;
     setSelected((prev) => {
       const next = new Set(prev);
       next.has(id) ? next.delete(id) : next.add(id);
-      onSelectionChange?.([...next], pendingIds);
+      onSelectionChange?.([...next], idsToIndex);
       return next;
     });
   };
@@ -54,11 +55,11 @@ const FileCardContainer = ({
     const indexedFiles = files.filter((f) => f.status === "indexed");
     if (selected.size === indexedFiles.length) {
       setSelected(new Set());
-      onSelectionChange?.([], pendingIds);
+      onSelectionChange?.([], idsToIndex);
     } else {
       const all = new Set(indexedFiles.map((f) => f.file_key));
       setSelected(all);
-      onSelectionChange?.([...all], pendingIds);
+      onSelectionChange?.([...all], idsToIndex);
     }
   };
 
@@ -140,7 +141,7 @@ const FileCardContainer = ({
       >
         {files.map((file: IFile) => {
           const isSelected = selected.has(file.file_key);
-          const isPending = file.status === "pending";
+          const isPending = file.status === "processed";
           return (
             <Box
               key={file.file_key}
