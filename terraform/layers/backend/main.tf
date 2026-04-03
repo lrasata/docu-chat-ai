@@ -97,8 +97,43 @@ resource "aws_lambda_permission" "allow_sns_to_invoke_s3_ingestion" {
   source_arn    = module.file_uploader.sns_topic_arn_processed_file_event
 }
 
+module "dlq_is_not_empty_sns" {
+  source = "./modules/sns"
+
+  app_id       = var.app_id
+  environment  = var.environment
+  service_name = "s3-ingestion"
+}
+
+module "s3_ingestion_dlq" {
+  source = "./modules/dlq"
+
+  app_id        = var.app_id
+  environment   = var.environment
+  service_name  = "s3-ingestion"
+  sns_topic_arn = module.dlq_is_not_empty_sns.sns_topic_arn
+}
+
+# Catches Lambda execution failures after retries exhausted
+resource "aws_lambda_function_event_invoke_config" "s3_ingestion" {
+  function_name = module.lambda_functions["s3_ingestion"].function_name
+
+  destination_config {
+    on_failure {
+      destination = module.s3_ingestion_dlq.dlq_arn
+    }
+  }
+
+  depends_on = [module.s3_ingestion_dlq]
+}
+
 resource "aws_sns_topic_subscription" "s3_ingestion_lambda" {
   topic_arn = module.file_uploader.sns_topic_arn_processed_file_event
   protocol  = "lambda"
   endpoint  = module.lambda_functions["s3_ingestion"].function_arn
+
+  # Catches SNS → Lambda delivery failures (throttle / unavailable)
+  redrive_policy = jsonencode({
+    deadLetterTargetArn = module.dlq_is_not_empty_sns.sns_topic_arn
+  })
 }
