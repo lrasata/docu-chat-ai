@@ -22,5 +22,5 @@ export interface IFile {
   file_size: number;
   uploaded_timestamp: string;
   resource: string;
-  status: "pending" | "indexed";
+  status: "processed" | "indexed";
 }
