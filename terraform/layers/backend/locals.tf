@@ -100,17 +100,9 @@ locals {
           Resource = ["arn:aws:lambda:${var.region}:${data.aws_caller_identity.current.account_id}:function:${var.environment}-${var.app_id}-query-document-lambda"]
         },
         {
-          Effect = "Allow"
-          Action = ["bedrock:InvokeModel"]
-          Resource = [
-            var.bedrock_model_inference_profile_arn,
-            "arn:aws:bedrock:eu-central-1::foundation-model/anthropic.claude-sonnet-4-20250514-v1:0",
-            "arn:aws:bedrock:eu-north-1::foundation-model/anthropic.claude-sonnet-4-20250514-v1:0",
-            "arn:aws:bedrock:eu-south-1::foundation-model/anthropic.claude-sonnet-4-20250514-v1:0",
-            "arn:aws:bedrock:eu-south-2::foundation-model/anthropic.claude-sonnet-4-20250514-v1:0",
-            "arn:aws:bedrock:eu-west-1::foundation-model/anthropic.claude-sonnet-4-20250514-v1:0",
-            "arn:aws:bedrock:eu-west-3::foundation-model/anthropic.claude-sonnet-4-20250514-v1:0"
-          ]
+          Effect   = "Allow"
+          Action   = ["bedrock:InvokeModel"]
+          Resource = concat([var.bedrock_model_inference_profile_arn], var.bedrock_foundation_model_arns)
         }
       ]
     }
@@ -131,6 +123,8 @@ locals {
         REGION                              = var.region
         DOCUMENTS_TABLE                     = module.file_uploader.dynamo_db_table_name
         BEDROCK_MODEL_INFERENCE_PROFILE_ARN = var.bedrock_model_inference_profile_arn
+        TEMPERATURE                         = var.llm_temperature
+        LLM_MAX_TOKENS                      = var.llm_max_tokens
         MAX_SEARCH_RESULTS                  = var.max_search_results
         BEDROCK_GUARDRAIL_ID                = module.bedrock_guardrails.guardrail_id
         BEDROCK_GUARDRAIL_VERSION           = module.bedrock_guardrails.guardrail_version
@@ -144,19 +138,12 @@ locals {
         },
         {
           Effect = "Allow"
-          Action = [
-            "bedrock:InvokeModel"
-          ]
-          Resource = [
-            "arn:aws:bedrock:${var.region}::foundation-model/amazon.titan-embed-text-v1",
-            var.bedrock_model_inference_profile_arn,
-            "arn:aws:bedrock:eu-central-1::foundation-model/anthropic.claude-sonnet-4-20250514-v1:0",
-            "arn:aws:bedrock:eu-north-1::foundation-model/anthropic.claude-sonnet-4-20250514-v1:0",
-            "arn:aws:bedrock:eu-south-1::foundation-model/anthropic.claude-sonnet-4-20250514-v1:0",
-            "arn:aws:bedrock:eu-south-2::foundation-model/anthropic.claude-sonnet-4-20250514-v1:0",
-            "arn:aws:bedrock:eu-west-1::foundation-model/anthropic.claude-sonnet-4-20250514-v1:0",
-            "arn:aws:bedrock:eu-west-3::foundation-model/anthropic.claude-sonnet-4-20250514-v1:0"
-          ]
+          Action = ["bedrock:InvokeModel"]
+          Resource = concat(
+            # Titan Embeddings is kept explicit — it serves a different role (embeddings, not LLM)
+            ["arn:aws:bedrock:${var.region}::foundation-model/amazon.titan-embed-text-v1", var.bedrock_model_inference_profile_arn],
+            var.bedrock_foundation_model_arns
+          )
         },
         {
           Effect   = "Allow"

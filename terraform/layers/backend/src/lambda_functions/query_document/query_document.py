@@ -8,12 +8,15 @@ from pgvector.psycopg2 import register_vector
 REGION = os.environ["REGION"]
 RDS_SECRET_ARN = os.environ["RDS_SECRET_ARN"]
 DOCUMENTS_TABLE = os.environ["DOCUMENTS_TABLE"]
-BEDROCK_MODEL_INFERENCE_PROFILE_ARN = os.environ.get(
-    "BEDROCK_MODEL_INFERENCE_PROFILE_ARN", "anthropic.claude-sonnet-4-20250514-v1:0"
-)
+BEDROCK_MODEL_INFERENCE_PROFILE_ARN = os.environ["BEDROCK_MODEL_INFERENCE_PROFILE_ARN"]
 MAX_RESULTS = int(os.environ.get("MAX_SEARCH_RESULTS", "5"))
-BEDROCK_GUARDRAIL_ID = os.environ.get("BEDROCK_GUARDRAIL_ID")
+BEDROCK_GUARDRAIL_ID = os.environ["BEDROCK_GUARDRAIL_ID"]
 BEDROCK_GUARDRAIL_VERSION = os.environ.get("BEDROCK_GUARDRAIL_VERSION", "1")
+TEMPERATURE=float(os.environ.get("TEMPERATURE", "0.7"))
+MAX_TOKENS=int(os.environ.get("LLM_MAX_TOKENS", "2000"))
+
+# ----------- CONSTANTS -----------------
+QUESTION_MODEL_EMBEDDING="amazon.titan-embed-text-v1"
 
 # ---------- AWS clients ----------
 bedrock_runtime = boto3.client("bedrock-runtime", region_name=REGION)
@@ -54,7 +57,7 @@ def get_db_connection():
 def create_embedding(text):
     try:
         response = bedrock_runtime.invoke_model(
-            modelId="amazon.titan-embed-text-v1",
+            modelId=QUESTION_MODEL_EMBEDDING,
             contentType="application/json",
             accept="application/json",
             body=json.dumps({"inputText": text})
@@ -69,6 +72,7 @@ def search_similar_chunks(question_embedding, user_id, document_id=None, max_res
     try:
         conn = get_db_connection()
         with conn.cursor() as cur:
+            # The <=> operator is pgvector's cosine distance. ORDER BY embedding <=> vector → sorts by closest first (lowest distance)
             if document_id:
                 cur.execute(
                     """
@@ -106,34 +110,27 @@ def search_similar_chunks(question_embedding, user_id, document_id=None, max_res
 def generate_answer_with_bedrock(question, context_chunks, model_id=BEDROCK_MODEL_INFERENCE_PROFILE_ARN):
     try:
         context = "\n\n".join([f"[Chunk {i+1}]\n{chunk['text']}" for i, chunk in enumerate(context_chunks)])
-        prompt = f"""You are a helpful AI assistant that answers questions based on the provided document context.
-Only use information from the context below to answer the question. If the answer cannot be found in the context, say so.
-
-Context:
-{context}
-
-Question: {question}
-
-Answer:"""
-        request_body = {
-            "anthropic_version": "bedrock-2023-05-31",
-            "max_tokens": 2000,
-            "temperature": 0.7,
-            "messages": [{"role": "user", "content": prompt}]
-        }
-        invoke_kwargs = {
+        converse_kwargs = {
             "modelId": model_id,
-            "contentType": "application/json",
-            "accept": "application/json",
-            "body": json.dumps(request_body),
+            "system": [{"text": (
+                "You are a helpful AI assistant that answers questions based on the provided document context. "
+                "Only use information from the context below to answer the question. "
+                "If the answer cannot be found in the context, say so."
+            )}],
+            "messages": [{"role": "user", "content": [{"text": f"Context:\n{context}\n\nQuestion: {question}"}]}],
+            "inferenceConfig": {
+                "maxTokens": MAX_TOKENS,
+                "temperature": TEMPERATURE,
+            },
         }
         if BEDROCK_GUARDRAIL_ID:
-            invoke_kwargs["guardrailIdentifier"] = BEDROCK_GUARDRAIL_ID
-            invoke_kwargs["guardrailVersion"] = BEDROCK_GUARDRAIL_VERSION
+            converse_kwargs["guardrailConfig"] = {
+                "guardrailIdentifier": BEDROCK_GUARDRAIL_ID,
+                "guardrailVersion": BEDROCK_GUARDRAIL_VERSION,
+            }
 
-        response = bedrock_runtime.invoke_model(**invoke_kwargs)
-        response_body = json.loads(response["body"].read())
-        return response_body["content"][0]["text"]
+        response = bedrock_runtime.converse(**converse_kwargs)
+        return response["output"]["message"]["content"][0]["text"]
     except Exception as e:
         print(f"Error calling Bedrock: {str(e)}")
         raise

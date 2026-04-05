@@ -113,10 +113,27 @@ variable "bedrock_model_inference_profile_arn" {
   type        = string
 }
 
+variable "bedrock_foundation_model_arns" {
+  description = "List of Bedrock foundation model ARNs to allow invocation. Defaults to a wildcard that permits any model in any region, enabling LLM portability. Restrict to specific ARNs in production for least-privilege."
+  type        = list(string)
+  default     = ["arn:aws:bedrock:*::foundation-model/*"]
+}
+
 variable "max_search_results" {
   description = "Maximum number of document chunks to retrieve for context"
   type        = number
   default     = 5
+}
+
+variable "llm_temperature" {
+  type    = number
+  default = 0.7
+}
+
+variable "llm_max_tokens" {
+  description = "It sets the maximum length of Claude's response"
+  type        = number
+  default     = 2000
 }
 # END
 
