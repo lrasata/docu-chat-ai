@@ -20,7 +20,7 @@ Before you begin, ensure you have:
 2. Go to "Model access" in the left sidebar
 3. Request access to:
    - **Amazon Titan Embeddings G1 - Text** (required for embeddings)
-   - **Anthropic Claude 4 Sonnet** (recommended for chat)
+   - **Anthropic Claude 4 Sonnet** (recommended for chat). Refer to [Claude LLMs documentation](https://platform.claude.com/docs/en/about-claude/models/choosing-a-model)
 
 Access is usually granted within minutes.
 
@@ -28,12 +28,12 @@ Access is usually granted within minutes.
 
 The infrastructure is split into four independent Terraform layers that must be deployed in order:
 
-| Layer | Path | Description |
-|-------|------|-------------|
-| `secrets` | `terraform/layers/secrets` | API keys and application secrets |
-| `cognito` | `terraform/layers/cognito` | Cognito User Pool + Google IdP |
-| `backend` | `terraform/layers/backend` | Lambda, API Gateway, RDS, VPC |
-| `frontend` | `terraform/layers/frontend` | S3, CloudFront, Route53 |
+| Layer      | Path                        | Description                      |
+|------------|-----------------------------|----------------------------------|
+| `secrets`  | `terraform/layers/secrets`  | API keys and application secrets |
+| `cognito`  | `terraform/layers/cognito`  | Cognito User Pool + Google IdP   |
+| `backend`  | `terraform/layers/backend`  | Lambda, API Gateway, RDS, VPC    |
+| `frontend` | `terraform/layers/frontend` | S3, CloudFront, Route53          |
 
 ## Deployment Steps
 
@@ -69,15 +69,58 @@ backend_certificate_arn = "arn:aws:acm:us-east-1:123456789012:certificate/your-c
 # Notification email
 notification_email = "your-email@your-domain.com"
 
-# Bedrock inference profile ARN
+# Bedrock inference profile ARN — the model the Lambda calls at runtime.
+# A cross-region inference profile routes requests across regions for availability.
 # Find in: AWS Bedrock → Inference and assessment → Inference profiles
-bedrock_model_inference_profile_arn = "arn:aws:bedrock:..."
+bedrock_model_inference_profile_arn = "arn:aws:bedrock:eu-central-1:123456789012:inference-profile/..."
+
+# IAM: foundation model ARNs that Bedrock is allowed to invoke on your behalf.
+# Required because cross-region inference profiles route internally to underlying
+# foundation models in other regions — IAM must permit those calls too.
+# The default wildcard allows any model and supports LLM portability.
+# Lock this down to specific ARNs in production for least-privilege.
+bedrock_foundation_model_arns = ["arn:aws:bedrock:*::foundation-model/*"]
 
 # RDS instance size
 db_instance_class    = "db.t4g.micro"
 availability_zones   = ["eu-central-1a", "eu-central-1b"]
 max_search_results   = 5
+
+# LLM configuration (optional — defaults shown)
+llm_temperature = 0.7
+llm_max_tokens  = 2000
 ```
+
+#### Bedrock model configuration
+
+Two separate settings control which model is used — they serve different purposes:
+
+| Variable                             | Purpose                  | Description                                                                                                                                                                                                       |
+|--------------------------------------|--------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `bedrock_model_inference_profile_arn` | **Runtime** — what the Lambda calls | ARN of a Bedrock inference profile. A cross-region inference profile automatically routes requests to available regions for resilience. The Lambda passes this as `modelId` to the Bedrock Converse API. Find it in AWS Bedrock → Inference and assessment → Inference profiles. |
+| `bedrock_foundation_model_arns`      | **IAM** — what AWS permits | List of foundation model ARNs granted `bedrock:InvokeModel` in the Lambda's IAM policy. When a cross-region inference profile routes a request, Bedrock invokes the underlying foundation model in a specific region — IAM must explicitly allow that. The default `arn:aws:bedrock:*::foundation-model/*` permits any model in any region, which is what makes swapping LLMs a one-variable change. Restrict to specific ARNs in production. |
+
+**Example: switching from Claude to Llama 3**
+
+```hcl
+# 1. Point to a Llama 3 inference profile
+bedrock_model_inference_profile_arn = "arn:aws:bedrock:eu-central-1:123456789012:inference-profile/eu.meta.llama3-70b-instruct-v1:0"
+
+# 2. Allow the underlying Llama 3 foundation model ARNs (or leave as wildcard)
+bedrock_foundation_model_arns = [
+  "arn:aws:bedrock:eu-central-1::foundation-model/meta.llama3-70b-instruct-v1:0",
+  "arn:aws:bedrock:eu-west-1::foundation-model/meta.llama3-70b-instruct-v1:0"
+]
+```
+
+No code changes required — the Lambda uses the Bedrock Converse API which has a unified interface across all supported models.
+
+#### LLM generation parameters
+
+| Variable          | Default | Description                                                                                                    |
+|-------------------|---------|----------------------------------------------------------------------------------------------------------------|
+| `llm_temperature` | `0.7`   | Controls response randomness. `0.0` = deterministic/factual, `1.0` = more creative. Lower values are safer for Q&A use cases. |
+| `llm_max_tokens`  | `2000`  | Maximum number of tokens in the model's response. Increase for longer answers, decrease to reduce Bedrock costs. |
 
 ### 3. Deploy Secrets Layer
 

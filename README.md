@@ -91,8 +91,15 @@ A cloud-native application that allows users to chat with their PDF documents us
   - VPC Interface Endpoints for Bedrock, Secrets Manager, SNS (no NAT Gateway)
   - VPC Gateway Endpoints for S3 and DynamoDB (free)
 - **AI/ML**:
-  - Amazon Titan Embeddings for vectorization
-  - Anthropic Claude 4 for chat responses
+  - Amazon Titan Embeddings (`amazon.titan-embed-text-v1`) for vectorization — hardcoded, not swappable at runtime. The embedding model must stay consistent for the lifetime of the vector store: every chunk is embedded at ingestion time and stored as a 1536-dimensional vector in pgvector. If you changed the model, its vector space would be incompatible with existing stored vectors and all documents would need to be re-ingested from scratch. Titan was chosen because it is natively available in Bedrock (no subscription required), requires no NAT Gateway (accessible via VPC endpoint), and its 1536-d output is a well-supported size for pgvector similarity search.
+  - Any Bedrock-supported LLM for chat responses via the Bedrock Converse API. Converse provides a unified interface across all models — switching LLMs is a Terraform variable change, not a code change. Two variables control this:
+
+    | Variable                              | Purpose       | Description                                                                                                                                                                                                                        |
+    |---------------------------------------|---------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+    | `bedrock_model_inference_profile_arn` | Runtime       | ARN of the Bedrock inference profile the Lambda calls. A cross-region profile routes across regions for availability. Changing this switches the active LLM.                                                                       |
+    | `bedrock_foundation_model_arns`       | IAM           | Foundation model ARNs granted `bedrock:InvokeModel`. Needed because cross-region inference profiles route internally to underlying models in specific regions — IAM must permit those calls. Defaults to `arn:aws:bedrock:*::foundation-model/*` (any model, any region). |
+    | `llm_temperature`                     | Generation    | Response randomness (`0.0` = deterministic, `1.0` = creative). Default: `0.7`.                                                                                                                                                     |
+    | `llm_max_tokens`                      | Generation    | Maximum tokens in the response — caps answer length and Bedrock cost. Default: `2000`.                                                                                                                                              |
   - Amazon Bedrock Guardrails for content moderation (applied to every `query-document` invocation):
 
     | Feature                  | Configuration                                       |
