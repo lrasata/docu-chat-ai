@@ -100,3 +100,36 @@ variable "vpc_security_group_ids" {
   type    = list(string)
   default = []
 }
+
+variable "function_url" {
+  description = "Optional Lambda Function URL configuration. Set to null to disable."
+  type = object({
+    auth_type         = string
+    invoke_mode       = string
+    allow_credentials = bool
+    cors_origins      = list(string)
+    cors_methods      = list(string)
+    cors_headers      = list(string)
+    expose_headers    = list(string)
+    max_age           = number
+  })
+  default = null
+}
+
+variable "sns_trigger_arn" {
+  description = "Optional SNS topic ARN that triggers this Lambda. Set to null to disable."
+  type        = string
+  default     = null
+}
+
+variable "sns_redrive_dlq_arn" {
+  description = "Optional DLQ ARN for SNS-to-Lambda delivery failures. Set to null to disable."
+  type        = string
+  default     = null
+}
+
+variable "dlq_on_failure_arn" {
+  description = "Optional DLQ ARN for Lambda execution failures after retries exhausted. Set to null to disable."
+  type        = string
+  default     = null
+}

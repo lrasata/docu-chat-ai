@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import { Box, Alert, CircularProgress, Typography } from "@mui/material";
 import ChatWindow from "../components/ChatWindow";
 import MessageInput from "../components/MessageInput";
@@ -11,7 +11,10 @@ interface ChatPageProps {
   isSelectedDocumentPending?: boolean;
 }
 
-const ChatPage: React.FC<ChatPageProps> = ({ selectedDocumentId, isSelectedDocumentPending }) => {
+const ChatPage: React.FC<ChatPageProps> = ({
+  selectedDocumentId,
+  isSelectedDocumentPending,
+}) => {
   const auth = useAuth();
   const [messages, setMessages] = useState<Message[]>([
     {
@@ -21,52 +24,86 @@ const ChatPage: React.FC<ChatPageProps> = ({ selectedDocumentId, isSelectedDocum
     },
   ]);
   const [isLoading, setIsLoading] = useState(false);
+  const [isStreaming, setIsStreaming] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const abortControllerRef = useRef<AbortController | null>(null);
 
   const handleSend = async (text: string) => {
+    // Cancel any in-flight stream before starting a new one
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+
     setError(null);
+    const botMessageId = crypto.randomUUID();
 
     setMessages((prev) => [
       ...prev,
-      {
-        id: crypto.randomUUID(),
-        sender: "user",
-        text,
-      },
+      { id: crypto.randomUUID(), sender: "user", text },
+      { id: botMessageId, sender: "bot", text: "", isStreaming: true },
     ]);
     setIsLoading(true);
+    setIsStreaming(false);
+
+    const controller = new AbortController();
+    abortControllerRef.current = controller;
 
     try {
       const token = auth.user?.access_token ?? "";
-      const response = selectedDocumentId
-        ? await chatApi.queryDocument(selectedDocumentId, text, token)
-        : await chatApi.queryAllDocuments(text, token);
+      const request = selectedDocumentId
+        ? { question: text, documentId: selectedDocumentId }
+        : { question: text };
 
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: crypto.randomUUID(),
-          sender: "bot",
-          text: response.answer,
-          sources: response.sources,
+      await chatApi.streamChat(
+        request,
+        token,
+        (chunk) => {
+          // Hide spinner as soon as the first token arrives
+          setIsStreaming(true);
+          setMessages((prev) =>
+            prev.map((msg) =>
+              msg.id === botMessageId ? { ...msg, text: msg.text + chunk } : msg,
+            ),
+          );
         },
-      ]);
+        (sources) => {
+          setMessages((prev) =>
+            prev.map((msg) =>
+              msg.id === botMessageId ? { ...msg, sources } : msg,
+            ),
+          );
+        },
+        controller.signal,
+      );
+
+      setMessages((prev) =>
+        prev.map((msg) =>
+          msg.id === botMessageId ? { ...msg, isStreaming: false } : msg,
+        ),
+      );
     } catch (err) {
+      if (err instanceof Error && err.name === "AbortError") return;
+
       const errorMessage =
         err instanceof Error ? err.message : "Failed to get response";
       setError(errorMessage);
 
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: crypto.randomUUID(),
-          sender: "bot",
-          text: `Sorry, I encountered an error: ${errorMessage}`,
-          error: true,
-        },
-      ]);
+      setMessages((prev) =>
+        prev.map((msg) =>
+          msg.id === botMessageId
+            ? {
+                ...msg,
+                text: `Sorry, I encountered an error: ${errorMessage}`,
+                error: true,
+                isStreaming: false,
+              }
+            : msg,
+        ),
+      );
     } finally {
       setIsLoading(false);
+      setIsStreaming(false);
+      abortControllerRef.current = null;
     }
   };
 
@@ -82,11 +119,12 @@ const ChatPage: React.FC<ChatPageProps> = ({ selectedDocumentId, isSelectedDocum
 
       {isSelectedDocumentPending && (
         <Alert severity="warning" sx={{ mb: 1 }}>
-          A document is still being indexed. Please wait before asking questions about it.
+          A document is still being indexed. Please wait before asking questions
+          about it.
         </Alert>
       )}
 
-      {isLoading && (
+      {isLoading && !isStreaming && (
         <Box sx={{ display: "flex", justifyContent: "center", mb: 2 }}>
           <CircularProgress size={24} />
           <Typography variant="body2" sx={{ ml: 2, color: "text.secondary" }}>
@@ -95,7 +133,10 @@ const ChatPage: React.FC<ChatPageProps> = ({ selectedDocumentId, isSelectedDocum
         </Box>
       )}
 
-      <MessageInput onSend={handleSend} disabled={isLoading || !!isSelectedDocumentPending} />
+      <MessageInput
+        onSend={handleSend}
+        disabled={isLoading || !!isSelectedDocumentPending}
+      />
     </Box>
   );
 };

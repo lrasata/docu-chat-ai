@@ -40,7 +40,7 @@ A cloud-native application that allows users to chat with their PDF documents us
 - **Document Upload**: Tested with PDFs containing text. ⚠️ Not multimodal yet (images, tables, etc.)
 - **AI-Powered Chat**: Ask questions about your documents using natural language
 - **Semantic Search**: Vector similarity search with Amazon Titan embeddings (for text) and pgvector
-- **LLM Integration**: Powered by Anthropic Claude 4 on AWS Bedrock
+- **LLM Integration**: Use any LLM available on AWS Bedrock. This project was tested with Anthropic Claude 4 Sonnet
 - **Secure Authentication**: AWS Cognito with Google OAuth
 - **Real-time Interface**: Modern React UI with Material-UI
 - **Serverless Architecture**: Auto-scaling, pay-per-use infrastructure

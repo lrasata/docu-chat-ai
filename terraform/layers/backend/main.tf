@@ -15,6 +15,25 @@ module "bedrock_guardrails" {
   app_id      = var.app_id
 }
 
+module "dlq_is_not_empty_sns" {
+  source = "./modules/sns"
+
+  app_id       = var.app_id
+  environment  = var.environment
+  service_name = "s3-ingestion"
+}
+
+module "s3_ingestion_dlq" {
+  source = "./modules/dlq"
+
+  app_id        = var.app_id
+  environment   = var.environment
+  service_name  = "s3-ingestion"
+  sns_topic_arn = module.dlq_is_not_empty_sns.sns_topic_arn
+
+  depends_on = [module.dlq_is_not_empty_sns]
+}
+
 module "lambda_functions" {
   source = "./modules/lambda_function"
 
@@ -36,37 +55,15 @@ module "lambda_functions" {
   s3_bucket             = each.value.s3_bucket != null ? each.value.s3_bucket : ""
   s3_key                = each.value.s3_key != null ? each.value.s3_key : ""
   iam_policy_statements = each.value.iam_policy_statements
+  function_url          = each.value.function_url
+  sns_trigger_arn       = each.value.sns_trigger_arn
+  sns_redrive_dlq_arn   = each.value.sns_redrive_dlq_arn
+  dlq_on_failure_arn    = each.value.dlq_on_failure_arn
 
   vpc_subnet_ids         = module.rds.private_subnet_ids
   vpc_security_group_ids = [module.rds.lambda_security_group_id]
 
-  depends_on = [module.rds]
-}
-
-module "api_gateway" {
-  source = "./modules/api_gateway"
-
-  app_id                              = var.app_id
-  cloudfront_domain_name              = var.cloudfront_domain_name
-  custom_domain_name                  = var.api_backend_custom_domain_name
-  backend_certificate_arn             = var.backend_certificate_arn
-  cognito_user_pool_client_id         = data.terraform_remote_state.cognito.outputs.cognito_user_pool_client_id
-  cognito_user_pool_id                = data.terraform_remote_state.cognito.outputs.cognito_user_pool_id
-  environment                         = var.environment
-  region                              = var.region
-  lambda_query_document_arn           = module.lambda_functions["query_document"].function_arn
-  lambda_query_document_function_name = module.lambda_functions["query_document"].function_name
-
-  depends_on = [module.lambda_functions]
-}
-
-module "route53" {
-  source = "./modules/route53"
-
-  route53_zone_name          = var.route53_zone_name
-  api_custom_domain_name     = var.api_backend_custom_domain_name
-  api_gateway_domain_name    = module.api_gateway.api_gateway_domain_name
-  api_gateway_hosted_zone_id = module.api_gateway.api_gateway_hosted_zone_id
+  depends_on = [module.rds, module.s3_ingestion_dlq]
 }
 
 module "file_uploader" {
@@ -87,54 +84,4 @@ module "file_uploader" {
   cloudfront_domain_name                        = var.cloudfront_domain_name
   cognito_user_pool_client_id                   = data.terraform_remote_state.cognito.outputs.cognito_user_pool_client_id
   cognito_user_pool_id                          = data.terraform_remote_state.cognito.outputs.cognito_user_pool_id
-}
-
-resource "aws_lambda_permission" "allow_sns_to_invoke_s3_ingestion" {
-  statement_id  = "AllowExecutionFromSNS"
-  action        = "lambda:InvokeFunction"
-  function_name = module.lambda_functions["s3_ingestion"].function_name
-  principal     = "sns.amazonaws.com"
-  source_arn    = module.file_uploader.sns_topic_arn_processed_file_event
-}
-
-module "dlq_is_not_empty_sns" {
-  source = "./modules/sns"
-
-  app_id       = var.app_id
-  environment  = var.environment
-  service_name = "s3-ingestion"
-}
-
-module "s3_ingestion_dlq" {
-  source = "./modules/dlq"
-
-  app_id        = var.app_id
-  environment   = var.environment
-  service_name  = "s3-ingestion"
-  sns_topic_arn = module.dlq_is_not_empty_sns.sns_topic_arn
-}
-
-# Catches Lambda execution failures after retries exhausted
-resource "aws_lambda_function_event_invoke_config" "s3_ingestion" {
-  function_name = module.lambda_functions["s3_ingestion"].function_name
-
-  destination_config {
-    on_failure {
-      destination = module.s3_ingestion_dlq.dlq_arn
-    }
-  }
-
-  depends_on = [module.s3_ingestion_dlq]
-}
-
-resource "aws_sns_topic_subscription" "s3_ingestion_lambda" {
-  topic_arn = module.file_uploader.sns_topic_arn_processed_file_event
-  protocol  = "lambda"
-  endpoint  = module.lambda_functions["s3_ingestion"].function_arn
-
-  # Catches SNS → Lambda delivery failures (throttle / unavailable)
-  redrive_policy = jsonencode({
-    deadLetterTargetArn = module.s3_ingestion_dlq.dlq_arn
-  })
-  depends_on = [module.s3_ingestion_dlq]
 }

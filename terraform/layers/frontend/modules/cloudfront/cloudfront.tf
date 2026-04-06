@@ -39,10 +39,12 @@ resource "aws_cloudfront_distribution" "cdn" {
     origin_id   = local.api_gw_backend_origin
 
     custom_origin_config {
-      origin_protocol_policy = "https-only"
-      http_port              = 80 # required by Terraform but dont get confused only https is used
-      https_port             = 443
-      origin_ssl_protocols   = ["TLSv1.2"]
+      origin_protocol_policy   = "https-only"
+      http_port                = 80 # required by Terraform but dont get confused only https is used
+      https_port               = 443
+      origin_ssl_protocols     = ["TLSv1.2"]
+      origin_read_timeout      = 60 # must be >= Lambda streaming duration; 60s is the max without a quota increase
+      origin_keepalive_timeout = 60
     }
   }
   # -------------------------

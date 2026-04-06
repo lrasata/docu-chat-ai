@@ -84,7 +84,69 @@ resource "aws_lambda_function" "lambda_function" {
   depends_on = [aws_iam_role.lambda_exec_role]
 }
 
-# --- 6. IAM ATTACHMENTS ---
+# --- 6. OPTIONAL FUNCTION URL ---
+resource "aws_lambda_function_url" "this" {
+  count              = var.function_url != null ? 1 : 0
+  function_name      = aws_lambda_function.lambda_function.function_name
+  authorization_type = var.function_url.auth_type
+  invoke_mode        = var.function_url.invoke_mode
+
+  dynamic "cors" {
+    for_each = var.function_url.cors_origins != null ? [1] : []
+    content {
+      allow_credentials = var.function_url.allow_credentials
+      allow_origins     = var.function_url.cors_origins
+      allow_methods     = var.function_url.cors_methods
+      allow_headers     = var.function_url.cors_headers
+      expose_headers    = var.function_url.expose_headers
+      max_age           = var.function_url.max_age
+    }
+  }
+}
+
+resource "aws_lambda_permission" "function_url_invoke" {
+  count                  = var.function_url != null ? 1 : 0
+  statement_id           = "AllowFunctionURLInvoke"
+  action                 = "lambda:InvokeFunctionUrl"
+  function_name          = aws_lambda_function.lambda_function.function_name
+  principal              = "*"
+  function_url_auth_type = var.function_url.auth_type
+}
+
+# --- 7. OPTIONAL SNS TRIGGER ---
+resource "aws_lambda_permission" "sns_trigger" {
+  count         = var.sns_trigger_arn != null ? 1 : 0
+  statement_id  = "AllowExecutionFromSNS"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.lambda_function.function_name
+  principal     = "sns.amazonaws.com"
+  source_arn    = var.sns_trigger_arn
+}
+
+resource "aws_sns_topic_subscription" "lambda_trigger" {
+  count     = var.sns_trigger_arn != null ? 1 : 0
+  topic_arn = var.sns_trigger_arn
+  protocol  = "lambda"
+  endpoint  = aws_lambda_function.lambda_function.arn
+
+  redrive_policy = var.sns_redrive_dlq_arn != null ? jsonencode({
+    deadLetterTargetArn = var.sns_redrive_dlq_arn
+  }) : null
+}
+
+# --- 8. OPTIONAL DLQ ON FAILURE ---
+resource "aws_lambda_function_event_invoke_config" "dlq" {
+  count         = var.dlq_on_failure_arn != null ? 1 : 0
+  function_name = aws_lambda_function.lambda_function.function_name
+
+  destination_config {
+    on_failure {
+      destination = var.dlq_on_failure_arn
+    }
+  }
+}
+
+# --- 9. IAM ATTACHMENTS ---
 resource "aws_iam_role_policy_attachment" "lambda_custom_policy_attach" {
   role       = aws_iam_role.lambda_exec_role.name
   policy_arn = aws_iam_policy.lambda_custom_policy.arn

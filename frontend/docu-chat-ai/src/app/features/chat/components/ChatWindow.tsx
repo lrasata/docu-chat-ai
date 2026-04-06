@@ -40,6 +40,24 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ messages }) => {
               sx={{ whiteSpace: "pre-wrap" }}
             >
               {msg.text}
+              {msg.isStreaming && (
+                <Box
+                  component="span"
+                  sx={{
+                    display: "inline-block",
+                    width: "2px",
+                    height: "1em",
+                    bgcolor: "text.primary",
+                    ml: "2px",
+                    verticalAlign: "text-bottom",
+                    animation: "blink 1s step-end infinite",
+                    "@keyframes blink": {
+                      "0%, 100%": { opacity: 1 },
+                      "50%": { opacity: 0 },
+                    },
+                  }}
+                />
+              )}
             </Typography>
 
             {msg.sources && msg.sources.length > 0 && (

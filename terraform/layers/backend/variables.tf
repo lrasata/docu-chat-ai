@@ -18,16 +18,6 @@ variable "cloudfront_domain_name" {
   type        = string
 }
 
-variable "api_backend_custom_domain_name" {
-  description = "The Alternative domain name for API gateway"
-  type        = string
-}
-
-variable "api_gateway_route53_zone_id" {
-  type    = string
-  default = "Z1U9ULNL0V5AJ3" # eu-central-1 fixed value : https://docs.aws.amazon.com/general/latest/gr/apigateway.html
-}
-
 variable "s3_ingestion_lambda_code_bucket" {
   type        = string
   description = "Optional S3 bucket for large ingestionLambda code"

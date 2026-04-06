@@ -12,3 +12,8 @@ output "function_exec_role_arn" {
   value = aws_iam_role.lambda_exec_role.arn
 }
 
+output "function_url" {
+  description = "Lambda Function URL (null if not configured)"
+  value       = length(aws_lambda_function_url.this) > 0 ? aws_lambda_function_url.this[0].function_url : null
+}
+

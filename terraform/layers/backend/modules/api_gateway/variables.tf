@@ -37,10 +37,3 @@ variable "cognito_user_pool_id" {
   type = string
 }
 
-variable "lambda_query_document_arn" {
-  type = string
-}
-
-variable "lambda_query_document_function_name" {
-  type = string
-}

@@ -54,6 +54,11 @@ locals {
           Resource = [module.s3_ingestion_dlq.dlq_arn]
         }
       ]
+      # Wiring: SNS trigger + DLQ on failure
+      function_url        = null
+      sns_trigger_arn     = module.file_uploader.sns_topic_arn_processed_file_event
+      sns_redrive_dlq_arn = module.s3_ingestion_dlq.dlq_arn
+      dlq_on_failure_arn  = module.s3_ingestion_dlq.dlq_arn
     }
 
     # RAG evaluation lambda — runs the golden-dataset evaluation pipeline
@@ -105,6 +110,11 @@ locals {
           Resource = concat([var.bedrock_model_inference_profile_arn], var.bedrock_foundation_model_arns)
         }
       ]
+      # Wiring: no trigger, no DLQ, no function URL
+      function_url        = null
+      sns_trigger_arn     = null
+      sns_redrive_dlq_arn = null
+      dlq_on_failure_arn  = null
     }
 
     # Query document lambda for chat functionality
@@ -128,6 +138,8 @@ locals {
         MAX_SEARCH_RESULTS                  = var.max_search_results
         BEDROCK_GUARDRAIL_ID                = module.bedrock_guardrails.guardrail_id
         BEDROCK_GUARDRAIL_VERSION           = module.bedrock_guardrails.guardrail_version
+        COGNITO_USER_POOL_ID                = data.terraform_remote_state.cognito.outputs.cognito_user_pool_id
+        COGNITO_CLIENT_ID                   = data.terraform_remote_state.cognito.outputs.cognito_user_pool_client_id
       }
       # Policy unique to this Lambda
       iam_policy_statements = [
@@ -138,7 +150,10 @@ locals {
         },
         {
           Effect = "Allow"
-          Action = ["bedrock:InvokeModel"]
+          Action = [
+            "bedrock:InvokeModel",
+            "bedrock:InvokeModelWithResponseStream" # required for converse_stream()
+          ]
           Resource = concat(
             # Titan Embeddings is kept explicit — it serves a different role (embeddings, not LLM)
             ["arn:aws:bedrock:${var.region}::foundation-model/amazon.titan-embed-text-v1", var.bedrock_model_inference_profile_arn],
@@ -167,6 +182,20 @@ locals {
           Resource = [module.file_uploader.dynamo_db_table_arn, module.bedrock_guardrails.guardrail_arn]
         }
       ]
+      # Wiring: streaming function URL, no SNS trigger, no DLQ
+      function_url = {
+        auth_type         = "NONE"
+        invoke_mode       = "RESPONSE_STREAM"
+        allow_credentials = true
+        cors_origins      = ["https://${var.cloudfront_domain_name}"]
+        cors_methods      = ["POST", "OPTIONS"]
+        cors_headers      = ["authorization", "content-type"]
+        expose_headers    = ["content-type"]
+        max_age           = 86400
+      }
+      sns_trigger_arn     = null
+      sns_redrive_dlq_arn = null
+      dlq_on_failure_arn  = null
     }
   }
 

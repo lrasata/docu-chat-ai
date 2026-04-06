@@ -1,18 +1,14 @@
-import type { ChatResponse } from "../api/chatApi.ts";
+import type { ChatSource } from "../api/chatApi.ts";
 
-export interface ChatSource {
-  documentId: string;
-  chunkId: string;
-  relevanceScore: number;
-  preview: string;
-}
+export type { ChatSource };
 
 export interface Message {
   id: string;
   sender: "user" | "bot";
   text: string;
-  sources?: ChatSource[] | ChatResponse["sources"];
+  sources?: ChatSource[];
   error?: boolean;
+  isStreaming?: boolean;
 }
 
 export interface IFile {
