@@ -14,7 +14,6 @@ module "cloudfront" {
   cloudfront_certificate_arn                      = var.cloudfront_certificate_arn
   cloudfront_domain_name                          = var.cloudfront_domain_name
   api_file_upload_domain_name                     = data.terraform_remote_state.backend.outputs.api_file_upload_domain_name
-  api_backend_custom_domain_name                  = data.terraform_remote_state.backend.outputs.api_backend_domain_name
 }
 
 # For the static web app bucket
