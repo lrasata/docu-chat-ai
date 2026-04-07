@@ -76,7 +76,8 @@ jobs:
           export VITE_AWS_COGNITO_CLIENT_ID=${{ secrets.COGNITO_CLIENT_ID }}
           export VITE_AWS_COGNITO_REDIRECT_URI=https://${{ github.event.inputs.environment }}.epic-trip-planner.com
           export VITE_API_GW_BACKEND_ENDPOINT=https://${{ github.event.inputs.environment }}.epic-trip-planner.com/api
-          
+          export VITE_LAMBDA_STREAM_URL=${{ steps.tf_outputs.outputs.lambda_stream_url }}
+
           # Install dependencies and build
           npm ci --silent --no-audit
           npm run build
@@ -86,14 +87,13 @@ jobs:
         run: |
           aws s3 sync ./dist/ s3://${{ github.event.inputs.environment }}-${{ env.TF_VAR_app_id}}-static-web-app-bucket/ --delete
 
-      - name: Get CloudFront Distribution ID
-        id: get_distribution_id
+      - name: Get Terraform outputs
+        id: tf_outputs
         working-directory: terraform/layers/frontend
         run: |
-          distribution_id=$(terraform output -raw cloudfront_distribution_id)
-          echo "distribution_id=$distribution_id" >> "$GITHUB_OUTPUT"
+          echo "distribution_id=$(terraform output -raw cloudfront_distribution_id)" >> "$GITHUB_OUTPUT"
+          echo "lambda_stream_url=$(terraform output -raw lambda_stream_url)" >> "$GITHUB_OUTPUT"
 
       - name: Invalidate CloudFront Cache
         run: |
-          distribution_id=${{ steps.get_distribution_id.outputs.distribution_id }}
-          aws cloudfront create-invalidation --distribution-id $distribution_id --paths "/*"
+          aws cloudfront create-invalidation --distribution-id ${{ steps.tf_outputs.outputs.distribution_id }} --paths "/*"

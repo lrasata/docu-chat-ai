@@ -23,8 +23,3 @@ output "query_document_stream_url" {
   value       = module.lambda_functions["query_document"].function_url
   description = "Lambda Function URL for streaming SSE chat responses"
 }
-
-output "api_backend_domain_name" {
-  value       = trimsuffix(replace(module.lambda_functions["query_document"].function_url, "https://", ""), "/")
-  description = "Lambda Function URL domain — used by the frontend CloudFront as the backend origin"
-}

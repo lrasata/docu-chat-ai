@@ -1,5 +1,6 @@
 export const APP_NAME = "AI Powered PDF Chat";
 export const API_BACKEND_URL = import.meta.env.VITE_API_GW_BACKEND_ENDPOINT;
+export const LAMBDA_STREAM_URL = import.meta.env.VITE_LAMBDA_STREAM_URL;
 
 export const AWS_COGNITO_USER_POOL_API_ENDPOINT = import.meta.env
   .VITE_AWS_COGNITO_USER_POOL_API_ENDPOINT;

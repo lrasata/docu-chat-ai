@@ -27,7 +27,3 @@ variable "cloudfront_domain_name" {
 variable "api_file_upload_domain_name" {
   type = string
 }
-
-variable "api_backend_custom_domain_name" {
-  type = string
-}

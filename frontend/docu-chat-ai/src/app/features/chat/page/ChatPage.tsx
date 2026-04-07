@@ -62,7 +62,9 @@ const ChatPage: React.FC<ChatPageProps> = ({
           setIsStreaming(true);
           setMessages((prev) =>
             prev.map((msg) =>
-              msg.id === botMessageId ? { ...msg, text: msg.text + chunk } : msg,
+              msg.id === botMessageId
+                ? { ...msg, text: msg.text + chunk }
+                : msg,
             ),
           );
         },

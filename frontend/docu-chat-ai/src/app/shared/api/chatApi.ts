@@ -1,3 +1,4 @@
+import { LAMBDA_STREAM_URL } from "../constants/constants.ts";
 
 export interface ChatRequest {
   question: string;
@@ -39,7 +40,7 @@ class ChatApiService {
     onSources: (sources: ChatSource[]) => void,
     signal?: AbortSignal,
   ): Promise<void> {
-    const response = await fetch("/api/chat", {
+    const response = await fetch(LAMBDA_STREAM_URL, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
