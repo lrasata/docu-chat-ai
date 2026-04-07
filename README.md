@@ -196,6 +196,18 @@ for this use case the cost difference is so significant (~50x cheaper) that it i
 For production with high query volume, you could scale up the RDS instance or migrate to Aurora PostgreSQL which also 
 supports pgvector.
 
+## Chunking and Search Considerations
+
+- **Chunking strategy:**  
+  Documents are split into ~500-word overlapping chunks for embeddings. The **choice of chunking affects retrieval quality**:
+    - If your documents have unpredictable formatting or structure, **chunking by character length** is often more reliable than word-based heuristics.
+    - Poor chunking can lead to irrelevant or truncated context being sent to the LLM, reducing answer quality.
+
+- **Search type:**
+    - Currently, only **semantic search** via vector similarity is used.
+    - Adding a **lexical search (e.g., BM25)** could improve retrieval, especially for exact matches or technical terms.
+
+
 ## Production Readiness TODOs
 
 The current setup works for staging and demos. Before going to production:
