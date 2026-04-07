@@ -296,20 +296,19 @@ def handler(event, context, response_stream=None):
 
     # --- Extract user_id ---
     user_id = None
-    if is_streaming:
-        # Function URL bypasses API Gateway auth — validate JWT ourselves
-        headers = event.get("headers", {})
-        auth_header = headers.get("authorization") or headers.get("Authorization", "")
-        user_id = extract_user_id_from_bearer_token(auth_header)
-        if not user_id:
+    # Always called via Lambda Function URL — validate JWT from Bearer token
+    headers = event.get("headers", {})
+    auth_header = headers.get("authorization") or headers.get("Authorization", "")
+    user_id = extract_user_id_from_bearer_token(auth_header)
+    if not user_id:
+        if is_streaming:
             _sse_error(response_stream, "Unauthorized")
             return
-    else:
-        # JWT already validated by API Gateway Cognito authorizer
-        if "requestContext" in event and "authorizer" in event["requestContext"]:
-            authorizer = event["requestContext"]["authorizer"]
-            claims = authorizer.get("jwt", {}).get("claims") or authorizer.get("claims", {})
-            user_id = claims.get("sub")
+        return {
+            "statusCode": 401,
+            "headers": {"Content-Type": "application/json"},
+            "body": json.dumps({"error": "Unauthorized"}),
+        }
 
     print(
         f"question={question[:60]!r} document_id={document_id} "
