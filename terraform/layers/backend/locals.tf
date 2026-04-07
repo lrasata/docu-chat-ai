@@ -126,7 +126,7 @@ locals {
       base_name    = "query-document"
       source_dir   = "${path.module}/src/lambda_functions/query_document"
       handler_file = "query_document.handler"
-      runtime      = "python3.12"
+      runtime      = "python3.11"
       timeout      = 120
       memory_size  = 512
       s3_bucket    = var.s3_query_document_lambda_code_bucket
