@@ -44,6 +44,7 @@ class ChatApiService {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
+        "Accept": "text/event-stream",
         Authorization: `Bearer ${token}`,
       },
       body: JSON.stringify(request),
