@@ -62,6 +62,13 @@ jobs:
         run: |
           terraform apply -input=false -auto-approve
 
+      - name: Get Terraform outputs
+        id: tf_outputs
+        working-directory: terraform/layers/frontend
+        run: |
+          echo "distribution_id=$(terraform output -raw cloudfront_distribution_id)" >> "$GITHUB_OUTPUT"
+          echo "lambda_stream_url=$(terraform output -raw lambda_stream_url)" >> "$GITHUB_OUTPUT"
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
@@ -86,13 +93,6 @@ jobs:
         working-directory: frontend/docu-chat-ai
         run: |
           aws s3 sync ./dist/ s3://${{ github.event.inputs.environment }}-${{ env.TF_VAR_app_id}}-static-web-app-bucket/ --delete
-
-      - name: Get Terraform outputs
-        id: tf_outputs
-        working-directory: terraform/layers/frontend
-        run: |
-          echo "distribution_id=$(terraform output -raw cloudfront_distribution_id)" >> "$GITHUB_OUTPUT"
-          echo "lambda_stream_url=$(terraform output -raw lambda_stream_url)" >> "$GITHUB_OUTPUT"
 
       - name: Invalidate CloudFront Cache
         run: |
