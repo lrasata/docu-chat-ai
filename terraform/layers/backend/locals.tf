@@ -55,10 +55,12 @@ locals {
         }
       ]
       # Wiring: SNS trigger + DLQ on failure
-      function_url        = null
-      sns_trigger_arn     = module.file_uploader.sns_topic_arn_processed_file_event
-      sns_redrive_dlq_arn = module.s3_ingestion_dlq.dlq_arn
-      dlq_on_failure_arn  = module.s3_ingestion_dlq.dlq_arn
+      function_url          = null
+      enable_sns_trigger    = true
+      sns_trigger_arn       = module.file_uploader.sns_topic_arn_processed_file_event
+      sns_redrive_dlq_arn   = module.s3_ingestion_dlq.dlq_arn
+      enable_dlq_on_failure = true
+      dlq_on_failure_arn    = module.s3_ingestion_dlq.dlq_arn
     }
 
     # RAG evaluation lambda — runs the golden-dataset evaluation pipeline
@@ -111,10 +113,12 @@ locals {
         }
       ]
       # Wiring: no trigger, no DLQ, no function URL
-      function_url        = null
-      sns_trigger_arn     = null
-      sns_redrive_dlq_arn = null
-      dlq_on_failure_arn  = null
+      function_url          = null
+      enable_sns_trigger    = false
+      sns_trigger_arn       = null
+      sns_redrive_dlq_arn   = null
+      enable_dlq_on_failure = false
+      dlq_on_failure_arn    = null
     }
 
     # Query document lambda for chat functionality
@@ -183,6 +187,11 @@ locals {
         }
       ]
       # Wiring: streaming function URL, no SNS trigger, no DLQ
+      enable_sns_trigger    = false
+      sns_trigger_arn       = null
+      sns_redrive_dlq_arn   = null
+      enable_dlq_on_failure = false
+      dlq_on_failure_arn    = null
       function_url = {
         auth_type         = "NONE"
         invoke_mode       = "RESPONSE_STREAM"
@@ -193,9 +202,6 @@ locals {
         expose_headers    = ["content-type"]
         max_age           = 86400
       }
-      sns_trigger_arn     = null
-      sns_redrive_dlq_arn = null
-      dlq_on_failure_arn  = null
     }
   }
 

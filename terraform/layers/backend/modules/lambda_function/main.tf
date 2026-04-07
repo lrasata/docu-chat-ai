@@ -18,7 +18,7 @@ resource "aws_iam_role" "lambda_exec_role" {
   })
 }
 
-# --- 4. IAM POLICY ---
+# --- IAM POLICY ---
 resource "aws_iam_policy" "lambda_custom_policy" {
   name        = "${var.environment}-${var.app_id}-lambda-${var.lambda_name}-policy"
   description = "Custom policy for ${var.lambda_name} lambda"
@@ -35,7 +35,7 @@ resource "aws_iam_policy" "lambda_custom_policy" {
   }
 }
 
-# --- 5. LAMBDA FUNCTION ---
+# --- LAMBDA FUNCTION ---
 data "archive_file" "lambda_zip" {
   count       = var.s3_bucket == "" && var.s3_key == "" ? 1 : 0
   type        = "zip"
@@ -84,7 +84,7 @@ resource "aws_lambda_function" "lambda_function" {
   depends_on = [aws_iam_role.lambda_exec_role]
 }
 
-# --- 6. OPTIONAL FUNCTION URL ---
+# --- OPTIONAL FUNCTION URL ---
 resource "aws_lambda_function_url" "this" {
   count              = var.function_url != null ? 1 : 0
   function_name      = aws_lambda_function.lambda_function.function_name
@@ -113,9 +113,9 @@ resource "aws_lambda_permission" "function_url_invoke" {
   function_url_auth_type = var.function_url.auth_type
 }
 
-# --- 7. OPTIONAL SNS TRIGGER ---
+# --- OPTIONAL SNS TRIGGER ---
 resource "aws_lambda_permission" "sns_trigger" {
-  count         = var.sns_trigger_arn != null ? 1 : 0
+  count         = var.enable_sns_trigger ? 1 : 0
   statement_id  = "AllowExecutionFromSNS"
   action        = "lambda:InvokeFunction"
   function_name = aws_lambda_function.lambda_function.function_name
@@ -124,7 +124,7 @@ resource "aws_lambda_permission" "sns_trigger" {
 }
 
 resource "aws_sns_topic_subscription" "lambda_trigger" {
-  count     = var.sns_trigger_arn != null ? 1 : 0
+  count     = var.enable_sns_trigger ? 1 : 0
   topic_arn = var.sns_trigger_arn
   protocol  = "lambda"
   endpoint  = aws_lambda_function.lambda_function.arn
@@ -134,9 +134,9 @@ resource "aws_sns_topic_subscription" "lambda_trigger" {
   }) : null
 }
 
-# --- 8. OPTIONAL DLQ ON FAILURE ---
+# --- OPTIONAL DLQ ON FAILURE ---
 resource "aws_lambda_function_event_invoke_config" "dlq" {
-  count         = var.dlq_on_failure_arn != null ? 1 : 0
+  count         = var.enable_dlq_on_failure ? 1 : 0
   function_name = aws_lambda_function.lambda_function.function_name
 
   destination_config {
@@ -146,7 +146,7 @@ resource "aws_lambda_function_event_invoke_config" "dlq" {
   }
 }
 
-# --- 9. IAM ATTACHMENTS ---
+# --- IAM ATTACHMENTS ---
 resource "aws_iam_role_policy_attachment" "lambda_custom_policy_attach" {
   role       = aws_iam_role.lambda_exec_role.name
   policy_arn = aws_iam_policy.lambda_custom_policy.arn

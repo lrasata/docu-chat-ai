@@ -56,8 +56,10 @@ module "lambda_functions" {
   s3_key                = each.value.s3_key != null ? each.value.s3_key : ""
   iam_policy_statements = each.value.iam_policy_statements
   function_url          = each.value.function_url
+  enable_sns_trigger    = each.value.enable_sns_trigger
   sns_trigger_arn       = each.value.sns_trigger_arn
   sns_redrive_dlq_arn   = each.value.sns_redrive_dlq_arn
+  enable_dlq_on_failure = each.value.enable_dlq_on_failure
   dlq_on_failure_arn    = each.value.dlq_on_failure_arn
 
   vpc_subnet_ids         = module.rds.private_subnet_ids

@@ -116,20 +116,32 @@ variable "function_url" {
   default = null
 }
 
+variable "enable_sns_trigger" {
+  description = "Whether to create an SNS trigger and subscription for this Lambda."
+  type        = bool
+  default     = false
+}
+
 variable "sns_trigger_arn" {
-  description = "Optional SNS topic ARN that triggers this Lambda. Set to null to disable."
+  description = "SNS topic ARN that triggers this Lambda. Required when enable_sns_trigger is true."
   type        = string
   default     = null
 }
 
 variable "sns_redrive_dlq_arn" {
-  description = "Optional DLQ ARN for SNS-to-Lambda delivery failures. Set to null to disable."
+  description = "DLQ ARN for SNS-to-Lambda delivery failures. Optional even when enable_sns_trigger is true."
   type        = string
   default     = null
 }
 
+variable "enable_dlq_on_failure" {
+  description = "Whether to route Lambda execution failures to a DLQ."
+  type        = bool
+  default     = false
+}
+
 variable "dlq_on_failure_arn" {
-  description = "Optional DLQ ARN for Lambda execution failures after retries exhausted. Set to null to disable."
+  description = "DLQ ARN for Lambda execution failures. Required when enable_dlq_on_failure is true."
   type        = string
   default     = null
 }
