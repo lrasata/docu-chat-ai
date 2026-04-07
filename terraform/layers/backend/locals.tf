@@ -197,7 +197,7 @@ locals {
         invoke_mode       = "RESPONSE_STREAM"
         allow_credentials = true
         cors_origins      = ["https://${var.cloudfront_domain_name}"]
-        cors_methods      = ["POST", "OPTIONS"]
+        cors_methods      = ["POST"]
         cors_headers      = ["authorization", "content-type"]
         expose_headers    = ["content-type"]
         max_age           = 86400
