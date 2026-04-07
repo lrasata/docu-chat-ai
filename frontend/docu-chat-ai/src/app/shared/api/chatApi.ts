@@ -43,7 +43,7 @@ class ChatApiService {
     const response = await fetch(LAMBDA_STREAM_URL, {
       method: "POST",
       headers: {
-        "Content-Type": "application/json",
+        "Content-Type": "text/plain",
         "Accept": "text/event-stream",
         Authorization: `Bearer ${token}`,
       },
