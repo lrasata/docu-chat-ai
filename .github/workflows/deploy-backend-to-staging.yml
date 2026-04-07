@@ -214,7 +214,7 @@ jobs:
             --user "$(id -u):$(id -g)" \
             --entrypoint "" \
             -v "$PWD:/var/task" \
-            public.ecr.aws/sam/build-python3.11 \
+            public.ecr.aws/sam/build-python3.12 \
             bash -c "pip install -r requirements.txt -t build/"
 
       - name: Package S3 Ingestion Lambda
