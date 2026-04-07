@@ -68,6 +68,7 @@ class ChatApiService {
       if (done) break;
 
       buffer += decoder.decode(value, { stream: true });
+      console.debug("[chatApi] raw chunk:", buffer.slice(0, 200));
 
       // SSE lines are separated by "\n\n"; split on double-newline
       const parts = buffer.split("\n\n");
