@@ -336,10 +336,17 @@ def handler(event, context, response_stream=None):
         sources = _build_sources(relevant_chunks)
 
         if is_streaming:
+            response_stream.set_content_type("text/event-stream")
+
             stream_answer_with_bedrock(question, relevant_chunks, response_stream)
+
             sources_sse = json.dumps({"type": "sources", "sources": sources})
             response_stream.write(f"data: {sources_sse}\n\n".encode("utf-8"))
+
             response_stream.write(b"data: [DONE]\n\n")
+
+            response_stream.end()
+            return response_stream
         else:
             answer = generate_answer_with_bedrock(question, relevant_chunks)
             return {
