@@ -40,7 +40,7 @@ A cloud-native application that allows users to chat with their PDF documents us
 - **Document Upload**: Tested with PDFs containing text. ⚠️ Not multimodal yet (images, tables, etc.)
 - **AI-Powered Chat**: Ask questions about your documents using natural language
 - **Semantic Search**: Vector similarity search with Amazon Titan embeddings (for text) and pgvector
-- **LLM Integration**: Powered by Anthropic Claude 4 on AWS Bedrock
+- **LLM Integration**: Use any LLM available on AWS Bedrock. This project was tested with Anthropic Claude 4 Sonnet
 - **Secure Authentication**: AWS Cognito with Google OAuth
 - **Real-time Interface**: Modern React UI with Material-UI
 - **Serverless Architecture**: Auto-scaling, pay-per-use infrastructure
@@ -249,6 +249,17 @@ The current setup works for staging and demos. Before going to production:
 **Cost**
 - [ ] Use reserved instances for RDS in production (up to 40% savings)
 - [ ] Set S3 lifecycle rules to archive or delete old document uploads
+
+## Scalability Limits
+
+The current Lambda-based RAG ingestion works well for demos and small-scale usage:
+- Fine for: PDFs ≤ ~20–30 pages, occasional uploads, best-effort processing with DLQ fallback
+
+**Limitations:**
+- Large documents (hundreds of pages) → Lambda S3 ingestion can timeout 
+- Many concurrent uploads can hit Bedrock throttling
+- No guaranteed processing or job tracking—retries are best-effort
+Next step for scale: Use a queue-driven ETL pipeline (SQS + workers, Step Functions, or containerized batch jobs) for reliable, high-volume ingestion
 
 ## License
 
