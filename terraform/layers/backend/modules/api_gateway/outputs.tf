@@ -4,6 +4,10 @@ output "api_id" {
   description = "The ID of the Query document API Gateway"
 }
 
+output "api_name" {
+  value = aws_apigatewayv2_api.api.name
+}
+
 # The default execution URL (base URL) of the API
 output "api_endpoint" {
   value       = aws_apigatewayv2_api.api.api_endpoint

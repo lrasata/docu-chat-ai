@@ -153,7 +153,7 @@ module "sns_monitoring" {
 module "api_gw_monitoring" {
   source = "./modules/monitoring/api_gateway"
 
-  api_name      = module.api_gateway.api_id
+  api_name      = module.api_gateway.api_name
   region        = var.region
   sns_topic_arn = module.sns_monitoring.sns_topic_arn
 }
