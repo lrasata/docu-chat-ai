@@ -2,6 +2,7 @@ import json
 import os
 import time
 import boto3
+from botocore.config import Config
 import psycopg2
 from pgvector.psycopg2 import register_vector
 
@@ -23,7 +24,7 @@ QUESTION_MODEL_EMBEDDING="amazon.titan-embed-text-v1"
 bedrock_runtime = boto3.client("bedrock-runtime", region_name=REGION)
 dynamodb = boto3.client("dynamodb", region_name=REGION)
 secretsmanager = boto3.client("secretsmanager")
-cloudwatch = boto3.client("cloudwatch")
+cloudwatch = boto3.client("cloudwatch", config=Config(connect_timeout=2, read_timeout=2, retries={"max_attempts": 0}))
 
 FUNCTION_NAME = os.environ.get("AWS_LAMBDA_FUNCTION_NAME", "query-document")
 
