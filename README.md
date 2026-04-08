@@ -244,6 +244,9 @@ Alarms are created for each Lambda function (`s3_ingestion`, `query_document`).
 |-----------------------------------------------|-------|-----------------------------------------------------------------------------|
 | **DLQ depth (CloudWatch Alarm)**              | Count | Triggers as soon as any message lands in the `s3-ingestion` DLQ, indicating a processing failure after all retries are exhausted |
 
+
+
+
 ## Production Readiness TODOs
 
 The current setup works for staging and demos. Before going to production:
@@ -282,17 +285,17 @@ The current setup works for staging and demos. Before going to production:
 - ✅ Handle partial ingestion failures — all chunks are written in a single transaction; a failed commit triggers rollback and connection invalidation, leaving no orphaned chunks
 
 **Security**
-- [ ] Enable AWS WAF on CloudFront and API Gateway
+- ✅ Enable AWS WAF on CloudFront and API Gateway
 - [ ] Enforce MFA for Cognito users
 - [ ] Enable CloudTrail for full API audit logging
 - [ ] Rotate RDS credentials automatically via Secrets Manager rotation
 
 **Content Filtering**
-✅ with Bedrock Guardrails for PII removal, text filtering, word filtering, profanities etc...
+- ✅ with Bedrock Guardrails for PII removal, text filtering, word filtering, profanities etc...
 
 **Observability**
-✅ Set up CloudWatch Alarms for Lambda error rates, RDS connection count, and API Gateway 5xx
-✅ Create a CloudWatch Dashboard for the key metrics
+- ✅ Set up CloudWatch Alarms for Lambda error rates, RDS connection count, and API Gateway 5xx
+- ✅ Create a CloudWatch Dashboard for the key metrics
 
 **Cost**
 - [ ] Use reserved instances for RDS in production (up to 40% savings)
