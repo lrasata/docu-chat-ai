@@ -236,7 +236,7 @@ resource "aws_serverlessapplicationrepository_cloudformation_stack" "rds_rotatio
   name             = "${local.name_prefix}-rds-rotation"
   application_id   = "arn:aws:serverlessrepo:us-east-1:297356227824:applications/SecretsManagerRDSPostgreSQLRotationSingleUser"
   semantic_version = "1.1.367"
-  capabilities     = ["CAPABILITY_NAMED_IAM"]
+  capabilities     = ["CAPABILITY_NAMED_IAM", "CAPABILITY_RESOURCE_POLICY"]
 
   parameters = {
     endpoint            = "https://secretsmanager.${var.region}.amazonaws.com"

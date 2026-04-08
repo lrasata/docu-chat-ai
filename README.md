@@ -288,7 +288,7 @@ The current setup works for staging and demos. Before going to production:
 - ✅ Enable AWS WAF on CloudFront and API Gateway
 - [ ] Enforce MFA for Cognito users
 - [ ] Enable CloudTrail for full API audit logging
-- [ ] Rotate RDS credentials automatically via Secrets Manager rotation
+- ✅ Rotate RDS credentials automatically via Secrets Manager rotation
 
 **Content Filtering**
 - ✅ with Bedrock Guardrails for PII removal, text filtering, word filtering, profanities etc...
