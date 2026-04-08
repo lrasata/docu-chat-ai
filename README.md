@@ -288,11 +288,11 @@ The current setup works for staging and demos. Before going to production:
 - [ ] Rotate RDS credentials automatically via Secrets Manager rotation
 
 **Content Filtering**
-- ✅ with Bedrock Guardrails for PII removal, text filtering, word filtering, profanities etc...
+✅ with Bedrock Guardrails for PII removal, text filtering, word filtering, profanities etc...
 
 **Observability**
-- ✅ Set up CloudWatch Alarms for Lambda error rates, RDS connection count, and API Gateway 5xx
-- [ ] Create a CloudWatch Dashboard for the key metrics
+✅ Set up CloudWatch Alarms for Lambda error rates, RDS connection count, and API Gateway 5xx
+✅ Create a CloudWatch Dashboard for the key metrics
 
 **Cost**
 - [ ] Use reserved instances for RDS in production (up to 40% savings)

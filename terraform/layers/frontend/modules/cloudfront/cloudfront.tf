@@ -153,6 +153,9 @@ resource "aws_cloudfront_distribution" "cdn" {
 
   aliases = [var.cloudfront_domain_name]
 
+  # Attach WAF ACL
+  web_acl_id = var.cloudfront_waf_arn
+
   depends_on = [
     aws_cloudfront_origin_access_control.oac
   ]

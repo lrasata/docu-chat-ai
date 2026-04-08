@@ -31,3 +31,7 @@ variable "api_file_upload_domain_name" {
 variable "api_backend_custom_domain_name" {
   type = string
 }
+
+variable "cloudfront_waf_arn" {
+  type = string
+}
