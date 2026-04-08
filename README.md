@@ -207,6 +207,29 @@ supports pgvector.
     - Currently, only **semantic search** via vector similarity is used.
     - Adding a **lexical search (e.g., BM25)** could improve retrieval, especially for exact matches or technical terms.
 
+## Monitoring
+
+### API Gateway Metrics
+
+| Metric                          | Unit  | Description                              |
+|---------------------------------|-------|------------------------------------------|
+| **Latency**                     | ms    | Identify slow API behavior               |
+| **5XXError (Cloudwatch Alarm)** | Count | API internal server failures             |
+| **4XXError (Cloudwatch Alarm)** | Count | Authentication or malformed requests     |
+
+### RDS Metrics
+
+| Metric                                     | Unit  | Description                                                                                                                  |
+|--------------------------------------------|-------|------------------------------------------------------------------------------------------------------------------------------|
+| **DatabaseConnections (CloudWatch Alarm)** | Count | Triggers when connection count exceeds ~80% of `max_connections` (threshold: 90 for `db.t4g.micro`, `max_connections` ≈ 112) |
+
+### Lambda Metrics
+
+Alarms are created for each Lambda function (`s3_ingestion`, `query_document`).
+
+| Metric                          | Unit  | Description                                      |
+|---------------------------------|-------|--------------------------------------------------|
+| **Errors (CloudWatch Alarm)**   | Count | Triggers when error count exceeds 5 per minute   |
 
 ## Production Readiness TODOs
 
@@ -255,7 +278,7 @@ The current setup works for staging and demos. Before going to production:
 - ✅ with Bedrock Guardrails for PII removal, text filtering, word filtering, profanities etc...
 
 **Observability**
-- [ ] Set up CloudWatch Alarms for Lambda error rates, RDS connection count, and API Gateway 5xx
+- ✅ Set up CloudWatch Alarms for Lambda error rates, RDS connection count, and API Gateway 5xx
 - [ ] Create a CloudWatch Dashboard for the key metrics
 
 **Cost**
