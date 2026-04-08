@@ -83,7 +83,7 @@ resource "aws_cloudwatch_metric_alarm" "api_p99_latency_alarm" {
   period              = 60
   metric_name         = "Latency"
   namespace           = "AWS/ApiGateway"
-  extended_statistics = "p99"
+  extended_statistic  = "p99"
   threshold           = var.latency_p99_threshold_ms
 
   dimensions = {

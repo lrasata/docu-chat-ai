@@ -32,7 +32,7 @@ resource "aws_cloudwatch_metric_alarm" "bedrock_embedding_latency" {
   period              = 60
   metric_name         = "EmbeddingLatency"
   namespace           = "DocuChatAI/Bedrock"
-  statistic           = "p99"
+  extended_statistic  = "p99"
   threshold           = var.bedrock_embedding_latency_threshold_ms
 
   dimensions = {
@@ -56,7 +56,7 @@ resource "aws_cloudwatch_metric_alarm" "bedrock_llm_latency" {
   period              = 60
   metric_name         = "LLMLatency"
   namespace           = "DocuChatAI/Bedrock"
-  statistic           = "p99"
+  extended_statistic  = "p99"
   threshold           = var.bedrock_llm_latency_threshold_ms
 
   dimensions = {
