@@ -46,7 +46,7 @@ resource "aws_wafv2_web_acl" "cloudfront_waf" {
   # Rate-based rule to limit requests per IP
   rule {
     name     = "${var.environment}-${var.app_id}-RateLimitPerIP"
-    priority = 1
+    priority = 2
 
     action {
       block {}
