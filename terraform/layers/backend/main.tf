@@ -171,4 +171,10 @@ module "lambda_monitoring" {
 
   function_name = each.value.function_name
   sns_topic_arn = module.sns_monitoring.sns_topic_arn
+
+  # Bedrock embedding latency: emitted by both s3_ingestion and query_document
+  bedrock_embedding_latency_threshold_ms = 3000
+
+  # Bedrock LLM latency: only query_document calls the LLM (converse API)
+  bedrock_llm_latency_threshold_ms = each.key == "query_document" ? 30000 : null
 }

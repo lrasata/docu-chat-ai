@@ -13,3 +13,15 @@ variable "error_rate_threshold" {
   description = "Number of errors per evaluation period that triggers the alarm"
   default     = 5
 }
+
+variable "bedrock_embedding_latency_threshold_ms" {
+  type        = number
+  description = "Bedrock embedding latency in ms above which the alarm triggers. Set to null to disable."
+  default     = null
+}
+
+variable "bedrock_llm_latency_threshold_ms" {
+  type        = number
+  description = "Bedrock LLM (converse) latency in ms above which the alarm triggers. Set to null to disable."
+  default     = null
+}

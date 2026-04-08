@@ -13,3 +13,15 @@ variable "connection_count_threshold" {
   description = "Number of connections that triggers the alarm. Default is ~80% of max_connections for db.t4g.micro (max ~112)."
   default     = 90
 }
+
+variable "free_storage_threshold_bytes" {
+  type        = number
+  description = "Free storage in bytes below which the alarm triggers. Default is 2 GB."
+  default     = 2000000000
+}
+
+variable "cpu_utilization_threshold" {
+  type        = number
+  description = "CPU utilization percentage above which the alarm triggers."
+  default     = 80
+}

@@ -75,6 +75,24 @@ resource "aws_cloudwatch_metric_alarm" "api_4xx_alarm" {
   alarm_actions = [var.sns_topic_arn]
 }
 
+resource "aws_cloudwatch_metric_alarm" "api_p99_latency_alarm" {
+  alarm_name          = "${var.api_name}-p99-latency"
+  alarm_description   = "Triggers if API Gateway p99 latency exceeds threshold"
+  comparison_operator = "GreaterThanThreshold"
+  evaluation_periods  = 1
+  period              = 60
+  metric_name         = "Latency"
+  namespace           = "AWS/ApiGateway"
+  extended_statistics = "p99"
+  threshold           = var.latency_p99_threshold_ms
+
+  dimensions = {
+    ApiName = var.api_name
+  }
+
+  alarm_actions = [var.sns_topic_arn]
+}
+
 resource "aws_cloudwatch_metric_alarm" "api_5xx_alarm" {
   alarm_name          = "${var.api_name}-5xx-errors"
   alarm_description   = "Triggers if API Gateway 5XX errors exceed threshold"

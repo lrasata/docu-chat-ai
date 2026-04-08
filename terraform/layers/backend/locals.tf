@@ -52,6 +52,11 @@ locals {
           Effect   = "Allow"
           Action   = ["sqs:SendMessage"]
           Resource = [module.s3_ingestion_dlq.dlq_arn]
+        },
+        {
+          Effect   = "Allow"
+          Action   = ["cloudwatch:PutMetricData"]
+          Resource = ["*"]
         }
       ]
     }
@@ -165,6 +170,11 @@ locals {
             "dynamodb:GetItem"
           ]
           Resource = [module.file_uploader.dynamo_db_table_arn, module.bedrock_guardrails.guardrail_arn]
+        },
+        {
+          Effect   = "Allow"
+          Action   = ["cloudwatch:PutMetricData"]
+          Resource = ["*"]
         }
       ]
     }

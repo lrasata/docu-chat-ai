@@ -15,6 +15,23 @@ s3 = boto3.client("s3")
 bedrock = boto3.client("bedrock-runtime")
 secretsmanager = boto3.client("secretsmanager")
 dynamodb = boto3.client("dynamodb")
+cloudwatch = boto3.client("cloudwatch")
+
+FUNCTION_NAME = os.environ.get("AWS_LAMBDA_FUNCTION_NAME", "s3-ingestion")
+
+def _emit_bedrock_metric(metric_name, value_ms):
+    try:
+        cloudwatch.put_metric_data(
+            Namespace="DocuChatAI/Bedrock",
+            MetricData=[{
+                "MetricName": metric_name,
+                "Dimensions": [{"Name": "FunctionName", "Value": FUNCTION_NAME}],
+                "Value": value_ms,
+                "Unit": "Milliseconds",
+            }]
+        )
+    except Exception as e:
+        print(f"Failed to emit metric {metric_name}: {e}")
 
 REGION = os.environ["REGION"]
 RDS_SECRET_ARN = os.environ["RDS_SECRET_ARN"]
@@ -119,13 +136,16 @@ _BEDROCK_RETRYABLE = {"ThrottlingException", "ServiceUnavailableException", "Mod
 def create_embedding(text, max_retries=3):
     for attempt in range(max_retries + 1):
         try:
+            t0 = time.monotonic()
             response = bedrock.invoke_model(
                 modelId="amazon.titan-embed-text-v1",
                 contentType="application/json",
                 accept="application/json",
                 body=json.dumps({"inputText": text})
             )
-            return json.loads(response["body"].read())["embedding"]
+            embedding = json.loads(response["body"].read())["embedding"]
+            _emit_bedrock_metric("EmbeddingLatency", (time.monotonic() - t0) * 1000)
+            return embedding
         except ClientError as e:
             if e.response["Error"]["Code"] in _BEDROCK_RETRYABLE and attempt < max_retries:
                 delay = min(2 ** attempt + random.uniform(0, 1), 30)
@@ -133,6 +153,8 @@ def create_embedding(text, max_retries=3):
                 time.sleep(delay)
             else:
                 raise
+    return None
+
 
 def index_chunk(conn, document_id, chunk_id, chunk_text_content, embedding):
     with conn.cursor() as cur:

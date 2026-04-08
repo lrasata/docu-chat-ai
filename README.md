@@ -211,25 +211,38 @@ supports pgvector.
 
 ### API Gateway Metrics
 
-| Metric                          | Unit  | Description                              |
-|---------------------------------|-------|------------------------------------------|
-| **Latency**                     | ms    | Identify slow API behavior               |
-| **5XXError (Cloudwatch Alarm)** | Count | API internal server failures             |
-| **4XXError (Cloudwatch Alarm)** | Count | Authentication or malformed requests     |
+| Metric                                | Unit  | Description                                                             |
+|---------------------------------------|-------|-------------------------------------------------------------------------|
+| **Latency**                           | ms    | Identify slow API behavior (shown on dashboard)                         |
+| **Latency p99 (CloudWatch Alarm)**    | ms    | Triggers when p99 latency exceeds 10s (RAG queries can be slow)         |
+| **5XXError (CloudWatch Alarm)**       | Count | API internal server failures; triggers above 5 per minute               |
+| **4XXError (CloudWatch Alarm)**       | Count | Authentication or malformed requests; triggers above 5 per minute       |
 
 ### RDS Metrics
 
-| Metric                                     | Unit  | Description                                                                                                                  |
-|--------------------------------------------|-------|------------------------------------------------------------------------------------------------------------------------------|
-| **DatabaseConnections (CloudWatch Alarm)** | Count | Triggers when connection count exceeds ~80% of `max_connections` (threshold: 90 for `db.t4g.micro`, `max_connections` ≈ 112) |
+| Metric                                     | Unit    | Description                                                                                                                  |
+|--------------------------------------------|---------|------------------------------------------------------------------------------------------------------------------------------|
+| **DatabaseConnections (CloudWatch Alarm)** | Count   | Triggers when connection count exceeds ~80% of `max_connections` (threshold: 90 for `db.t4g.micro`, `max_connections` ≈ 112) |
+| **FreeStorageSpace (CloudWatch Alarm)**    | Bytes   | Triggers when free storage drops below 2 GB; vector embeddings grow with every ingested document                             |
+| **CPUUtilization (CloudWatch Alarm)**      | Percent | Triggers when CPU exceeds 80% over two consecutive 5-minute periods; pgvector ANN searches are CPU-bound                    |
 
 ### Lambda Metrics
 
 Alarms are created for each Lambda function (`s3_ingestion`, `query_document`).
 
-| Metric                          | Unit  | Description                                      |
-|---------------------------------|-------|--------------------------------------------------|
-| **Errors (CloudWatch Alarm)**   | Count | Triggers when error count exceeds 5 per minute   |
+| Metric                                            | Unit  | Function(s)                          | Description                                                     |
+|---------------------------------------------------|-------|--------------------------------------|-----------------------------------------------------------------|
+| **Errors (CloudWatch Alarm)**                     | Count | `s3_ingestion`, `query_document`     | Triggers when error count exceeds 5 per minute                  |
+| **EmbeddingLatency (CloudWatch Alarm)** ¹         | ms    | `s3_ingestion`, `query_document`     | Custom metric; triggers when p99 Bedrock embedding call > 3s    |
+| **LLMLatency (CloudWatch Alarm)** ¹               | ms    | `query_document`                     | Custom metric; triggers when p99 Bedrock converse call > 30s    |
+
+> ¹ Custom metrics emitted to the `DocuChatAI/Bedrock` namespace directly from Lambda code using `cloudwatch:PutMetricData`. Alarms use `treat_missing_data = notBreaching` so they stay green when the function is idle.
+
+### Ingestion Pipeline Metrics
+
+| Metric                                        | Unit  | Description                                                                 |
+|-----------------------------------------------|-------|-----------------------------------------------------------------------------|
+| **DLQ depth (CloudWatch Alarm)**              | Count | Triggers as soon as any message lands in the `s3-ingestion` DLQ, indicating a processing failure after all retries are exhausted |
 
 ## Production Readiness TODOs
 
