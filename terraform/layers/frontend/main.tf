@@ -15,6 +15,9 @@ module "cloudfront" {
   cloudfront_domain_name                          = var.cloudfront_domain_name
   api_file_upload_domain_name                     = data.terraform_remote_state.backend.outputs.api_file_upload_domain_name
   api_backend_custom_domain_name                  = data.terraform_remote_state.backend.outputs.api_backend_domain_name
+  cloudfront_waf_arn                              = aws_wafv2_web_acl.cloudfront_waf.arn
+
+  depends_on = [aws_wafv2_web_acl.cloudfront_waf]
 }
 
 # For the static web app bucket

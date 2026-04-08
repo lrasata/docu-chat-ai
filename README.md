@@ -207,6 +207,45 @@ supports pgvector.
     - Currently, only **semantic search** via vector similarity is used.
     - Adding a **lexical search (e.g., BM25)** could improve retrieval, especially for exact matches or technical terms.
 
+## Monitoring
+
+### API Gateway Metrics
+
+| Metric                                | Unit  | Description                                                             |
+|---------------------------------------|-------|-------------------------------------------------------------------------|
+| **Latency**                           | ms    | Identify slow API behavior (shown on dashboard)                         |
+| **Latency p99 (CloudWatch Alarm)**    | ms    | Triggers when p99 latency exceeds 10s (RAG queries can be slow)         |
+| **5XXError (CloudWatch Alarm)**       | Count | API internal server failures; triggers above 5 per minute               |
+| **4XXError (CloudWatch Alarm)**       | Count | Authentication or malformed requests; triggers above 5 per minute       |
+
+### RDS Metrics
+
+| Metric                                     | Unit    | Description                                                                                                                  |
+|--------------------------------------------|---------|------------------------------------------------------------------------------------------------------------------------------|
+| **DatabaseConnections (CloudWatch Alarm)** | Count   | Triggers when connection count exceeds ~80% of `max_connections` (threshold: 90 for `db.t4g.micro`, `max_connections` ≈ 112) |
+| **FreeStorageSpace (CloudWatch Alarm)**    | Bytes   | Triggers when free storage drops below 2 GB; vector embeddings grow with every ingested document                             |
+| **CPUUtilization (CloudWatch Alarm)**      | Percent | Triggers when CPU exceeds 80% over two consecutive 5-minute periods; pgvector ANN searches are CPU-bound                    |
+
+### Lambda Metrics
+
+Alarms are created for each Lambda function (`s3_ingestion`, `query_document`).
+
+| Metric                                            | Unit  | Function(s)                          | Description                                                     |
+|---------------------------------------------------|-------|--------------------------------------|-----------------------------------------------------------------|
+| **Errors (CloudWatch Alarm)**                     | Count | `s3_ingestion`, `query_document`     | Triggers when error count exceeds 5 per minute                  |
+| **EmbeddingLatency (CloudWatch Alarm)** ¹         | ms    | `s3_ingestion`, `query_document`     | Custom metric; triggers when p99 Bedrock embedding call > 3s    |
+| **LLMLatency (CloudWatch Alarm)** ¹               | ms    | `query_document`                     | Custom metric; triggers when p99 Bedrock converse call > 30s    |
+
+> ¹ Custom metrics emitted to the `DocuChatAI/Bedrock` namespace directly from Lambda code using `cloudwatch:PutMetricData`. Alarms use `treat_missing_data = notBreaching` so they stay green when the function is idle.
+
+### Ingestion Pipeline Metrics
+
+| Metric                                        | Unit  | Description                                                                 |
+|-----------------------------------------------|-------|-----------------------------------------------------------------------------|
+| **DLQ depth (CloudWatch Alarm)**              | Count | Triggers as soon as any message lands in the `s3-ingestion` DLQ, indicating a processing failure after all retries are exhausted |
+
+
+
 
 ## Production Readiness TODOs
 
@@ -246,17 +285,17 @@ The current setup works for staging and demos. Before going to production:
 - ✅ Handle partial ingestion failures — all chunks are written in a single transaction; a failed commit triggers rollback and connection invalidation, leaving no orphaned chunks
 
 **Security**
-- [ ] Enable AWS WAF on CloudFront and API Gateway
+- ✅ Enable AWS WAF on CloudFront and API Gateway
 - [ ] Enforce MFA for Cognito users
 - [ ] Enable CloudTrail for full API audit logging
-- [ ] Rotate RDS credentials automatically via Secrets Manager rotation
+- ✅ Rotate RDS credentials automatically via Secrets Manager rotation
 
 **Content Filtering**
 - ✅ with Bedrock Guardrails for PII removal, text filtering, word filtering, profanities etc...
 
 **Observability**
-- [ ] Set up CloudWatch Alarms for Lambda error rates, RDS connection count, and API Gateway 5xx
-- [ ] Create a CloudWatch Dashboard for the key metrics
+- ✅ Set up CloudWatch Alarms for Lambda error rates, RDS connection count, and API Gateway 5xx
+- ✅ Create a CloudWatch Dashboard for the key metrics
 
 **Cost**
 - [ ] Use reserved instances for RDS in production (up to 40% savings)

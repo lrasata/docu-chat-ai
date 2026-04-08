@@ -63,10 +63,25 @@ resource "aws_security_group" "rds" {
     from_port       = 5432
     to_port         = 5432
     protocol        = "tcp"
-    security_groups = [aws_security_group.lambda.id]
+    security_groups = [aws_security_group.lambda.id, aws_security_group.rds_rotation_lambda.id]
   }
 
   tags = { Name = "${local.name_prefix}-rds-sg", Environment = var.environment }
+}
+
+resource "aws_security_group" "rds_rotation_lambda" {
+  name        = "${local.name_prefix}-rds-rotation-sg"
+  description = "Secrets Manager rotation Lambda security group"
+  vpc_id      = aws_vpc.main.id
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = { Name = "${local.name_prefix}-rds-rotation-sg", Environment = var.environment }
 }
 
 resource "aws_security_group" "vpc_endpoints" {
@@ -191,6 +206,17 @@ resource "aws_vpc_endpoint" "lambda" {
   tags                = { Name = "${local.name_prefix}-lambda-endpoint" }
 }
 
+# CloudWatch Monitoring Interface endpoint (required for custom metric emission from Lambda)
+resource "aws_vpc_endpoint" "cloudwatch_monitoring" {
+  vpc_id              = aws_vpc.main.id
+  service_name        = "com.amazonaws.${var.region}.monitoring"
+  vpc_endpoint_type   = "Interface"
+  subnet_ids          = aws_subnet.private[*].id
+  security_group_ids  = [aws_security_group.vpc_endpoints.id]
+  private_dns_enabled = true
+  tags                = { Name = "${local.name_prefix}-cloudwatch-endpoint" }
+}
+
 # SNS Interface endpoint
 resource "aws_vpc_endpoint" "sns" {
   vpc_id              = aws_vpc.main.id
@@ -200,4 +226,33 @@ resource "aws_vpc_endpoint" "sns" {
   security_group_ids  = [aws_security_group.vpc_endpoints.id]
   private_dns_enabled = true
   tags                = { Name = "${local.name_prefix}-sns-endpoint" }
+}
+
+# ── RDS Credentials Rotation ──────────────────────────────────────────────────
+# Deploys the AWS-managed PostgreSQL single-user rotation Lambda via SAR.
+# The rotation Lambda connects to RDS directly to change the password,
+# then updates the secret — no custom code needed.
+resource "aws_serverlessapplicationrepository_cloudformation_stack" "rds_rotation" {
+  name             = "${local.name_prefix}-rds-rotation"
+  application_id   = "arn:aws:serverlessrepo:us-east-1:297356227824:applications/SecretsManagerRDSPostgreSQLRotationSingleUser"
+  semantic_version = "1.1.367"
+  capabilities     = ["CAPABILITY_NAMED_IAM", "CAPABILITY_RESOURCE_POLICY"]
+
+  parameters = {
+    endpoint            = "https://secretsmanager.${var.region}.amazonaws.com"
+    functionName        = "${local.name_prefix}-rds-rotation"
+    vpcSecurityGroupIds = aws_security_group.rds_rotation_lambda.id
+    vpcSubnetIds        = join(",", aws_subnet.private[*].id)
+  }
+}
+
+resource "aws_secretsmanager_secret_rotation" "rds" {
+  secret_id           = aws_secretsmanager_secret.rds_credentials.id
+  rotation_lambda_arn = aws_serverlessapplicationrepository_cloudformation_stack.rds_rotation.outputs["RotationLambdaARN"]
+
+  rotation_rules {
+    automatically_after_days = var.environment == "prod" ? 30 : 90
+  }
+
+  depends_on = [aws_serverlessapplicationrepository_cloudformation_stack.rds_rotation]
 }

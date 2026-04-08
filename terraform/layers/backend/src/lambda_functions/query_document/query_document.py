@@ -1,6 +1,8 @@
 import json
 import os
+import time
 import boto3
+from botocore.config import Config
 import psycopg2
 from pgvector.psycopg2 import register_vector
 
@@ -22,6 +24,23 @@ QUESTION_MODEL_EMBEDDING="amazon.titan-embed-text-v1"
 bedrock_runtime = boto3.client("bedrock-runtime", region_name=REGION)
 dynamodb = boto3.client("dynamodb", region_name=REGION)
 secretsmanager = boto3.client("secretsmanager")
+cloudwatch = boto3.client("cloudwatch", config=Config(connect_timeout=2, read_timeout=2, retries={"max_attempts": 0}))
+
+FUNCTION_NAME = os.environ.get("AWS_LAMBDA_FUNCTION_NAME", "query-document")
+
+def _emit_bedrock_metric(metric_name, value_ms):
+    try:
+        cloudwatch.put_metric_data(
+            Namespace="DocuChatAI/Bedrock",
+            MetricData=[{
+                "MetricName": metric_name,
+                "Dimensions": [{"Name": "FunctionName", "Value": FUNCTION_NAME}],
+                "Value": value_ms,
+                "Unit": "Milliseconds",
+            }]
+        )
+    except Exception as e:
+        print(f"Failed to emit metric {metric_name}: {e}")
 
 # ---------- Connection cache ----------
 _db_conn = None
@@ -56,6 +75,7 @@ def get_db_connection():
 # ---------- Helper functions ----------
 def create_embedding(text):
     try:
+        t0 = time.monotonic()
         response = bedrock_runtime.invoke_model(
             modelId=QUESTION_MODEL_EMBEDDING,
             contentType="application/json",
@@ -63,6 +83,7 @@ def create_embedding(text):
             body=json.dumps({"inputText": text})
         )
         body = json.loads(response["body"].read())
+        _emit_bedrock_metric("EmbeddingLatency", (time.monotonic() - t0) * 1000)
         return body["embedding"]
     except Exception as e:
         print(f"Error creating embedding: {str(e)}")
@@ -129,7 +150,9 @@ def generate_answer_with_bedrock(question, context_chunks, model_id=BEDROCK_MODE
                 "guardrailVersion": BEDROCK_GUARDRAIL_VERSION,
             }
 
+        t0 = time.monotonic()
         response = bedrock_runtime.converse(**converse_kwargs)
+        _emit_bedrock_metric("LLMLatency", (time.monotonic() - t0) * 1000)
         return response["output"]["message"]["content"][0]["text"]
     except Exception as e:
         print(f"Error calling Bedrock: {str(e)}")

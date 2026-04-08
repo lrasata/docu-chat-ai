@@ -26,10 +26,10 @@ This guide walks you through deploying and configuring the AWS Cognito User Pool
 
 Create a secret in AWS Secrets Manager with the following:
 
-| Detail | Value |
-| :--- | :--- |
+| Detail          | Value                                                                             |
+|:----------------|:----------------------------------------------------------------------------------|
 | **Secret Name** | `${var.environment}/${var.app_id}/secrets` (e.g., `staging/docu-chat-ai/secrets`) |
-| **Secret Type** | Plaintext or Key/Value (must be a valid JSON string) |
+| **Secret Type** | Plaintext or Key/Value (must be a valid JSON string)                              |
 
 **Secret value example:**
 

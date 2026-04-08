@@ -12,7 +12,7 @@ resource "aws_cognito_user_pool" "cognito_user_pool" {
     require_uppercase = true
   }
 
-  mfa_configuration = "OFF" # TODO optionally enable MFA configuration and SNS service to send code
+  mfa_configuration = "OFF"
 
   account_recovery_setting {
     recovery_mechanism {

@@ -138,3 +138,43 @@ resource "aws_sns_topic_subscription" "s3_ingestion_lambda" {
   })
   depends_on = [module.s3_ingestion_dlq]
 }
+
+
+#------------- Monitoring --------------------------
+
+module "sns_monitoring" {
+  source = "./modules/sns"
+
+  app_id       = var.app_id
+  environment  = var.environment
+  service_name = "monitoring"
+}
+
+module "api_gw_monitoring" {
+  source = "./modules/monitoring/api_gateway"
+
+  api_name      = module.api_gateway.api_name
+  region        = var.region
+  sns_topic_arn = module.sns_monitoring.sns_topic_arn
+}
+
+module "rds_monitoring" {
+  source = "./modules/monitoring/rds"
+
+  db_instance_identifier = module.rds.db_instance_identifier
+  sns_topic_arn          = module.sns_monitoring.sns_topic_arn
+}
+
+module "lambda_monitoring" {
+  source   = "./modules/monitoring/lambda"
+  for_each = module.lambda_functions
+
+  function_name = each.value.function_name
+  sns_topic_arn = module.sns_monitoring.sns_topic_arn
+
+  # Bedrock embedding latency: emitted by both s3_ingestion and query_document
+  bedrock_embedding_latency_threshold_ms = 3000
+
+  # Bedrock LLM latency: only query_document calls the LLM (converse API)
+  bedrock_llm_latency_threshold_ms = each.key == "query_document" ? 30000 : null
+}
