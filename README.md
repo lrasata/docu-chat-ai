@@ -5,6 +5,21 @@
 
 A cloud-native application that allows users to chat with their PDF documents using AI. Built with AWS Bedrock, RDS PostgreSQL + pgvector, and React. Uses **Retrieval-Augmented Generation (RAG)** to answer questions grounded in the user's own documents.
 
+## Table of Contents
+
+- [What is RAG?](#what-is-rag)
+- [Features](#features)
+- [Architecture](#architecture)
+- [How It Works](#how-it-works)
+- [Repository Structure](#repository-structure)
+- [API Endpoints](#api-endpoints)
+- [Security](#security)
+- [Why these choices?](#why-these-choices)
+- [Chunking and Search Considerations](#chunking-and-search-considerations)
+- [Monitoring](#monitoring)
+- [Production Readiness TODOs](#production-readiness-todos)
+- [Scalability Limits](#scalability-limits)
+
 ## What is RAG?
 
 **Retrieval-Augmented Generation (RAG)** is a technique that combines a vector search engine with a large language model (LLM). Instead of relying solely on the LLM's pre-trained knowledge, RAG first retrieves relevant passages from a document store and feeds them as context to the LLM before generating an answer.
