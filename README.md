@@ -267,9 +267,12 @@ Alarms are created for each Lambda function (`s3_ingestion`, `query_document`).
 The current setup works for staging and demos. Before going to production:
 
 **RAG Quality**
+
+The RAG pipeline uses **Claude Sonnet** (via a Bedrock cross-region inference profile) to answer user questions. The evaluation pipeline uses a separate **Claude Opus** model as the LLM-as-judge — a stronger, independent model — to avoid self-evaluation bias where the same model grades its own outputs.
+
 ✅ Done
 - Built a golden Q&A dataset (41 questions across factual, conceptual, and out-of-scope types) for the UDHR document
-- Implemented an automated LLM-as-judge evaluator deployed as a Lambda, storing results in S3
+- Implemented an automated LLM-as-judge evaluator deployed as a Lambda, storing results in S3 (judge: Claude Opus, answering model: Claude Sonnet)
 - Ran a full evaluation pass and got results back (4.98/5 faithfulness, 4.98/5 correctness)
 
 🚧 Issues Found

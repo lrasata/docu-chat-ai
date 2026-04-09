@@ -168,7 +168,14 @@ Score each dimension 1-5 and respond ONLY in valid JSON, no extra text:
         }),
     )
     result = json.loads(response["body"].read())
-    return json.loads(result["content"][0]["text"])
+    text = result["content"][0]["text"].strip()
+    # Strip markdown code fences if the model wraps the JSON in ```json ... ```
+    if text.startswith("```"):
+        text = text.split("```", 2)[1]
+        if text.startswith("json"):
+            text = text[4:]
+        text = text.strip()
+    return json.loads(text)
 
 
 # ---------- Lambda handler ----------
