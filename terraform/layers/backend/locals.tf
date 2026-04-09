@@ -108,6 +108,15 @@ locals {
           Effect   = "Allow"
           Action   = ["bedrock:InvokeModel"]
           Resource = concat([var.eval_model_arn], var.bedrock_foundation_model_arns)
+        },
+        {
+          Effect = "Allow"
+          Action = [
+            "aws-marketplace:ViewSubscriptions",
+            "aws-marketplace:Subscribe",
+            "aws-marketplace:Unsubscribe"
+          ]
+          Resource = ["*"]
         }
       ]
     }
