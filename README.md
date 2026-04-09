@@ -268,21 +268,17 @@ The current setup works for staging and demos. Before going to production:
 
 **RAG Quality**
 
-The RAG pipeline uses **Claude Sonnet** (via a Bedrock cross-region inference profile) to answer user questions. The evaluation pipeline uses a separate **Claude Opus** model as the LLM-as-judge — a stronger, independent model — to avoid self-evaluation bias where the same model grades its own outputs.
+Two evaluation rounds completed. Full results, methodology, and observations: [rag_evaluation_results.md](rag_evaluation_results.md)
 
 ✅ Done
-- Built a golden Q&A dataset (41 questions across factual, conceptual, and out-of-scope types) for the UDHR document
+- Built golden Q&A datasets for UDHR (41 questions) and RFC 7519 (57 questions across factual, conceptual, edge cases, and cross-claim reasoning types)
 - Implemented an automated LLM-as-judge evaluator deployed as a Lambda, storing results in S3 (judge: Claude Opus, answering model: Claude Sonnet)
-- Ran a full evaluation pass and got results back (4.98/5 faithfulness, 4.98/5 correctness)
-
-🚧 Issues Found
-- Dataset used (UDHR) is too clean and simple — scores of 4.98/5 indicate the benchmark isn't challenging enough to surface real weaknesses
-- Out-of-scope questions are too obvious and need harder edge cases that look like they should be in the document but aren't
+- RFC 7519 eval surfaced real retrieval weaknesses: avg correctness 4.49/5, with failures concentrated in introductory/definitional sections
 
 ❌ Not Done
-- Redo golden dataset with a harder document (dense technical doc, research paper, long contract)
-- Human review of outputs — current evaluation is fully automated via LLM judge, which the checklist specifically calls out as insufficient on its own
-- Measure baseline retrieval Hit Rate in isolation — current scoring evaluates end-to-end quality but doesn't independently verify whether the right chunks are being retrieved before generation kicks in
+- Fix retrieval for short introductory chunks (reduce chunk size, increase overlap, or add BM25)
+- Measure baseline retrieval Hit Rate in isolation — current scoring evaluates end-to-end quality but doesn't verify whether the right chunks are retrieved before generation
+- Human review of outputs — current evaluation is fully automated via LLM judge, which is insufficient on its own
 
 **Reliability & Error Handling**
 - ✅ Add a Dead Letter Queue (DLQ) to the SNS → S3 Ingestion Lambda subscription to catch failed ingestion events
