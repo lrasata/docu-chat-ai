@@ -14,14 +14,17 @@ REGION = os.environ["REGION"]
 UPLOADS_BUCKET = os.environ["UPLOADS_BUCKET"]
 DOCUMENTS_TABLE = os.environ["DOCUMENTS_TABLE"]
 QUERY_DOCUMENT_LAMBDA_NAME = os.environ["QUERY_DOCUMENT_LAMBDA_NAME"]
-BEDROCK_MODEL_ARN = os.environ["BEDROCK_MODEL_INFERENCE_PROFILE_ARN"]
+EVAL_MODEL_ARN = os.environ.get("EVAL_MODEL_ARN", "anthropic.claude-opus-4-5")
 RESULTS_BUCKET = os.environ.get("RESULTS_BUCKET", UPLOADS_BUCKET)
 
 # ---------- Constants ----------
-EVAL_DOC_S3_KEY = "uploads/resources/RAGevaluation/udhr.pdf"
-LOCAL_PDF_PATH = os.path.join(os.path.dirname(__file__), "udhr.pdf")
-LOCAL_DATASET_PATH = os.path.join(os.path.dirname(__file__), "golden_dataset.json")
-RESULTS_S3_KEY = "evaluations/eval_results.json"
+FILE_NAME = "rfc7519.pdf"
+EVAL_DOC_S3_KEY = f"uploads/resources/rag_eval/{FILE_NAME}"
+LOCAL_PDF_PATH = os.path.join(os.path.dirname(__file__), "docs", FILE_NAME)
+
+GOLDEN_DATASET_FILE = "rfc7519_golden_dataset.json"
+LOCAL_DATASET_PATH = os.path.join(os.path.dirname(__file__), "datasets", GOLDEN_DATASET_FILE)
+RESULTS_S3_KEY = f"evals/{os.path.splitext(FILE_NAME)[0]}_eval_results.json"
 
 MAX_WAIT_SECONDS = 600  # 10 minutes for ingestion
 POLL_INTERVAL_SECONDS = 15
@@ -62,7 +65,7 @@ def file_exists_in_s3():
 
 
 def upload_eval_document():
-    print(f"Uploading udhr.pdf to s3://{UPLOADS_BUCKET}/{EVAL_DOC_S3_KEY}")
+    print(f"Uploading {FILE_NAME} to s3://{UPLOADS_BUCKET}/{EVAL_DOC_S3_KEY}")
     with open(LOCAL_PDF_PATH, "rb") as f:
         s3.put_object(
             Bucket=UPLOADS_BUCKET,
@@ -154,7 +157,7 @@ Score each dimension 1-5 and respond ONLY in valid JSON, no extra text:
 }}"""
 
     response = bedrock_client.invoke_model(
-        modelId=BEDROCK_MODEL_ARN,
+        modelId=EVAL_MODEL_ARN,
         contentType="application/json",
         accept="application/json",
         body=json.dumps({
@@ -173,7 +176,7 @@ Score each dimension 1-5 and respond ONLY in valid JSON, no extra text:
 def handler(event, context):
     bedrock_client = boto3.client("bedrock-runtime", region_name=REGION)
 
-    # --- Step 1: Upload udhr.pdf if not already indexed ---
+    # --- Step 1: Upload file if not already indexed ---
     ensure_document_ready()
 
     # --- Step 2: Load golden dataset (bundled in Lambda package) ---

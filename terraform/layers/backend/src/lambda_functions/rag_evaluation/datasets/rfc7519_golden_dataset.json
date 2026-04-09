@@ -1,0 +1,345 @@
+[
+  {
+    "question": "What does JWT stand for?",
+    "expected_answer": "JSON Web Token",
+    "source_hint": "abstract / section 1",
+    "type": "factual"
+  },
+  {
+    "question": "How is a JWT pronounced according to the specification?",
+    "expected_answer": "the same as the English word 'jot'",
+    "source_hint": "section 1",
+    "type": "factual"
+  },
+  {
+    "question": "What is the primary purpose of a JWT?",
+    "expected_answer": "a compact, URL-safe means of representing claims to be transferred between two parties",
+    "source_hint": "abstract",
+    "type": "factual"
+  },
+  {
+    "question": "How are the parts of a JWT separated?",
+    "expected_answer": "by period ('.') characters",
+    "source_hint": "section 3",
+    "type": "factual"
+  },
+  {
+    "question": "What encoding is used for each part of a JWT?",
+    "expected_answer": "base64url encoding",
+    "source_hint": "section 3",
+    "type": "factual"
+  },
+  {
+    "question": "What does the 'iss' claim identify?",
+    "expected_answer": "the principal that issued the JWT",
+    "source_hint": "section 4.1.1",
+    "type": "factual"
+  },
+  {
+    "question": "What does the 'sub' claim identify?",
+    "expected_answer": "the principal that is the subject of the JWT",
+    "source_hint": "section 4.1.2",
+    "type": "factual"
+  },
+  {
+    "question": "What does the 'aud' claim identify?",
+    "expected_answer": "the recipients that the JWT is intended for",
+    "source_hint": "section 4.1.3",
+    "type": "factual"
+  },
+  {
+    "question": "What does the 'exp' claim represent?",
+    "expected_answer": "the expiration time on or after which the JWT must not be accepted for processing",
+    "source_hint": "section 4.1.4",
+    "type": "factual"
+  },
+  {
+    "question": "What does the 'nbf' claim represent?",
+    "expected_answer": "the time before which the JWT must not be accepted for processing",
+    "source_hint": "section 4.1.5",
+    "type": "factual"
+  },
+  {
+    "question": "What does the 'iat' claim represent?",
+    "expected_answer": "the time at which the JWT was issued",
+    "source_hint": "section 4.1.6",
+    "type": "factual"
+  },
+  {
+    "question": "What is the purpose of the 'jti' claim?",
+    "expected_answer": "provides a unique identifier for the JWT, which can be used to prevent the JWT from being replayed",
+    "source_hint": "section 4.1.7",
+    "type": "factual"
+  },
+  {
+    "question": "Are any of the registered JWT claim names mandatory to use?",
+    "expected_answer": "no, none of the registered claims are intended to be mandatory in all cases; they provide a starting point for a set of useful, interoperable claims",
+    "source_hint": "section 4.1",
+    "type": "conceptual"
+  },
+  {
+    "question": "What is a NumericDate in the context of JWTs?",
+    "expected_answer": "a JSON numeric value representing the number of seconds from 1970-01-01T00:00:00Z UTC until the specified UTC date/time, ignoring leap seconds",
+    "source_hint": "section 2",
+    "type": "factual"
+  },
+  {
+    "question": "What is a Nested JWT?",
+    "expected_answer": "a JWT in which nested signing and/or encryption are employed, where a JWT is used as the payload or plaintext value of an enclosing JWS or JWE structure",
+    "source_hint": "section 2",
+    "type": "factual"
+  },
+  {
+    "question": "What is an Unsecured JWT?",
+    "expected_answer": "a JWT whose claims are not integrity protected or encrypted; it uses the 'alg' header value 'none' and an empty JWS signature",
+    "source_hint": "section 2 / section 6",
+    "type": "factual"
+  },
+  {
+    "question": "What algorithm must all conforming JWT implementations support for signing?",
+    "expected_answer": "HMAC SHA-256 ('HS256') and 'none' are the only mandatory algorithms; RS256 and ES256 are recommended",
+    "source_hint": "section 8",
+    "type": "conceptual"
+  },
+  {
+    "question": "Is support for encrypted JWTs mandatory?",
+    "expected_answer": "no, support for encrypted JWTs is optional",
+    "source_hint": "section 8",
+    "type": "factual"
+  },
+  {
+    "question": "What is the purpose of the 'typ' header parameter?",
+    "expected_answer": "used by JWT applications to declare the media type of the complete JWT, typically set to 'JWT' to indicate the object is a JWT",
+    "source_hint": "section 5.1",
+    "type": "factual"
+  },
+  {
+    "question": "When must the 'cty' (content type) header parameter be present?",
+    "expected_answer": "when nested signing or encryption is employed; in that case its value must be 'JWT'",
+    "source_hint": "section 5.2",
+    "type": "conceptual"
+  },
+  {
+    "question": "What are the three classes of JWT claim names?",
+    "expected_answer": "Registered Claim Names, Public Claim Names, and Private Claim Names",
+    "source_hint": "section 4",
+    "type": "factual"
+  },
+  {
+    "question": "What is the risk of using Private Claim Names?",
+    "expected_answer": "they are subject to collision and should be used with caution, unlike Public Claim Names which use a collision-resistant namespace",
+    "source_hint": "section 4.3",
+    "type": "conceptual"
+  },
+  {
+    "question": "What should happen if a JWT processor does not understand a claim?",
+    "expected_answer": "all claims that are not understood by implementations must be ignored",
+    "source_hint": "section 4",
+    "type": "conceptual"
+  },
+  {
+    "question": "What must happen if a JWT contains duplicate claim names?",
+    "expected_answer": "parsers must either reject JWTs with duplicate claim names or use a JSON parser that returns only the lexically last duplicate member name",
+    "source_hint": "section 4",
+    "type": "conceptual"
+  },
+  {
+    "question": "What is the recommended order of signing and encryption for Nested JWTs?",
+    "expected_answer": "producers should sign the message first and then encrypt the result, thus encrypting the signature",
+    "source_hint": "section 11.2",
+    "type": "conceptual"
+  },
+  {
+    "question": "What does the 'aud' claim require of JWT processors?",
+    "expected_answer": "each principal intended to process the JWT must identify itself with a value in the audience claim, otherwise the JWT must be rejected",
+    "source_hint": "section 4.1.3",
+    "type": "conceptual"
+  },
+  {
+    "question": "How should privacy-sensitive information in a JWT be protected?",
+    "expected_answer": "by using an encrypted JWT, or by transmitting the JWT only over protocols with encryption and endpoint authentication such as TLS; omitting sensitive information is the simplest approach",
+    "source_hint": "section 12",
+    "type": "conceptual"
+  },
+  {
+    "question": "What is the recommended maximum length for a registered claim name and why?",
+    "expected_answer": "names should not exceed 8 characters without a compelling reason, because a core goal of JWTs is compact representation",
+    "source_hint": "section 10.1.1",
+    "type": "conceptual"
+  },
+  {
+    "question": "Can a valid JWT be rejected even if it passes cryptographic validation?",
+    "expected_answer": "yes, if the algorithms used in the JWT are not acceptable to the application, it should reject the JWT",
+    "source_hint": "section 7.2",
+    "type": "conceptual"
+  },
+  {
+    "question": "What is the first step in validating a JWT?",
+    "expected_answer": "verify that the JWT contains at least one period ('.') character",
+    "source_hint": "section 7.2",
+    "type": "factual"
+  },
+  {
+    "question": "What is the media type registered for JWTs?",
+    "expected_answer": "application/jwt",
+    "source_hint": "section 10.3",
+    "type": "factual"
+  },
+  {
+    "question": "Which RFC defines the JSON Web Algorithms (JWA) referenced by JWT?",
+    "expected_answer": null,
+    "source_hint": null,
+    "type": "out_of_scope"
+  },
+  {
+    "question": "What is the maximum size a JWT payload can be?",
+    "expected_answer": null,
+    "source_hint": null,
+    "type": "out_of_scope"
+  },
+  {
+    "question": "How does AWS Cognito implement JWT validation?",
+    "expected_answer": null,
+    "source_hint": null,
+    "type": "out_of_scope"
+  },
+  {
+    "question": "What programming libraries are available for JWT in Python?",
+    "expected_answer": null,
+    "source_hint": null,
+    "type": "out_of_scope"
+  },
+  {
+    "question": "When was RFC 7519 superseded, and by which RFC?",
+    "expected_answer": null,
+    "source_hint": null,
+    "type": "out_of_scope"
+  },
+  {
+    "question": "How does OAuth 2.0 use JWTs as access tokens?",
+    "expected_answer": null,
+    "source_hint": null,
+    "type": "out_of_scope"
+  },
+  {
+    "question": "What is the difference between a JWS and a JWE in the context of JWTs?",
+    "expected_answer": "a JWS JWT has its claims digitally signed or MACed with the JWT Claims Set as the JWS payload, while a JWE JWT has its claims encrypted with the JWT Claims Set as the encrypted plaintext",
+    "source_hint": "section 3",
+    "type": "conceptual"
+  },
+  {
+    "question": "How is a StringOrURI value compared according to the specification?",
+    "expected_answer": "as a case-sensitive string with no transformations or canonicalizations applied; any value containing a colon character must be a URI",
+    "source_hint": "section 2",
+    "type": "factual"
+  },
+  {
+    "question": "What leeway may implementations allow when processing the 'exp' or 'nbf' claims?",
+    "expected_answer": "a small leeway, usually no more than a few minutes, to account for clock skew",
+    "source_hint": "section 4.1.4 / 4.1.5",
+    "type": "factual"
+  },
+  {
+    "question": "What is the URN registered to declare that content is a JWT?",
+    "expected_answer": "urn:ietf:params:oauth:token-type:jwt",
+    "source_hint": "section 9 / section 10.2",
+    "type": "factual"
+  },
+
+  {
+    "question": "A JWT has a current time exactly equal to the value in the 'exp' claim. Should it be accepted?",
+    "expected_answer": "no, the JWT must not be accepted when the current date/time is equal to or after the expiration time; the current time must be strictly before 'exp'",
+    "source_hint": "section 4.1.4",
+    "type": "validation_edge_case"
+  },
+  {
+    "question": "A JWT has a current time exactly equal to the value in the 'nbf' claim. Should it be accepted?",
+    "expected_answer": "yes, the JWT should be accepted; the 'nbf' check requires the current date/time to be after or equal to the not-before time",
+    "source_hint": "section 4.1.5",
+    "type": "validation_edge_case"
+  },
+  {
+    "question": "A JWT's 'exp' is in the future but its 'nbf' is also in the future. Should the JWT be accepted?",
+    "expected_answer": "no, even though the token has not expired, it must not be accepted because the current time has not yet reached the 'nbf' (not before) time",
+    "source_hint": "section 4.1.4 / section 4.1.5",
+    "type": "validation_edge_case"
+  },
+  {
+    "question": "A JWT is received with an 'aud' claim containing multiple values, and the processing party matches one of them. Should the JWT be accepted?",
+    "expected_answer": "yes, each principal must identify itself with a value in the audience claim — matching any one value in the array is sufficient",
+    "source_hint": "section 4.1.3",
+    "type": "validation_edge_case"
+  },
+  {
+    "question": "A JWT is received that has no 'aud' claim. A processing party checks the audience and finds the claim absent. Should it reject the token?",
+    "expected_answer": "the specification does not mandate rejection when 'aud' is absent since the claim is optional; rejection behaviour is application-specific. The 'aud' check only applies when the claim is present.",
+    "source_hint": "section 4.1.3 / section 4.1",
+    "type": "validation_edge_case"
+  },
+  {
+    "question": "A JWT passes signature validation but uses an algorithm the receiving application considers unacceptable. What should the application do?",
+    "expected_answer": "it should reject the JWT; even if cryptographic validation succeeds, the application should reject tokens whose algorithms are not on its acceptable list",
+    "source_hint": "section 7.2",
+    "type": "validation_edge_case"
+  },
+  {
+    "question": "A JWT's JOSE Header contains a parameter whose syntax is understood but whose semantics are not supported. What must the validator do?",
+    "expected_answer": "it must reject the JWT; step 5 of validation requires that the JOSE Header include only parameters whose syntax and semantics are both understood and supported, or that are specified as being ignored when not understood",
+    "source_hint": "section 7.2",
+    "type": "validation_edge_case"
+  },
+  {
+    "question": "An encrypted JWT has the 'iss' claim replicated as a header parameter. The header 'iss' and the payload 'iss' differ. What should the application do?",
+    "expected_answer": "the application should verify that the replicated header claim and the payload claim have identical values; if they differ, the application should treat this as an error unless it has defined other specific processing rules",
+    "source_hint": "section 5.3",
+    "type": "validation_edge_case"
+  },
+  {
+    "question": "A JWT has both an 'iat' claim set to now and an 'exp' claim set to a time in the past. Both claims are individually well-formed. Should the JWT be accepted?",
+    "expected_answer": "no, the JWT must be rejected because the current time is not before the 'exp' value; 'iat' being recent does not override an already-expired 'exp'",
+    "source_hint": "section 4.1.4 / section 4.1.6",
+    "type": "cross_claim_reasoning"
+  },
+  {
+    "question": "A JWT has an 'nbf' claim that is later than its 'exp' claim. What does this imply about the token's valid window?",
+    "expected_answer": "the token has no valid window — it cannot be accepted before 'nbf' but is already expired by that time; such a token would always be rejected on both the 'nbf' and 'exp' checks",
+    "source_hint": "section 4.1.4 / section 4.1.5",
+    "type": "cross_claim_reasoning"
+  },
+  {
+    "question": "A JWT has a 'jti' claim. What additional behaviour does this claim require from an application that wants to prevent replay attacks?",
+    "expected_answer": "the specification states that 'jti' can be used to prevent replay, but does not itself mandate replay prevention; the application must independently track seen 'jti' values and reject any JWT whose 'jti' has already been processed",
+    "source_hint": "section 4.1.7",
+    "type": "cross_claim_reasoning"
+  },
+  {
+    "question": "A JWT is a Nested JWT where the outer structure is a JWE and the inner structure is a JWS. In what order were signing and encryption applied, and why does the spec recommend this order?",
+    "expected_answer": "signing was applied first (inner JWS), then encryption (outer JWE); this order is recommended to encrypt the signature, providing privacy for the signer and preventing attacks where the signature is stripped leaving only an encrypted message",
+    "source_hint": "section 11.2 / section 5.2",
+    "type": "cross_claim_reasoning"
+  },
+  {
+    "question": "An application receives a JWT with a 'cty' header value of 'JWT'. What must it do differently during validation compared to a normal JWT?",
+    "expected_answer": "after decoding and validating the outer JWT, it must treat the resulting message as another JWT and restart the entire validation process from step 1, because the 'cty' value of 'JWT' signals a Nested JWT",
+    "source_hint": "section 7.2 / section 5.2",
+    "type": "cross_claim_reasoning"
+  },
+  {
+    "question": "A JWT claim set contains a private claim name that collides with a registered claim name. Which takes precedence according to the spec?",
+    "expected_answer": "the specification does not define precedence in this case; it warns that private claim names are subject to collision and should be used with caution — applications must define their own handling, but using a private name that shadows a registered one is explicitly a misuse to avoid",
+    "source_hint": "section 4.3 / section 4.1",
+    "type": "cross_claim_reasoning"
+  },
+  {
+    "question": "A JWT has an 'iss' value containing a colon character. How must this value be treated according to the StringOrURI definition?",
+    "expected_answer": "any string value containing a colon must be a URI; the 'iss' value must therefore be a valid URI and is compared as a case-sensitive string with no transformations applied",
+    "source_hint": "section 2 / section 4.1.1",
+    "type": "cross_claim_reasoning"
+  },
+  {
+    "question": "An implementation supports encrypted JWTs but only implements AES Key Wrap with 128-bit keys. Is it compliant with the spec's encryption requirements?",
+    "expected_answer": "no, if an implementation provides encryption capabilities it must also implement RSAES-PKCS1-v1_5 with 2048-bit keys, AES Key Wrap with both 128-bit and 256-bit keys, and the AES-CBC HMAC SHA-2 composite algorithms — supporting only A128KW is insufficient",
+    "source_hint": "section 8",
+    "type": "cross_claim_reasoning"
+  }
+]

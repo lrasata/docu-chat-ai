@@ -70,7 +70,7 @@ A cloud-native application that allows users to chat with their PDF documents us
 - Material-UI components
 - Hosted on S3 + CloudFront
 
-<img src="docs/frontend-UI-1.png" alt="frontend-ui-1" height="120px"> <img src="docs/frontend-UI-2.png" alt="frontend-ui-2" height="120px">
+<img src="docs/frontend-UI-1.png" alt="frontend-ui-1" height="170px"> <img src="docs/frontend-UI-2.png" alt="frontend-ui-2" height="170px">
 
 **Backend:**
 - **API Gateway**: RESTful endpoints with JWT authentication
@@ -109,12 +109,12 @@ A cloud-native application that allows users to chat with their PDF documents us
   - Amazon Titan Embeddings (`amazon.titan-embed-text-v1`) for vectorization — hardcoded, not swappable at runtime. The embedding model must stay consistent for the lifetime of the vector store: every chunk is embedded at ingestion time and stored as a 1536-dimensional vector in pgvector. If you changed the model, its vector space would be incompatible with existing stored vectors and all documents would need to be re-ingested from scratch. Titan was chosen because it is natively available in Bedrock (no subscription required), requires no NAT Gateway (accessible via VPC endpoint), and its 1536-d output is a well-supported size for pgvector similarity search.
   - Any Bedrock-supported LLM for chat responses via the Bedrock Converse API. Converse provides a unified interface across all models — switching LLMs is a Terraform variable change, not a code change. Two variables control this:
 
-    | Variable                              | Purpose       | Description                                                                                                                                                                                                                        |
-    |---------------------------------------|---------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-    | `bedrock_model_inference_profile_arn` | Runtime       | ARN of the Bedrock inference profile the Lambda calls. A cross-region profile routes across regions for availability. Changing this switches the active LLM.                                                                       |
-    | `bedrock_foundation_model_arns`       | IAM           | Foundation model ARNs granted `bedrock:InvokeModel`. Needed because cross-region inference profiles route internally to underlying models in specific regions — IAM must permit those calls. Defaults to `arn:aws:bedrock:*::foundation-model/*` (any model, any region). |
-    | `llm_temperature`                     | Generation    | Response randomness (`0.0` = deterministic, `1.0` = creative). Default: `0.7`.                                                                                                                                                     |
-    | `llm_max_tokens`                      | Generation    | Maximum tokens in the response — caps answer length and Bedrock cost. Default: `2000`.                                                                                                                                              |
+    | Variable                              | Purpose    | Description                                                                                                                                                                                                                                                               |
+    |---------------------------------------|------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+    | `bedrock_model_inference_profile_arn` | Runtime    | ARN of the Bedrock inference profile the Lambda calls. A cross-region profile routes across regions for availability. Changing this switches the active LLM.                                                                                                              |
+    | `bedrock_foundation_model_arns`       | IAM        | Foundation model ARNs granted `bedrock:InvokeModel`. Needed because cross-region inference profiles route internally to underlying models in specific regions — IAM must permit those calls. Defaults to `arn:aws:bedrock:*::foundation-model/*` (any model, any region). |
+    | `llm_temperature`                     | Generation | Response randomness (`0.0` = deterministic, `1.0` = creative). Default: `0.7`.                                                                                                                                                                                            |
+    | `llm_max_tokens`                      | Generation | Maximum tokens in the response — caps answer length and Bedrock cost. Default: `2000`.                                                                                                                                                                                    |
   - Amazon Bedrock Guardrails for content moderation (applied to every `query-document` invocation):
 
     | Feature                  | Configuration                                       |
@@ -272,7 +272,7 @@ The current setup works for staging and demos. Before going to production:
 - Implemented an automated LLM-as-judge evaluator deployed as a Lambda, storing results in S3
 - Ran a full evaluation pass and got results back (4.98/5 faithfulness, 4.98/5 correctness)
 
-🚧 In Progress / Issues Found
+🚧 Issues Found
 - Dataset used (UDHR) is too clean and simple — scores of 4.98/5 indicate the benchmark isn't challenging enough to surface real weaknesses
 - Out-of-scope questions are too obvious and need harder edge cases that look like they should be in the document but aren't
 
@@ -283,8 +283,8 @@ The current setup works for staging and demos. Before going to production:
 
 **Reliability & Error Handling**
 - ✅ Add a Dead Letter Queue (DLQ) to the SNS → S3 Ingestion Lambda subscription to catch failed ingestion events
-  ├─ failure point 1: SNS can't invoke Lambda (throttle, unavailable) → SNS has no visibility into execution — needs redrive_policy on the subscription
-  └─ failure point 2: Lambda invoked but execution fails → Lambda on_failure destination handles the event
+  - failure point 1: SNS can't invoke Lambda (throttle, unavailable) → SNS has no visibility into execution — needs redrive_policy on the subscription
+  - failure point 2: Lambda invoked but execution fails → Lambda on_failure destination handles the event
 - ✅ Add retry logic with exponential backoff on Bedrock API calls (throttling)
 
   > ⚠️ **Warning — Bedrock throttling risk on large documents**
