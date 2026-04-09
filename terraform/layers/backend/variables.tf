@@ -113,6 +113,12 @@ variable "bedrock_model_inference_profile_arn" {
   type        = string
 }
 
+variable "eval_model_arn" {
+  description = "Bedrock model ID or ARN used as the LLM-as-judge in RAG evaluation. Should be a more capable model than the one used for answering to avoid self-evaluation bias."
+  type        = string
+  default     = "anthropic.claude-opus-4-5"
+}
+
 variable "bedrock_foundation_model_arns" {
   description = "List of Bedrock foundation model ARNs to allow invocation. Defaults to a wildcard that permits any model in any region, enabling LLM portability. Restrict to specific ARNs in production for least-privilege."
   type        = list(string)

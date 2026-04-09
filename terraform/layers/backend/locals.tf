@@ -76,9 +76,9 @@ locals {
         UPLOADS_BUCKET  = module.file_uploader.uploads_bucket_id
         DOCUMENTS_TABLE = module.file_uploader.dynamo_db_table_name
         # Constructed inline to avoid circular dependency with the lambda_functions for_each
-        QUERY_DOCUMENT_LAMBDA_NAME          = "${var.environment}-${var.app_id}-query-document-lambda"
-        BEDROCK_MODEL_INFERENCE_PROFILE_ARN = var.bedrock_model_inference_profile_arn
-        RESULTS_BUCKET                      = module.file_uploader.uploads_bucket_id
+        QUERY_DOCUMENT_LAMBDA_NAME = "${var.environment}-${var.app_id}-query-document-lambda"
+        EVAL_MODEL_ARN             = var.eval_model_arn
+        RESULTS_BUCKET             = module.file_uploader.uploads_bucket_id
       }
       iam_policy_statements = [
         {
@@ -107,7 +107,16 @@ locals {
         {
           Effect   = "Allow"
           Action   = ["bedrock:InvokeModel"]
-          Resource = concat([var.bedrock_model_inference_profile_arn], var.bedrock_foundation_model_arns)
+          Resource = concat([var.eval_model_arn], var.bedrock_foundation_model_arns)
+        },
+        {
+          Effect = "Allow"
+          Action = [
+            "aws-marketplace:ViewSubscriptions",
+            "aws-marketplace:Subscribe",
+            "aws-marketplace:Unsubscribe"
+          ]
+          Resource = ["*"]
         }
       ]
     }
